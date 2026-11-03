@@ -7,6 +7,7 @@ Raspberry Pi Pico（RP2040 / MicroPython）を、ブラウザから操作する�
 - 実行結果をリアルタイムに表示し、`input()` への入力やREPLのコマンドを送る
 - ピコの中のファイルを一覧・開く・保存・削除する（`main.py` に保存すると電源オンで自動実行）
 - BOOTSELモードのピコに MicroPython（.uf2）を書き込む
+- 教科書のような**ガイド**を横に表示しながら操作できる。コード例は「エディタに入れる」ですぐ実行できる
 
 サーバーは自分のPC（`127.0.0.1`）だけで動き、外部には公開しない。
 
@@ -57,6 +58,35 @@ python3 server.py --port 9000
    （手元の .uf2 ファイルを選んで書き込むこともできる）
 4. 数秒でピコが再起動するので、「更新」を押してから接続する
 
+## ガイド
+
+画面右上の「📘 ガイド」で、ラズパイピコの使い方をまとめたガイドを横に表示できる。
+GitHub 上でも [guide/](guide/) フォルダの Markdown をそのまま読める。
+
+| 章 | 内容 |
+| --- | --- |
+| [1. ラズパイピコとは](guide/01-pico.md) | マイコンとは、RP2040 の性能、MicroPython と C/C++ |
+| [2. マイコンでできること・おすすめリンク](guide/02-usecases.md) | 使い道、向き・不向き、公式ドキュメントや作例のリンク集 |
+| [3. はじめての操作](guide/03-first-steps.md) | MicroPython の書き込み、REPL、Lチカ、ボタン |
+| [4. ピンと電源の基本](guide/04-pins.md) | ピン配置、電源、GPIO、ADC、I2C/SPI/UART、注意点 |
+| [5. センサーのつなぎ方](guide/05-wiring.md) | ブレッドボード、I2C の配線図、I2C スキャン |
+| [6. センサーの操作](guide/06-sensors.md) | MPU-6050（加速度）・BMP280（気圧）の読み取り、一定間隔のサンプリング |
+| [7. データの記録と送信](guide/07-data.md) | CSV 保存、PC への送信と保存、メモリの注意 |
+| [8. 機械学習モデルの導入](guide/08-ml.md) | 特徴量、データ収集、PC で決定木を学習、ピコで推論、大きなモデルの選択肢 |
+| [9. 困ったとき](guide/09-trouble.md) | 接続・エラー・動作のトラブルと対処 |
+
+`http://localhost:8765/#chapter=5` のように開くと、その章を直接表示する。
+
+### ガイドの書き方
+
+- 章は `guide/*.md`（Markdown）。順番とタイトルは `guide/chapters.json` で決める
+- ` ```python run ` で始めたコードには「エディタに入れる」ボタンが付く（ピコで動くコード）。
+  ` ```python ` は PC で動かすコード、` ```text ` は説明用
+- 画像は `guide/images/` に置いて `![説明](images/ファイル名.png)` と書く（png / jpg / gif / webp / svg）
+- 動画も同じ書き方で表示できる
+  - 動画ファイル: `guide/videos/` などに置いて `![説明](videos/ファイル名.mp4)`（mp4 / webm）
+  - YouTube: `![説明](https://www.youtube.com/watch?v=動画ID)` と書くと、埋め込みで再生できる
+
 ## 権限の設定（初回だけ）
 
 Linux では、そのままだとシリアルポートを開く権限がないことがある。
@@ -105,6 +135,7 @@ server.py ── pyserial ──▶ /dev/ttyACM0 ──▶ ピコ (MicroPython)
 ```
 server.py               ローカルサーバー（ピコとの通信と API）
 static/index.html       画面（HTML / CSS / JavaScript を1ファイルに）
+guide/                  ガイド（Markdown・図）。画面の横に表示される
 start.sh                起動してブラウザを開くスクリプト
 99-pico-studio.rules    シリアルポートの権限を設定する udev ルール
 tests/fake_pico.py      テスト用の「偽のピコ」

@@ -15,13 +15,27 @@ import time
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 import serial
 import serial.tools.list_ports
 
 HERE = Path(__file__).resolve().parent
 STATIC = HERE / "static"
+GUIDE = HERE / "guide"
+CONTENT_TYPES = {
+    ".html": "text/html; charset=utf-8",
+    ".md": "text/markdown; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
+    ".svg": "image/svg+xml",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+}
 
 RP_VID = 0x2E8A          # Raspberry Pi (RP2040 / RP2350)
 BOOTSEL_PIDS = {0x0003, 0x000F}  # RP2040 / RP2350 の BOOTSEL モード
@@ -440,6 +454,24 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _file(self, path):
+        body = path.read_bytes()
+        ctype = CONTENT_TYPES.get(path.suffix.lower(), "application/octet-stream")
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _guide_file(self, rel):
+        """guide/ フォルダの中のファイルだけを返す（フォルダの外は読ませない）"""
+        path = (GUIDE / rel).resolve()
+        if GUIDE not in path.parents or path.suffix.lower() not in CONTENT_TYPES \
+                or not path.is_file():
+            return self._json({"error": "not found"}, 404)
+        self._file(path)
+
     def _body(self):
         n = int(self.headers.get("Content-Length") or 0)
         return self.rfile.read(n) if n else b""
@@ -457,12 +489,9 @@ class Handler(BaseHTTPRequestHandler):
         q = parse_qs(url.query)
         try:
             if url.path in ("/", "/index.html"):
-                body = (STATIC / "index.html").read_bytes()
-                self.send_response(200)
-                self.send_header("Content-Type", "text/html; charset=utf-8")
-                self.send_header("Content-Length", str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
+                self._file(STATIC / "index.html")
+            elif url.path.startswith("/guide/"):
+                self._guide_file(unquote(url.path[len("/guide/"):]))
             elif url.path == "/api/state":
                 items, last = console.since(int(q.get("since", ["0"])[0]))
                 self._json({"connected": pico.connected, "port": pico.port,

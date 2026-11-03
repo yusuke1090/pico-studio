@@ -1,0 +1,11 @@
+[
+  {"file": "01-pico.md", "title": "1. ラズパイピコとは"},
+  {"file": "02-usecases.md", "title": "2. マイコンでできること・おすすめリンク"},
+  {"file": "03-first-steps.md", "title": "3. はじめての操作"},
+  {"file": "04-pins.md", "title": "4. ピンと電源の基本"},
+  {"file": "05-wiring.md", "title": "5. センサーのつなぎ方"},
+  {"file": "06-sensors.md", "title": "6. センサーの操作"},
+  {"file": "07-data.md", "title": "7. データの記録と送信"},
+  {"file": "08-ml.md", "title": "8. 機械学習モデルの導入"},
+  {"file": "09-trouble.md", "title": "9. 困ったとき"}
+]

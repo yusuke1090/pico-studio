@@ -33,8 +33,16 @@ button:hover:not(:disabled) { border-color: var(--accent); }
 button:disabled { opacity: .45; cursor: default; }
 button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
 button.danger { color: var(--err); }
-main { display: grid; grid-template-columns: 260px 1fr 1fr; gap: 12px; padding: 12px 16px;
+main { display: grid; grid-template-columns: 260px 1fr 1fr; grid-template-rows: 1fr;
+  grid-template-areas: "side code console"; gap: 12px; padding: 12px 16px;
   height: calc(100vh - 56px); min-height: 520px; }
+.side { grid-area: side; } .code-panel { grid-area: code; } .console-panel { grid-area: console; }
+.guide-panel { grid-area: guide; display: none; }
+main.with-guide { grid-template-columns: minmax(380px, 40%) 240px 1fr; grid-template-rows: 1fr 1fr;
+  grid-template-areas: "guide side code" "guide side console"; }
+main.with-guide .guide-panel { display: flex; }
+header .spacer { flex: 1; }
+#guideBtn.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
 .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
   display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 .panel h2 { font-size: 13px; margin: 0; padding: 8px 12px; border-bottom: 1px solid var(--border);
@@ -74,8 +82,41 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
 #toast { position: fixed; right: 16px; bottom: 16px; max-width: 420px; padding: 10px 14px;
   border-radius: 8px; background: var(--err); color: #fff; display: none; white-space: pre-wrap; }
 #toast.ok { background: var(--ok); }
+/* ---------- ガイド ---------- */
+.guide-head { display: flex; gap: 6px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.guide-head select { flex: 1; min-width: 0; }
+.guide-body { flex: 1; overflow: auto; padding: 4px 20px 24px; line-height: 1.75; }
+.guide-body h1 { font-size: 21px; margin: 16px 0 12px; }
+.guide-body h2 { font-size: 17px; margin: 28px 0 10px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+.guide-body h3 { font-size: 15px; margin: 20px 0 8px; }
+.guide-body p { margin: 8px 0; }
+.guide-body ul, .guide-body ol { padding-left: 1.5em; margin: 8px 0; }
+.guide-body a { color: var(--accent); }
+.guide-body code { font: 12.5px ui-monospace, "DejaVu Sans Mono", monospace; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
+.guide-body table { border-collapse: collapse; margin: 10px 0; font-size: 13px; display: block; overflow-x: auto; }
+.guide-body th, .guide-body td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; vertical-align: top; }
+.guide-body th { background: var(--bg); }
+.guide-body blockquote { margin: 10px 0; padding: 6px 12px; border-left: 4px solid var(--warn);
+  background: var(--bg); border-radius: 0 6px 6px 0; color: var(--text); }
+.guide-body hr { border: 0; border-top: 1px solid var(--border); margin: 20px 0; }
+.guide-body img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); display: block; margin: 10px 0; }
+.guide-body video, .guide-body iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 8px; margin: 10px 0; background: #000; }
+.codeblock { margin: 10px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.codeblock .cb-head { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: var(--bg);
+  border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+.codeblock .cb-head .grow { flex: 1; }
+.codeblock .cb-head button { padding: 1px 8px; font-size: 12px; }
+.codeblock.run .cb-head { color: var(--ok); }
+.codeblock pre { margin: 0; padding: 10px 12px; overflow-x: auto; background: var(--code-bg); }
+.codeblock pre code { border: 0; background: none; padding: 0; white-space: pre; }
+.guide-nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--border); }
+.guide-nav button { max-width: 48%; overflow: hidden; text-overflow: ellipsis; }
+
 @media (max-width: 1000px) {
-  main { grid-template-columns: 1fr; height: auto; }
+  main, main.with-guide { grid-template-columns: 1fr; grid-template-rows: none; height: auto;
+    grid-template-areas: "guide" "side" "code" "console"; }
+  .guide-panel { height: 75vh; }
   .editor, #console { min-height: 320px; }
 }
 </style>
@@ -88,9 +129,20 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
   <button id="refreshBtn" title="ポート一覧を更新">更新</button>
   <button id="connectBtn" class="primary">接続</button>
   <button id="disconnectBtn">切断</button>
+  <span class="spacer"></span>
+  <button id="guideBtn" title="使い方ガイドを横に表示">📘 ガイド</button>
 </header>
 
-<main>
+<main id="main">
+  <section class="panel guide-panel">
+    <div class="guide-head">
+      <button id="guidePrev" title="前の章">◀</button>
+      <select id="guideSel" title="章を選ぶ"></select>
+      <button id="guideNext" title="次の章">▶</button>
+      <button id="guideClose" title="ガイドを閉じる">✕</button>
+    </div>
+    <div class="guide-body" id="guideBody"><p class="empty">読み込み中…</p></div>
+  </section>
   <div class="side">
     <section class="panel">
       <h2>接続の確認</h2>
@@ -107,7 +159,7 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
     </section>
   </div>
 
-  <section class="panel">
+  <section class="panel code-panel">
     <h2>コード</h2>
     <div class="toolbar">
       <select id="sampleSel">
@@ -128,7 +180,7 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
     </div>
   </section>
 
-  <section class="panel">
+  <section class="panel console-panel">
     <h2><span class="grow">出力</span>
       <button id="resetBtn" title="ピコを再起動（main.py が実行される）">リセット</button>
       <button id="clearBtn">クリア</button></h2>
@@ -488,6 +540,208 @@ updateUi();
 refreshPorts();
 setInterval(() => { if (!state.connected) refreshPorts(); }, 3000);
 poll();
+
+// =====================================================================
+// ガイド（guide/*.md を読み込んで表示する）
+// =====================================================================
+const guide = { chapters: [], index: 0, loaded: false };
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+};
+
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function resolveUrl(u) {
+  if (/^(https?:)?\/\//.test(u) || u.startsWith("/") || u.startsWith("#")) return u;
+  return "/guide/" + u;
+}
+
+function youtubeId(u) {
+  const m = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+
+// 画像・動画（![説明](ファイル or URL)）
+function mediaHtml(alt, src) {
+  const yt = youtubeId(src);
+  if (yt) {
+    return `<iframe src="https://www.youtube-nocookie.com/embed/${yt}" title="${esc(alt)}" loading="lazy"
+      allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+  }
+  const url = esc(resolveUrl(src));
+  if (/\.(mp4|webm)$/i.test(src)) return `<video src="${url}" controls preload="metadata" title="${esc(alt)}"></video>`;
+  return `<img src="${url}" alt="${esc(alt)}" loading="lazy">`;
+}
+
+// 行の中の書式: `コード` **太字** [リンク](URL) ![画像](URL)
+function inline(text) {
+  const codes = [];
+  text = text.replace(/`([^`]+)`/g, (_, c) => { codes.push(c); return "\u0000" + (codes.length - 1) + "\u0000"; });
+  text = esc(text);
+  text = text.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_, a, u) => mediaHtml(a, u));
+  text = text.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, t, u) => {
+    const ext = /^https?:/.test(u);
+    return `<a href="${esc(ext ? u : resolveUrl(u))}"${ext ? ' target="_blank" rel="noopener"' : ""}>${t}</a>`;
+  });
+  text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  return text.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${esc(codes[i])}</code>`);
+}
+
+// 簡単な Markdown → HTML 変換（見出し・段落・リスト・表・引用・コード・画像・動画）
+function renderMarkdown(src) {
+  const lines = src.replace(/\r\n/g, "\n").split("\n");
+  const out = [];
+  const codeBlocks = [];
+  let i = 0;
+  const isTableSep = (l) => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(l);
+  const cells = (l) => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+
+  while (i < lines.length) {
+    const line = lines[i];
+    let m;
+    if ((m = line.match(/^```\s*(\w*)\s*(.*)$/))) {           // コードブロック
+      const lang = m[1], flags = m[2].split(/\s+/);
+      const body = [];
+      i++;
+      while (i < lines.length && !/^```\s*$/.test(lines[i])) body.push(lines[i++]);
+      i++;
+      const code = body.join("\n");
+      const run = lang === "python" && flags.includes("run");
+      const label = run ? "▶ ピコで実行できるコード" : lang === "python" ? "PC で実行するコード" : "";
+      codeBlocks.push(code);
+      out.push(`<div class="codeblock${run ? " run" : ""}" data-code="${codeBlocks.length - 1}">
+        <div class="cb-head"><span class="grow">${label}</span>
+          ${run ? '<button data-act="insert" class="primary">エディタに入れる</button>' : ""}
+          <button data-act="copy">コピー</button></div>
+        <pre><code>${esc(code)}</code></pre></div>`);
+      continue;
+    }
+    if (!line.trim()) { i++; continue; }
+    if ((m = line.match(/^(#{1,4})\s+(.*)$/))) {              // 見出し
+      const n = m[1].length;
+      out.push(`<h${n}>${inline(m[2])}</h${n}>`); i++; continue;
+    }
+    if (/^\s*(---|\*\*\*)\s*$/.test(line)) { out.push("<hr>"); i++; continue; }
+    if ((m = line.match(/^\s*!\[([^\]]*)\]\(([^)\s]+)\)\s*$/))) {  // 1行だけの画像・動画
+      out.push(mediaHtml(m[1], m[2])); i++; continue;
+    }
+    if (line.trim().startsWith("|") && i + 1 < lines.length && isTableSep(lines[i + 1])) {  // 表
+      const head = cells(line);
+      i += 2;
+      const rows = [];
+      while (i < lines.length && lines[i].trim().startsWith("|")) rows.push(cells(lines[i++]));
+      out.push("<table><thead><tr>" + head.map((c) => `<th>${inline(c)}</th>`).join("") + "</tr></thead><tbody>" +
+        rows.map((r) => "<tr>" + r.map((c) => `<td>${inline(c)}</td>`).join("") + "</tr>").join("") + "</tbody></table>");
+      continue;
+    }
+    if (/^>\s?/.test(line)) {                                   // 引用（注意書き）
+      const body = [];
+      while (i < lines.length && /^>\s?/.test(lines[i])) body.push(lines[i++].replace(/^>\s?/, ""));
+      out.push("<blockquote>" + body.filter((l) => l.trim()).map((l) => `<p>${inline(l)}</p>`).join("") + "</blockquote>");
+      continue;
+    }
+    if (/^\s*([-*]|\d+\.)\s+/.test(line)) {                     // リスト
+      const ordered = /^\s*\d+\./.test(line);
+      const items = [];
+      while (i < lines.length && /^\s*([-*]|\d+\.)\s+/.test(lines[i])) {
+        let item = lines[i++].replace(/^\s*([-*]|\d+\.)\s+/, "");
+        while (i < lines.length && /^\s{2,}\S/.test(lines[i]) && !/^\s*([-*]|\d+\.)\s+/.test(lines[i])) {
+          item += " " + lines[i++].trim();            // 字下げされた続きの行
+        }
+        items.push(`<li>${inline(item)}</li>`);
+      }
+      out.push(ordered ? `<ol>${items.join("")}</ol>` : `<ul>${items.join("")}</ul>`);
+      continue;
+    }
+    const para = [];                                            // 段落
+    while (i < lines.length && lines[i].trim() && !/^(#{1,4}\s|```|>|\s*([-*]|\d+\.)\s+|\|)/.test(lines[i])) {
+      para.push(inline(lines[i++].trim()));
+    }
+    if (para.length) out.push(`<p>${para.join("<br>")}</p>`);
+    else { out.push(`<p>${inline(lines[i++])}</p>`); }
+  }
+  return { html: out.join("\n"), codeBlocks };
+}
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) {
+    const t = document.createElement("textarea"); t.value = text; document.body.appendChild(t);
+    t.select(); document.execCommand("copy"); t.remove();
+  }
+  toast("コピーしました", true);
+}
+
+async function showChapter(idx) {
+  if (!guide.chapters.length) return;
+  idx = Math.max(0, Math.min(guide.chapters.length - 1, idx));
+  guide.index = idx;
+  store.set("pico-studio-chapter", String(idx));
+  const ch = guide.chapters[idx];
+  $("guideSel").value = String(idx);
+  $("guidePrev").disabled = idx === 0;
+  $("guideNext").disabled = idx === guide.chapters.length - 1;
+  const body = $("guideBody");
+  try {
+    const r = await fetch("/guide/" + ch.file, { cache: "no-cache" });
+    if (!r.ok) throw new Error(r.status);
+    const { html, codeBlocks } = renderMarkdown(await r.text());
+    const prev = guide.chapters[idx - 1], next = guide.chapters[idx + 1];
+    body.innerHTML = html + `<div class="guide-nav">
+      ${prev ? `<button data-go="${idx - 1}">◀ ${esc(prev.title)}</button>` : "<span></span>"}
+      ${next ? `<button data-go="${idx + 1}">${esc(next.title)} ▶</button>` : "<span></span>"}</div>`;
+    body.querySelectorAll(".codeblock").forEach((cb) => {
+      const code = codeBlocks[+cb.dataset.code];
+      cb.querySelectorAll("button").forEach((b) => {
+        b.onclick = () => (b.dataset.act === "copy" ? copyText(code) : insertCode(code));
+      });
+    });
+    body.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => showChapter(+b.dataset.go)));
+    body.scrollTop = 0;
+  } catch (e) {
+    body.innerHTML = `<p class="empty">章を読み込めませんでした（${esc(String(e.message || e))}）</p>`;
+  }
+}
+
+function insertCode(snippet) {
+  if (code.value.trim() && code.value !== snippet &&
+      !confirm("今のコードを、ガイドのコードに置き換えますか？")) return;
+  code.value = snippet;
+  onCodeChange();
+  code.focus();
+  toast(state.connected ? "エディタに入れました。「▶ 実行」で動かせます" : "エディタに入れました。ピコに接続すると実行できます", true);
+}
+
+async function setGuideOpen(open) {
+  $("main").classList.toggle("with-guide", open);
+  $("guideBtn").classList.toggle("on", open);
+  store.set("pico-studio-guide", open ? "1" : "0");
+  if (open && !guide.loaded) {
+    guide.loaded = true;
+    try {
+      guide.chapters = await (await fetch("/guide/chapters.json", { cache: "no-cache" })).json();
+    } catch (e) {
+      $("guideBody").innerHTML = '<p class="empty">ガイドを読み込めませんでした</p>';
+      return;
+    }
+    const sel = $("guideSel");
+    guide.chapters.forEach((c, i) => {
+      const o = document.createElement("option"); o.value = String(i); o.textContent = c.title; sel.appendChild(o);
+    });
+    const fromHash = location.hash.match(/chapter=(\d+)/);   // 例: http://localhost:8765/#chapter=5
+    showChapter(fromHash ? +fromHash[1] - 1 : parseInt(store.get("pico-studio-chapter", "0"), 10) || 0);
+  }
+}
+
+$("guideBtn").onclick = () => setGuideOpen(!$("main").classList.contains("with-guide"));
+$("guideClose").onclick = () => setGuideOpen(false);
+$("guidePrev").onclick = () => showChapter(guide.index - 1);
+$("guideNext").onclick = () => showChapter(guide.index + 1);
+$("guideSel").onchange = (e) => showChapter(+e.target.value);
+setGuideOpen(store.get("pico-studio-guide", "1") === "1");
 </script>
 </body>
 </html>
