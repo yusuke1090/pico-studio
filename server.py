@@ -531,7 +531,15 @@ def main():
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8765)
     args = ap.parse_args()
-    httpd = ThreadingHTTPServer((args.host, args.port), Handler)
+    try:
+        httpd = ThreadingHTTPServer((args.host, args.port), Handler)
+    except OSError as e:
+        if e.errno == 98:
+            raise SystemExit(
+                f"ポート {args.port} はすでに使われています。\n"
+                f"Pico Studio がもう起動していれば http://localhost:{args.port} を開いてください。\n"
+                f"別のポートで起動するには: python3 server.py --port 9000")
+        raise
     print(f"Pico Studio: http://localhost:{args.port}")
     try:
         httpd.serve_forever()
