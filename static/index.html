@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pico Studio</title>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --border: #d9dde3; --text: #1d2330; --muted: #667085;
+  --accent: #2f6fde; --accent-text: #ffffff; --ok: #1f9d55; --warn: #c27c0e; --err: #d64545;
+  --code-bg: #fbfbfc; --console-bg: #11151c; --console-text: #d7dde8; --sys: #7aa2f7; --gutter: #98a2b3;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12151b; --panel: #1a1e26; --border: #2c3340; --text: #e3e7ee; --muted: #8b95a7;
+    --accent: #5b8def; --accent-text: #ffffff; --ok: #3ccf7a; --warn: #e3a33b; --err: #f06a6a;
+    --code-bg: #151920; --console-bg: #0c0f14; --console-text: #d7dde8; --sys: #7aa2f7; --gutter: #5b6578;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.5 system-ui, "Noto Sans JP", sans-serif; }
+header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--border); }
+header h1 { font-size: 16px; margin: 0 8px 0 0; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.err { background: var(--err); }
+select, input[type=text] { font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; }
+button { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 12px; cursor: pointer; white-space: nowrap; }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: default; }
+button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+button.danger { color: var(--err); }
+main { display: grid; grid-template-columns: 260px 1fr 1fr; gap: 12px; padding: 12px 16px;
+  height: calc(100vh - 56px); min-height: 520px; }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+  display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.panel h2 { font-size: 13px; margin: 0; padding: 8px 12px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px; }
+.panel h2 .grow { flex: 1; }
+.side { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.checks { list-style: none; margin: 0; padding: 10px 12px; display: grid; gap: 8px; }
+.checks li { display: flex; gap: 8px; align-items: flex-start; }
+.checks li .dot { margin-top: 6px; flex: none; }
+.checks small { color: var(--muted); display: block; }
+.hint { margin: 0 12px 12px; padding: 8px 10px; border-radius: 6px; background: var(--bg);
+  color: var(--muted); font-size: 12px; }
+.hint:empty { display: none; }
+.hint button { margin-top: 6px; }
+.files { list-style: none; margin: 0; padding: 4px 0; overflow: auto; flex: 1; }
+.files li { display: flex; align-items: center; gap: 6px; padding: 3px 12px; }
+.files li .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.files li .name:hover { color: var(--accent); }
+.files li small { color: var(--muted); }
+.files li button { padding: 0 6px; font-size: 12px; }
+.empty { color: var(--muted); padding: 8px 12px; font-size: 12px; }
+.toolbar { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 12px; border-bottom: 1px solid var(--border); align-items: center; }
+.toolbar .grow { flex: 1; }
+.editor { position: relative; flex: 1; display: flex; min-height: 0; background: var(--code-bg); }
+.gutter { padding: 10px 8px 10px 10px; text-align: right; color: var(--gutter); user-select: none;
+  font: 13px/1.55 ui-monospace, "DejaVu Sans Mono", monospace; overflow: hidden; white-space: pre; }
+textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; background: transparent;
+  color: var(--text); font: 13px/1.55 ui-monospace, "DejaVu Sans Mono", monospace; tab-size: 4;
+  white-space: pre; overflow: auto; }
+#console { flex: 1; margin: 0; padding: 10px 12px; overflow: auto; background: var(--console-bg);
+  color: var(--console-text); font: 13px/1.5 ui-monospace, "DejaVu Sans Mono", monospace;
+  white-space: pre-wrap; word-break: break-all; }
+#console .err { color: #ff8b8b; } #console .sys { color: var(--sys); }
+.inputrow { display: flex; gap: 6px; padding: 8px 12px; border-top: 1px solid var(--border); }
+.inputrow input { flex: 1; font-family: ui-monospace, monospace; }
+.kbd { color: var(--muted); font-size: 12px; }
+#toast { position: fixed; right: 16px; bottom: 16px; max-width: 420px; padding: 10px 14px;
+  border-radius: 8px; background: var(--err); color: #fff; display: none; white-space: pre-wrap; }
+#toast.ok { background: var(--ok); }
+@media (max-width: 1000px) {
+  main { grid-template-columns: 1fr; height: auto; }
+  .editor, #console { min-height: 320px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Pico Studio</h1>
+  <span class="dot" id="connDot"></span><span id="connText">未接続</span>
+  <select id="portSel" title="シリアルポート"></select>
+  <button id="refreshBtn" title="ポート一覧を更新">更新</button>
+  <button id="connectBtn" class="primary">接続</button>
+  <button id="disconnectBtn">切断</button>
+</header>
+
+<main>
+  <div class="side">
+    <section class="panel">
+      <h2>接続の確認</h2>
+      <ul class="checks">
+        <li><span class="dot" id="chkUsb"></span><div>USB で認識<small id="chkUsbText">-</small></div></li>
+        <li><span class="dot" id="chkConn"></span><div>シリアル接続<small id="chkConnText">-</small></div></li>
+        <li><span class="dot" id="chkMp"></span><div>MicroPython の応答<small id="chkMpText">-</small></div></li>
+      </ul>
+      <div class="hint" id="hint"></div>
+    </section>
+    <section class="panel" style="flex:1">
+      <h2><span class="grow">ピコのファイル</span><button id="filesBtn" title="一覧を更新">更新</button></h2>
+      <ul class="files" id="files"><li class="empty">接続すると表示されます</li></ul>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>コード</h2>
+    <div class="toolbar">
+      <select id="sampleSel">
+        <option value="">サンプルを選ぶ…</option>
+      </select>
+      <span class="grow"></span>
+      <button id="runBtn" class="primary" title="Ctrl+Enter">▶ 実行</button>
+      <button id="stopBtn" class="danger">■ 停止</button>
+    </div>
+    <div class="editor">
+      <div class="gutter" id="gutter">1</div>
+      <textarea id="code" spellcheck="false" autocomplete="off"></textarea>
+    </div>
+    <div class="toolbar">
+      <input type="text" id="fileName" value="main.py" size="14" title="ピコに保存するときの名前">
+      <button id="saveBtn" title="Ctrl+S">ピコに保存</button>
+      <span class="kbd">main.py にすると電源を入れたとき自動で動きます</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><span class="grow">出力</span>
+      <button id="resetBtn" title="ピコを再起動（main.py が実行される）">リセット</button>
+      <button id="clearBtn">クリア</button></h2>
+    <pre id="console"></pre>
+    <div class="inputrow">
+      <input type="text" id="sendInput" placeholder="ピコに送る（REPL のコマンドや input() への入力）" autocomplete="off">
+      <button id="sendBtn">送信</button>
+    </div>
+  </section>
+</main>
+<div id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const SAMPLES = {
+  "hello: 文字と計算": `print("hello, pico!")
+for i in range(1, 6):
+    print(i, "x 2 =", i * 2)
+`,
+  "LED を点滅させる": `# ボードの LED を点滅させる
+# 公式ピコは 25 番ピン。ボードによって番号が違うことがある
+from machine import Pin
+import time
+
+led = Pin(25, Pin.OUT)
+for i in range(10):
+    led.toggle()
+    time.sleep(0.5)
+led.off()
+print("おわり")
+`,
+  "RGB LED を光らせる": `# RGB LED（WS2812）を光らせる
+# ピン番号はボードによって違う（例: 23, 16）。光らなければ変えてみる
+from machine import Pin
+import neopixel, time
+
+np = neopixel.NeoPixel(Pin(23), 1)
+for color in [(30, 0, 0), (0, 30, 0), (0, 0, 30), (0, 0, 0)]:
+    np[0] = color
+    np.write()
+    time.sleep(0.5)
+`,
+  "内蔵の温度センサー": `# RP2040 に入っている温度センサーの値を読む
+from machine import ADC
+import time
+
+sensor = ADC(4)
+for i in range(5):
+    v = sensor.read_u16() * 3.3 / 65535
+    temp = 27 - (v - 0.706) / 0.001721
+    print("温度: {:.1f} ℃".format(temp))
+    time.sleep(1)
+`,
+  "PC と送受信する": `# 下の「送信」欄に数字を入れると、2倍にして返す
+# 止めるときは「■ 停止」
+while True:
+    line = input("数字を入力: ")
+    try:
+        n = float(line)
+        print("受信:", n, "→ 2倍:", n * 2)
+    except ValueError:
+        print("受信した文字:", line)
+`,
+};
+
+let state = { connected: false, running: false, last: 0, mpOk: null };
+let infoTimer = null;
+
+function toast(msg, ok = false) {
+  const t = $("toast");
+  t.textContent = msg; t.className = ok ? "ok" : ""; t.style.display = "block";
+  clearTimeout(t._h); t._h = setTimeout(() => (t.style.display = "none"), ok ? 2500 : 7000);
+}
+
+async function api(path, body, raw) {
+  const opt = body === undefined ? {} : {
+    method: "POST",
+    headers: raw ? { "Content-Type": "application/octet-stream" } : { "Content-Type": "application/json" },
+    body: raw ? body : JSON.stringify(body),
+  };
+  const r = await fetch(path, opt);
+  const j = await r.json().catch(() => ({ error: "サーバーの応答が読めません" }));
+  if (!r.ok || j.error) throw new Error(j.error || r.statusText);
+  return j;
+}
+
+function setDot(id, cls) { $(id).className = "dot" + (cls ? " " + cls : ""); }
+
+// ---------- ポートと接続確認 ----------
+async function refreshPorts() {
+  let res;
+  try { res = await api("/api/ports"); } catch (e) { return toast(e.message); }
+  const sel = $("portSel"), prev = sel.value;
+  sel.innerHTML = "";
+  for (const p of res.ports) {
+    const o = document.createElement("option");
+    o.value = p.device;
+    o.textContent = p.device + (p.is_pico ? "  (ピコ)" : p.description ? "  " + p.description : "");
+    sel.appendChild(o);
+  }
+  if (!res.ports.length) {
+    const o = document.createElement("option"); o.value = ""; o.textContent = "ポートが見つかりません";
+    sel.appendChild(o);
+  }
+  if (state.port && ![...sel.options].some((o) => o.value === state.port)) {
+    const o = document.createElement("option"); o.value = o.textContent = state.port; sel.appendChild(o);
+  }
+  if ([...sel.options].some((o) => o.value === prev)) sel.value = prev;
+  if (state.port) sel.value = state.port;
+
+  const pico = res.ports.find((p) => p.is_pico);
+  const hint = $("hint");
+  let html = "";
+  if (res.bootsel.detected) {
+    setDot("chkUsb", "warn");
+    $("chkUsbText").textContent = "BOOTSEL モード（書き込み待ち）";
+    html = res.bootsel.mount
+      ? `ピコが書き込みモードになっています。MicroPython を書き込むと使えるようになります。<br>
+         <button id="flashLatestBtn" class="primary">最新の MicroPython を書き込む</button>
+         <button id="flashFileBtn">.uf2 ファイルを選ぶ</button>
+         <input type="file" id="uf2File" accept=".uf2" hidden>`
+      : "ピコが書き込みモードで見えていますが、ドライブがまだ開かれていません。ファイルマネージャーで「RPI-RP2」を開いてから「更新」を押してください。";
+  } else if (pico || state.connected) {
+    setDot("chkUsb", "ok");
+    $("chkUsbText").textContent = (pico ? pico.device : state.port) + " で認識";
+  } else if (res.ports.length) {
+    setDot("chkUsb", "warn");
+    $("chkUsbText").textContent = "ピコではないシリアル機器があります";
+  } else {
+    setDot("chkUsb", "err");
+    $("chkUsbText").textContent = "見つかりません";
+    html = `ピコが見つかりません。<br>
+      ・USB ケーブルがデータ通信に対応しているか<br>
+      ・BOOT ボタンを押しながらつなぐと「RPI-RP2」が出るか<br>を確認してください。`;
+  }
+  if (hint.dataset.src !== html) {
+    hint.dataset.src = html;
+    hint.innerHTML = html;
+    bindFlash();
+  }
+}
+
+function bindFlash() {
+  const latest = $("flashLatestBtn"), pick = $("flashFileBtn"), file = $("uf2File");
+  if (latest) latest.onclick = async () => {
+    latest.disabled = true; latest.textContent = "ダウンロードして書き込み中…";
+    try {
+      const r = await api("/api/flash-latest", {});
+      toast("書き込みました。ピコが再起動するので、数秒後に「更新」を押してください。\n" + r.url, true);
+      setTimeout(refreshPorts, 4000);
+    } catch (e) { toast(e.message); latest.disabled = false; latest.textContent = "最新の MicroPython を書き込む"; }
+  };
+  if (pick) pick.onclick = () => file.click();
+  if (file) file.onchange = async () => {
+    if (!file.files[0]) return;
+    try {
+      await api("/api/flash", await file.files[0].arrayBuffer(), true);
+      toast("書き込みました。数秒後に「更新」を押してください。", true);
+      setTimeout(refreshPorts, 4000);
+    } catch (e) { toast(e.message); }
+  };
+}
+
+async function checkMicroPython() {
+  setDot("chkMp", ""); $("chkMpText").textContent = "確認中…";
+  try {
+    const i = await api("/api/info");
+    state.mpOk = true;
+    setDot("chkMp", "ok");
+    const kb = (n) => Math.round(n / 1024) + " KB";
+    $("chkMpText").textContent =
+      `MicroPython ${i.version}\n${i.machine}\nストレージ空き ${kb(i.flash_free)} / ${kb(i.flash_total)}・メモリ空き ${kb(i.mem_free)}`;
+    $("chkMpText").style.whiteSpace = "pre-line";
+    loadFiles();
+  } catch (e) {
+    state.mpOk = false;
+    setDot("chkMp", "err");
+    $("chkMpText").textContent = e.message;
+  }
+}
+
+// ---------- 状態のポーリング ----------
+const consoleEl = $("console");
+function appendConsole(items) {
+  if (!items.length) return;
+  const atBottom = consoleEl.scrollHeight - consoleEl.scrollTop - consoleEl.clientHeight < 40;
+  for (const it of items) {
+    const last = consoleEl.lastChild;
+    const text = it.text.replace(/\r\n/g, "\n").replace(/\r/g, "");
+    if (last && last.dataset && last.dataset.kind === it.kind) last.textContent += text;
+    else {
+      const s = document.createElement("span");
+      s.dataset.kind = it.kind; s.className = it.kind; s.textContent = text;
+      consoleEl.appendChild(s);
+    }
+  }
+  if (atBottom) consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+async function poll() {
+  try {
+    const s = await api("/api/state?since=" + state.last);
+    appendConsole(s.console);
+    state.last = s.last;
+    const changed = s.connected !== state.connected;
+    state.connected = s.connected; state.running = s.running; state.port = s.port;
+    updateUi();
+    if (changed) {
+      if (s.connected) setTimeout(checkMicroPython, 400);
+      else { state.mpOk = null; setDot("chkMp", ""); $("chkMpText").textContent = "-"; renderFiles(null); }
+      refreshPorts();
+    }
+  } catch (e) {
+    $("connText").textContent = "サーバーに接続できません";
+    setDot("connDot", "err");
+  }
+  setTimeout(poll, state.running ? 150 : 400);
+}
+
+function updateUi() {
+  const c = state.connected, r = state.running;
+  setDot("connDot", c ? (r ? "warn" : "ok") : "");
+  $("connText").textContent = c ? (r ? "実行中" : "接続中") + "（" + state.port + "）" : "未接続";
+  setDot("chkConn", c ? "ok" : "");
+  $("chkConnText").textContent = c ? state.port : "-";
+  $("connectBtn").disabled = c;
+  $("disconnectBtn").disabled = !c;
+  $("portSel").disabled = c;
+  $("runBtn").disabled = !c || r;
+  $("stopBtn").disabled = !c;
+  $("saveBtn").disabled = !c || r;
+  $("resetBtn").disabled = !c || r;
+  $("filesBtn").disabled = !c || r;
+  $("sendBtn").disabled = !c;
+}
+
+// ---------- ファイル ----------
+async function loadFiles() {
+  try { renderFiles((await api("/api/files")).files); } catch (e) { toast(e.message); }
+}
+function renderFiles(files) {
+  const ul = $("files"); ul.innerHTML = "";
+  if (!files) { ul.innerHTML = '<li class="empty">接続すると表示されます</li>'; return; }
+  if (!files.length) { ul.innerHTML = '<li class="empty">ファイルはありません</li>'; return; }
+  for (const f of files) {
+    const li = document.createElement("li");
+    const name = document.createElement("span");
+    name.className = "name"; name.textContent = (f.dir ? "📁 " : "") + f.name.replace(/^\//, "");
+    li.appendChild(name);
+    if (!f.dir) {
+      name.title = "開く";
+      name.onclick = () => openFile(f.name);
+      const sz = document.createElement("small"); sz.textContent = f.size + "B"; li.appendChild(sz);
+      const del = document.createElement("button"); del.textContent = "削除"; del.className = "danger";
+      del.onclick = () => deleteFile(f.name); li.appendChild(del);
+    }
+    ul.appendChild(li);
+  }
+}
+async function openFile(name) {
+  if (state.running) return toast("実行中は開けません。停止してください。");
+  try {
+    const r = await api("/api/file?name=" + encodeURIComponent(name));
+    $("code").value = r.content; $("fileName").value = name.replace(/^\//, "");
+    onCodeChange();
+  } catch (e) { toast(e.message); }
+}
+async function deleteFile(name) {
+  if (!confirm(name + " を削除しますか？")) return;
+  try { await api("/api/delete", { name }); loadFiles(); } catch (e) { toast(e.message); }
+}
+
+// ---------- エディタ ----------
+const code = $("code"), gutter = $("gutter");
+function onCodeChange() {
+  const n = code.value.split("\n").length;
+  gutter.textContent = Array.from({ length: n }, (_, i) => i + 1).join("\n");
+  try { localStorage.setItem("pico-studio-code", code.value); } catch (e) {}
+}
+code.addEventListener("input", onCodeChange);
+code.addEventListener("scroll", () => (gutter.scrollTop = code.scrollTop));
+code.addEventListener("keydown", (e) => {
+  if (e.key === "Tab") {
+    e.preventDefault();
+    const s = code.selectionStart, en = code.selectionEnd;
+    if (s === en && !e.shiftKey) {
+      code.setRangeText("    ", s, en, "end");
+    } else {
+      const ls = code.value.lastIndexOf("\n", s - 1) + 1;
+      const block = code.value.slice(ls, en);
+      const out = e.shiftKey ? block.replace(/^ {1,4}/gm, "") : block.replace(/^/gm, "    ");
+      code.setRangeText(out, ls, en, "select");
+    }
+    onCodeChange();
+  } else if (e.key === "Enter" && !e.ctrlKey && !e.metaKey) {
+    // 自動インデント
+    e.preventDefault();
+    const s = code.selectionStart;
+    const line = code.value.slice(code.value.lastIndexOf("\n", s - 1) + 1, s);
+    let indent = line.match(/^\s*/)[0];
+    if (/:\s*$/.test(line)) indent += "    ";
+    code.setRangeText("\n" + indent, s, code.selectionEnd, "end");
+    onCodeChange();
+  }
+});
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); }
+});
+
+for (const k of Object.keys(SAMPLES)) {
+  const o = document.createElement("option"); o.value = k; o.textContent = k; $("sampleSel").appendChild(o);
+}
+$("sampleSel").onchange = (e) => {
+  const k = e.target.value; if (!k) return;
+  if (code.value.trim() && !confirm("今のコードをサンプルに置き換えますか？")) { e.target.value = ""; return; }
+  code.value = SAMPLES[k]; e.target.value = ""; onCodeChange();
+};
+
+// ---------- 操作 ----------
+async function run() {
+  if (!state.connected || state.running) return;
+  try { await api("/api/run", { code: code.value }); state.running = true; updateUi(); } catch (e) { toast(e.message); }
+}
+async function save() {
+  if (!state.connected) return toast("ピコに接続してください");
+  const name = $("fileName").value.trim();
+  if (!name) return toast("ファイル名を入れてください");
+  try { await api("/api/file", { name, content: code.value }); toast(name + " をピコに保存しました", true); loadFiles(); }
+  catch (e) { toast(e.message); }
+}
+async function send() {
+  const v = $("sendInput").value;
+  try { await api("/api/send", { text: v }); $("sendInput").value = ""; } catch (e) { toast(e.message); }
+}
+
+$("refreshBtn").onclick = refreshPorts;
+$("connectBtn").onclick = async () => {
+  const port = $("portSel").value;
+  if (!port) return toast("ポートが選ばれていません。ピコをつないで「更新」を押してください。");
+  try { await api("/api/connect", { port }); } catch (e) { toast(e.message); }
+};
+$("disconnectBtn").onclick = () => api("/api/disconnect", {}).catch((e) => toast(e.message));
+$("runBtn").onclick = run;
+$("stopBtn").onclick = () => api("/api/stop", {}).catch((e) => toast(e.message));
+$("saveBtn").onclick = save;
+$("resetBtn").onclick = () => api("/api/reset", {}).catch((e) => toast(e.message));
+$("clearBtn").onclick = () => { consoleEl.innerHTML = ""; api("/api/clear", {}).catch(() => {}); };
+$("filesBtn").onclick = loadFiles;
+$("sendBtn").onclick = send;
+$("sendInput").addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+
+try { code.value = localStorage.getItem("pico-studio-code") || SAMPLES["hello: 文字と計算"]; }
+catch (e) { code.value = SAMPLES["hello: 文字と計算"]; }
+onCodeChange();
+updateUi();
+refreshPorts();
+setInterval(() => { if (!state.connected) refreshPorts(); }, 3000);
+poll();
+</script>
+</body>
+</html>

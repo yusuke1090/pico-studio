@@ -1,0 +1,2 @@
+# Raspberry Pi Pico (RP2040 / RP2350) のシリアルポートを、ログイン中のユーザーが使えるようにする
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", TAG+="uaccess"
