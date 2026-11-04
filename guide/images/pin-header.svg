@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" font-family="system-ui, 'Noto Sans JP', sans-serif" font-size="13">
+  <rect width="760" height="360" rx="10" fill="#ffffff"/>
+
+  <!-- ① ピンヘッダ -->
+  <text x="125" y="34" text-anchor="middle" font-size="15" font-weight="700" fill="#2b2f36">① ピンヘッダ</text>
+  <g stroke="#9aa1ab" stroke-width="4" stroke-linecap="round">
+    <path d="M60 90 V190"/><path d="M85 90 V190"/><path d="M110 90 V190"/>
+    <path d="M135 90 V190"/><path d="M160 90 V190"/><path d="M185 90 V190"/>
+  </g>
+  <rect x="48" y="112" width="150" height="16" rx="2" fill="#2b2f36"/>
+  <text x="125" y="212" text-anchor="middle" font-size="11" fill="#5b616b">樹脂の色は黒・黄色など</text>
+  <g font-size="12" fill="#2b2f36">
+    <text x="208" y="100">短い側</text>
+    <text x="208" y="116" font-size="11" fill="#5b616b">ピコに差す</text>
+    <text x="208" y="176">長い側</text>
+    <text x="208" y="192" font-size="11" fill="#5b616b">ボードに差す</text>
+  </g>
+  <text x="125" y="244" text-anchor="middle" font-size="12" fill="#2b2f36">ピコ1枚に 20ピン × 2本</text>
+  <text x="125" y="262" text-anchor="middle" font-size="12" fill="#2b2f36">40ピンの棒なら半分に折る</text>
+
+  <!-- ② 横から見たところ -->
+  <text x="420" y="34" text-anchor="middle" font-size="15" font-weight="700" fill="#2b2f36">② ブレッドボードを台にして付ける</text>
+  <!-- iron -->
+  <g stroke-linecap="round">
+    <path d="M449 114 L478 88" stroke="#9aa1ab" stroke-width="5"/>
+    <path d="M478 88 L526 52" stroke="#d93a3a" stroke-width="14"/>
+  </g>
+  <text x="500" y="102" font-size="12" fill="#2b2f36">はんだごて</text>
+  <!-- pico board -->
+  <rect x="300" y="128" width="160" height="12" rx="2" fill="#1f7a3d"/>
+  <rect x="360" y="118" width="40" height="10" rx="1" fill="#2b2f36"/>
+  <text x="380" y="112" text-anchor="middle" font-size="11" fill="#5b616b">チップのある面が上</text>
+  <!-- headers -->
+  <g stroke="#9aa1ab" stroke-width="4" stroke-linecap="round">
+    <path d="M315 120 V196"/>
+    <path d="M445 120 V196"/>
+  </g>
+  <rect x="305" y="140" width="20" height="14" fill="#2b2f36"/>
+  <rect x="435" y="140" width="20" height="14" fill="#2b2f36"/>
+  <!-- solder cones -->
+  <path d="M308 128 L315 117 L322 128 Z" fill="#c5cad2"/>
+  <path d="M438 128 L445 117 L452 128 Z" fill="#c5cad2"/>
+  <!-- breadboard (pins pass into it) -->
+  <rect x="280" y="154" width="200" height="56" rx="4" fill="#efe9dc" fill-opacity="0.85" stroke="#cfc6b2"/>
+  <rect x="372" y="154" width="16" height="56" fill="#ddd4c0"/>
+  <text x="380" y="232" text-anchor="middle" font-size="12" fill="#2b2f36">ブレッドボード（溝をまたぐ）</text>
+  <text x="380" y="252" text-anchor="middle" font-size="11" fill="#5b616b">ピンヘッダは長い側を下にして差す</text>
+
+  <!-- ③ 仕上がり -->
+  <text x="650" y="34" text-anchor="middle" font-size="15" font-weight="700" fill="#2b2f36">③ 仕上がりの確認</text>
+  <rect x="570" y="150" width="160" height="12" rx="2" fill="#1f7a3d"/>
+  <g stroke="#9aa1ab" stroke-width="4" stroke-linecap="round">
+    <path d="M610 115 V200"/>
+    <path d="M690 108 V200"/>
+  </g>
+  <!-- good -->
+  <path d="M598 150 L610 120 L622 150 Z" fill="#c5cad2"/>
+  <text x="610" y="226" text-anchor="middle" font-size="18" font-weight="700" fill="#1f7a3d">○</text>
+  <text x="610" y="246" text-anchor="middle" font-size="12" fill="#2b2f36">富士山の形</text>
+  <text x="610" y="262" text-anchor="middle" font-size="11" fill="#5b616b">つやがある</text>
+  <!-- bad -->
+  <circle cx="690" cy="128" r="10" fill="#c5cad2"/>
+  <text x="690" y="226" text-anchor="middle" font-size="18" font-weight="700" fill="#d93a3a">×</text>
+  <text x="690" y="246" text-anchor="middle" font-size="12" fill="#2b2f36">玉になって浮く</text>
+  <text x="690" y="262" text-anchor="middle" font-size="11" fill="#5b616b">温め直す</text>
+
+  <text x="380" y="336" text-anchor="middle" font-size="12" fill="#5b616b">こて先をピンと穴のまわりの金属に同時に当て、2〜3秒温めてから、はんだを溶かし込む</text>
+</svg>

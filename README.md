@@ -69,7 +69,7 @@ GitHub 上でも [guide/](guide/) フォルダの Markdown をそのまま読め
 | [2. マイコンでできること・おすすめリンク](guide/02-usecases.md) | 使い道、向き・不向き、公式ドキュメントや作例のリンク集 |
 | [3. はじめての操作](guide/03-first-steps.md) | MicroPython の書き込み、REPL、Lチカ、ボタン |
 | [4. ピンと電源の基本](guide/04-pins.md) | ピン配置、電源、GPIO、ADC、I2C/SPI/UART、注意点 |
-| [5. センサーのつなぎ方](guide/05-wiring.md) | ブレッドボード、I2C の配線図、I2C スキャン |
+| [5. センサーのつなぎ方](guide/05-wiring.md) | ブレッドボード、ピンヘッダの付け方、I2C の配線図、I2C スキャン |
 | [6. センサーの操作](guide/06-sensors.md) | MPU-6050（加速度）・BMP280（気圧）の読み取り、一定間隔のサンプリング |
 | [7. データの記録と送信](guide/07-data.md) | CSV 保存、PC への送信と保存、メモリの注意 |
 | [8. 機械学習モデルの導入](guide/08-ml.md) | 特徴量、データ収集、PC で決定木を学習、ピコで推論、大きなモデルの選択肢 |
