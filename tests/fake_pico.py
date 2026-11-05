@@ -80,14 +80,16 @@ class FdWriter(io.TextIOBase):
         return len(s)
 
 
-def run_code(fd, code):
-    """コードを実行し (stdout, エラー文字列) を返す。Ctrl-C で止められる。"""
-    ns = make_namespace(fd)
+def run_code(fd, code, ns=None, mode="exec"):
+    """コードを実行し、エラー文字列を返す。Ctrl-C で止められる。
+    REPL（mode="single"）では、本物と同じように変数を覚えておき、式の値を表示する。"""
+    if ns is None:
+        ns = make_namespace(fd)
     err = ""
     w = FdWriter(fd)
     with contextlib.redirect_stdout(w):
         try:
-            exec(compile(code, "<stdin>", "exec"), ns)
+            exec(compile(code, "<stdin>", mode), ns)
         except KeyboardInterrupt:
             err = "Traceback (most recent call last):\r\nKeyboardInterrupt: \r\n"
         except Exception as e:  # noqa: BLE001
@@ -103,6 +105,7 @@ def main():
     fd = master
     raw = False
     buf = b""
+    repl_ns = make_namespace(fd)      # REPL で打った変数や import を覚えておく
 
     def friendly_banner():
         os.write(fd, b"MicroPython v1.99.0-fake; Fake Pico with RP2040\r\n"
@@ -118,13 +121,14 @@ def main():
             elif c == b"\x03":
                 os.write(fd, b"\r\n>>> ")
             elif c == b"\x04":
+                repl_ns = make_namespace(fd)
                 os.write(fd, b"MPY: soft reboot\r\n")
                 friendly_banner()
             elif c == b"\r":
                 line, buf = buf.decode(), b""
                 os.write(fd, b"\r\n")
                 if line.strip():
-                    err = run_code(fd, line)
+                    err = run_code(fd, line, repl_ns, "single")
                     os.write(fd, err.encode())
                 os.write(fd, b">>> ")
             else:

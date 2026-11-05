@@ -655,15 +655,19 @@ function renderMarkdown(src) {
     }
     if (/^\s*([-*]|\d+\.)\s+/.test(line)) {                     // リスト
       const ordered = /^\s*\d+\./.test(line);
+      const start = ordered ? parseInt(line.trim(), 10) : 1;   // 画像などをはさんだ続きの番号（例: 4.）から始める
       const items = [];
       while (i < lines.length && /^\s*([-*]|\d+\.)\s+/.test(lines[i])) {
         let item = lines[i++].replace(/^\s*([-*]|\d+\.)\s+/, "");
-        while (i < lines.length && /^\s{2,}\S/.test(lines[i]) && !/^\s*([-*]|\d+\.)\s+/.test(lines[i])) {
-          item += " " + lines[i++].trim();            // 字下げされた続きの行
+        const subs = [];                              // 字下げした「- 」は入れ子の箇条書き
+        while (i < lines.length && /^\s{2,}\S/.test(lines[i])) {
+          if (/^\s{2,}([-*]|\d+\.)\s+/.test(lines[i])) subs.push(lines[i++].replace(/^\s*([-*]|\d+\.)\s+/, ""));
+          else if (subs.length) subs[subs.length - 1] += " " + lines[i++].trim();
+          else item += " " + lines[i++].trim();       // 字下げされた続きの行
         }
-        items.push(`<li>${inline(item)}</li>`);
+        items.push(`<li>${inline(item)}${subs.length ? "<ul>" + subs.map((s) => `<li>${inline(s)}</li>`).join("") + "</ul>" : ""}</li>`);
       }
-      out.push(ordered ? `<ol>${items.join("")}</ol>` : `<ul>${items.join("")}</ul>`);
+      out.push(ordered ? `<ol${start > 1 ? ` start="${start}"` : ""}>${items.join("")}</ol>` : `<ul>${items.join("")}</ul>`);
       continue;
     }
     const para = [];                                            // 段落
