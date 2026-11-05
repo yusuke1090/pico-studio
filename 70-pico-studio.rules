@@ -1,2 +1,3 @@
 # Raspberry Pi Pico (RP2040 / RP2350) のシリアルポートを、ログイン中のユーザーが使えるようにする
+# uaccess は 73-seat-late.rules で処理されるので、それより前の番号（70）にしておく必要がある
 SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", TAG+="uaccess"

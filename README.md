@@ -93,11 +93,14 @@ Linux では、そのままだとシリアルポートを開く権限がない�
 次の udev ルールを入れると、ピコをつないだときにログイン中のユーザーが使えるようになる。
 
 ```sh
-sudo cp 99-pico-studio.rules /etc/udev/rules.d/
+sudo cp 70-pico-studio.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules
 ```
 
 入れたあとは、ピコを一度抜いてつなぎ直す。
+
+> 以前の `99-pico-studio.rules` を入れていた場合は、番号が大きすぎて効かない（`uaccess` は 73 番のルールで処理されるため）。
+> `sudo rm /etc/udev/rules.d/99-pico-studio.rules` で消してから、上の手順で入れ直す。
 
 udev ルールの代わりに、`dialout` グループに入る方法もある（ログインし直しが必要）。
 
@@ -137,7 +140,7 @@ server.py               ローカルサーバー（ピコとの通信と API）
 static/index.html       画面（HTML / CSS / JavaScript を1ファイルに）
 guide/                  ガイド（Markdown・図）。画面の横に表示される
 start.sh                起動してブラウザを開くスクリプト
-99-pico-studio.rules    シリアルポートの権限を設定する udev ルール
+70-pico-studio.rules    シリアルポートの権限を設定する udev ルール
 tests/fake_pico.py      テスト用の「偽のピコ」
 ```
 
