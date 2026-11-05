@@ -67,7 +67,7 @@ GitHub 上でも [guide/](guide/) フォルダの Markdown をそのまま読め
 
 | 章 | 内容 |
 | --- | --- |
-| [0. Pico Studio の使い方](guide/00-studio.md) | 起動、接続と権限の設定、画面の見方、よく使う操作、関数・引数の説明の出し方 |
+| [0. Pico Studio の使い方](guide/00-studio.md) | 起動、接続と権限の設定、画面の見方、よく使う操作、ピコのファイルの確認、関数・引数の説明の出し方 |
 | [1. ラズパイピコとは](guide/01-pico.md) | マイコンとは、RP2040 の性能、MicroPython と C/C++ |
 | [2. マイコンでできること・おすすめリンク](guide/02-usecases.md) | 使い道、向き・不向き、公式ドキュメントや作例のリンク集 |
 | [3. はじめての操作](guide/03-first-steps.md) | MicroPython の書き込み、REPL、Lチカ、ボタン |
