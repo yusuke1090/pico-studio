@@ -100,8 +100,8 @@ class Pico:
             self.ser = None
             msg = str(e)
             if "Permission denied" in msg:
-                msg = ("ポートを開く権限がありません。README の「権限の設定」を見て、"
-                       "udev ルールを入れるか dialout グループに入ってください。")
+                msg = ("ポートを開く権限がありません。ガイド0章の「『ポートを開く権限がありません』と出たとき」"
+                       "（README の「権限の設定」にも同じ内容）を見て、udev ルールを入れてください。")
             raise DeviceError(msg)
         self.port = port
         self.alive = True

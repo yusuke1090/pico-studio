@@ -1,4 +1,5 @@
 [
+  {"file": "00-studio.md", "title": "0. Pico Studio の使い方"},
   {"file": "01-pico.md", "title": "1. ラズパイピコとは"},
   {"file": "02-usecases.md", "title": "2. マイコンでできること・おすすめリンク"},
   {"file": "03-first-steps.md", "title": "3. はじめての操作"},

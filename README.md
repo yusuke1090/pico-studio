@@ -41,6 +41,8 @@ python3 server.py --port 9000
 
 ## 使い方
 
+くわしくはガイドの [0. Pico Studio の使い方](guide/00-studio.md) にまとめてある。
+
 1. ピコを USB ケーブルでつなぐ（充電専用ケーブルでは認識しない）
 2. 画面上部のポート欄で「(ピコ)」と書かれたポートを選び、「接続」を押す
 3. 左の「接続の確認」が3つとも緑になればOK
@@ -65,6 +67,7 @@ GitHub 上でも [guide/](guide/) フォルダの Markdown をそのまま読め
 
 | 章 | 内容 |
 | --- | --- |
+| [0. Pico Studio の使い方](guide/00-studio.md) | 起動、接続と権限の設定、画面の見方、よく使う操作、関数・引数の説明の出し方 |
 | [1. ラズパイピコとは](guide/01-pico.md) | マイコンとは、RP2040 の性能、MicroPython と C/C++ |
 | [2. マイコンでできること・おすすめリンク](guide/02-usecases.md) | 使い道、向き・不向き、公式ドキュメントや作例のリンク集 |
 | [3. はじめての操作](guide/03-first-steps.md) | MicroPython の書き込み、REPL、Lチカ、ボタン |
@@ -86,6 +89,9 @@ GitHub 上でも [guide/](guide/) フォルダの Markdown をそのまま読め
 - 動画も同じ書き方で表示できる
   - 動画ファイル: `guide/videos/` などに置いて `![説明](videos/ファイル名.mp4)`（mp4 / webm）
   - YouTube: `![説明](https://www.youtube.com/watch?v=動画ID)` と書くと、埋め込みで再生できる
+- コードの関数・引数をクリックしたときの説明は `guide/glossary.json` に書く
+  - キーは `"関数名.引数名"`（例: `"train_test_split.stratify"`）か `"単語"`（例: `"fit"`、`"Pin.OUT"`）
+  - 関数名は最後の部分だけ（`serial.Serial` なら `Serial`）。`"関数名.引数名"` があれば、そちらが優先される
 
 ## 権限の設定（初回だけ）
 

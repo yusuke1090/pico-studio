@@ -82,6 +82,14 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
 #toast { position: fixed; right: 16px; bottom: 16px; max-width: 420px; padding: 10px 14px;
   border-radius: 8px; background: var(--err); color: #fff; display: none; white-space: pre-wrap; }
 #toast.ok { background: var(--ok); }
+/* ---------- 関数・引数の説明（クリックで表示） ---------- */
+#tip { position: fixed; z-index: 10; max-width: min(380px, calc(100vw - 32px)); padding: 10px 12px;
+  background: var(--panel); color: var(--text); border: 1px solid var(--accent); border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .25); font-size: 13px; line-height: 1.6; display: none; }
+#tip .tip-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+#tip .tip-key { font: 600 13px ui-monospace, "DejaVu Sans Mono", monospace; color: var(--accent); }
+#tip .tip-kind { font-size: 11px; color: var(--muted); border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; }
+#tip .tip-text { white-space: pre-line; }
 /* ---------- ガイド ---------- */
 .guide-head { display: flex; gap: 6px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); }
 .guide-head select { flex: 1; min-width: 0; }
@@ -192,6 +200,7 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
   </section>
 </main>
 <div id="toast"></div>
+<div id="tip" role="tooltip"></div>
 
 <script>
 const $ = (id) => document.getElementById(id);
@@ -731,8 +740,8 @@ async function setGuideOpen(open) {
     guide.chapters.forEach((c, i) => {
       const o = document.createElement("option"); o.value = String(i); o.textContent = c.title; sel.appendChild(o);
     });
-    const fromHash = location.hash.match(/chapter=(\d+)/);   // 例: http://localhost:8765/#chapter=5
-    showChapter(fromHash ? +fromHash[1] - 1 : parseInt(store.get("pico-studio-chapter", "0"), 10) || 0);
+    const fromHash = location.hash.match(/chapter=(\d+)/);   // 例: http://localhost:8765/#chapter=5（章番号 = 並び順。0章から始まる）
+    showChapter(fromHash ? +fromHash[1] : parseInt(store.get("pico-studio-chapter", "0"), 10) || 0);
   }
 }
 
@@ -742,6 +751,89 @@ $("guidePrev").onclick = () => showChapter(guide.index - 1);
 $("guideNext").onclick = () => showChapter(guide.index + 1);
 $("guideSel").onchange = (e) => showChapter(+e.target.value);
 setGuideOpen(store.get("pico-studio-guide", "1") === "1");
+
+// =====================================================================
+// 関数・引数の説明（コードの単語をクリックすると guide/glossary.json の説明を出す）
+// =====================================================================
+const tipEl = $("tip");
+let glossary = {};
+fetch("/guide/glossary.json", { cache: "no-cache" })
+  .then((r) => r.json()).then((g) => (glossary = g)).catch(() => {});
+
+// pos の位置にある単語（英数字と _）
+function wordAt(text, pos) {
+  let s = pos, e = pos;
+  while (s > 0 && /\w/.test(text[s - 1])) s--;
+  while (e < text.length && /\w/.test(text[e])) e++;
+  return s === e ? null : { word: text.slice(s, e), start: s, end: e };
+}
+
+// pos を囲んでいる関数呼び出しの名前（例: "train_test_split(" の中なら train_test_split）
+function enclosingCall(text, pos) {
+  let depth = 0;
+  for (let i = pos - 1; i >= 0; i--) {
+    const c = text[i];
+    if (")]}".includes(c)) depth++;
+    else if ("([{".includes(c)) {
+      if (depth > 0) { depth--; continue; }
+      if (c !== "(") return null;
+      const m = text.slice(0, i).match(/([A-Za-z_][\w.]*)\s*$/);
+      return m ? m[1] : null;
+    }
+  }
+  return null;
+}
+
+// 単語の説明を探す。引数なら「関数名.引数名」、Pin.OUT のような形なら「Pin.OUT」を先に探す
+function lookupAt(text, pos) {
+  const w = wordAt(text, pos);
+  if (!w || /^\d/.test(w.word)) return null;
+  const isKwarg = /^\s*=(?!=)/.test(text.slice(w.end));
+  const fn = isKwarg ? enclosingCall(text, w.start) : null;
+  const owner = text.slice(0, w.start).match(/([A-Za-z_]\w*)\.$/);
+  const cands = [];
+  if (fn) cands.push({ key: fn.split(".").pop() + "." + w.word, kind: "引数", label: `${fn}( ${w.word}= )` });
+  if (owner) cands.push({ key: owner[1] + "." + w.word, kind: "", label: owner[1] + "." + w.word });
+  cands.push({ key: w.word, kind: fn ? "引数" : /^\s*\(/.test(text.slice(w.end)) ? "関数" : "",
+               label: fn ? `${fn}( ${w.word}= )` : w.word });
+  for (const c of cands) if (typeof glossary[c.key] === "string") return { ...c, text: glossary[c.key] };
+  return null;
+}
+
+function showTip(hit, x, y) {
+  tipEl.innerHTML = `<div class="tip-head"><span class="tip-key">${esc(hit.label)}</span>
+    ${hit.kind ? `<span class="tip-kind">${hit.kind}</span>` : ""}</div>
+    <div class="tip-text">${esc(hit.text)}</div>`;
+  tipEl.style.display = "block";
+  const r = tipEl.getBoundingClientRect();
+  const left = Math.max(8, Math.min(x - 20, innerWidth - r.width - 8));
+  const top = y + 18 + r.height < innerHeight ? y + 18 : Math.max(8, y - r.height - 12);
+  tipEl.style.left = left + "px"; tipEl.style.top = top + "px";
+}
+function hideTip() { tipEl.style.display = "none"; }
+
+// ガイドのコード
+$("guideBody").addEventListener("mouseup", (e) => {
+  const codeEl = e.target.closest("pre code");
+  const sel = getSelection();
+  if (!codeEl || !sel.rangeCount) return hideTip();
+  const r = sel.getRangeAt(0);
+  if (!codeEl.contains(r.startContainer)) return hideTip();
+  const before = document.createRange();
+  before.setStart(codeEl, 0); before.setEnd(r.startContainer, r.startOffset);
+  const hit = lookupAt(codeEl.textContent, before.toString().length);
+  hit ? showTip(hit, e.clientX, e.clientY) : hideTip();
+});
+// エディタ
+code.addEventListener("mouseup", (e) => {
+  const hit = lookupAt(code.value, code.selectionStart);
+  hit ? showTip(hit, e.clientX, e.clientY) : hideTip();
+});
+code.addEventListener("keydown", hideTip);
+document.addEventListener("mousedown", (e) => { if (!tipEl.contains(e.target)) hideTip(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideTip(); });
+$("guideBody").addEventListener("scroll", hideTip);
+code.addEventListener("scroll", hideTip);
 </script>
 </body>
 </html>
