@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 230" font-family="system-ui, 'Noto Sans JP', sans-serif" font-size="13">
+<defs><marker id="ah-8a919c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a919c"/></marker></defs>
+<rect width="760" height="230" rx="10" fill="#ffffff"/>
+<text x="380" y="28" font-size="16" text-anchor="middle" font-weight="700" fill="#2b2f36">例: 牛の行動監視 IoT の流れ</text>
+<rect x="20" y="50" width="165" height="96" rx="8" fill="#eef4ff" stroke="#2f6fde" stroke-width="2"/>
+<text x="102.5" y="85.1" font-size="15" text-anchor="middle" font-weight="700" fill="#2b2f36">① 測る</text>
+<text x="102.5" y="106.5" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">首輪のセンサー</text>
+<text x="102.5" y="123.9" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">加速度・気圧（5・6章）</text>
+<line x1="187" y1="98" x2="201" y2="98" stroke="#8a919c" stroke-width="3" stroke-linecap="round" marker-end="url(#ah-8a919c)"/>
+<rect x="205" y="50" width="165" height="96" rx="8" fill="#e7f4ec" stroke="#1f7a3d" stroke-width="2"/>
+<text x="287.5" y="85.1" font-size="15" text-anchor="middle" font-weight="700" fill="#2b2f36">② 記録・判定</text>
+<text x="287.5" y="106.5" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">ピコが特徴量を作り</text>
+<text x="287.5" y="123.9" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">行動を判定（7・8章）</text>
+<line x1="372" y1="98" x2="386" y2="98" stroke="#8a919c" stroke-width="3" stroke-linecap="round" marker-end="url(#ah-8a919c)"/>
+<rect x="390" y="50" width="165" height="96" rx="8" fill="#fff6e0" stroke="#e0a800" stroke-width="2"/>
+<text x="472.5" y="85.1" font-size="15" text-anchor="middle" font-weight="700" fill="#2b2f36">③ 送る</text>
+<text x="472.5" y="106.5" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">WiFi・LoRa など</text>
+<text x="472.5" y="123.9" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">（Pico W など）</text>
+<line x1="557" y1="98" x2="571" y2="98" stroke="#8a919c" stroke-width="3" stroke-linecap="round" marker-end="url(#ah-8a919c)"/>
+<rect x="575" y="50" width="165" height="96" rx="8" fill="#f3ecfa" stroke="#6b3fa0" stroke-width="2"/>
+<text x="657.5" y="85.1" font-size="15" text-anchor="middle" font-weight="700" fill="#2b2f36">④ 集めて見る</text>
+<text x="657.5" y="106.5" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">クラウド・PC で</text>
+<text x="657.5" y="123.9" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">グラフや通知にする</text>
+<text x="20" y="180" font-size="12.5" text-anchor="start" font-weight="400" fill="#555c66">ピコの上で判定まで済ませると、送るデータが「生の数値（1秒に数百個）」から「行動の名前（数秒に1つ）」になり、</text>
+<text x="20" y="199" font-size="12.5" text-anchor="start" font-weight="400" fill="#555c66">通信量と電池を大きく節約できます。</text>
+</svg>

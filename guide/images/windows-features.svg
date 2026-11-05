@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" font-family="system-ui, 'Noto Sans JP', sans-serif" font-size="13">
+<defs><marker id="ah-8a919c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a919c"/></marker><marker id="ah-e07b00" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#e07b00"/></marker></defs>
+<rect width="760" height="330" rx="10" fill="#ffffff"/>
+<text x="380" y="26" font-size="16" text-anchor="middle" font-weight="700" fill="#2b2f36">生データから特徴量を作って判定するまで</text>
+<polyline points="30,98.4 33,102.2 36,102.6 39,104.6 42,104.4 45,99.8 48,97.6 51,100.6 54,95.5 57,94.5 60,99.1 63,97.0 66,100.9 69,100.7 72,103.5 75,101.7 78,104.8 81,105.4 84,101.8 87,101.1 90,98.9 93,93.9 96,97.5 99,97.0 102,96.7 105,96.9 108,103.9 111,103.1 114,105.3 117,106.0 120,103.9 123,103.4 126,98.2 129,99.0 132,95.8 135,93.2 138,80.5 141,83.4 144,104.3 147,119.5 150,119.2 153,96.1 156,80.6 159,80.5 162,100.4 165,118.0 168,118.9 171,103.2 174,83.6 177,81.4 180,95.3 183,117.3 186,123.8 189,111.7 192,88.7 195,76.0 198,90.7 201,112.4 204,124.3 207,114.4 210,94.6 213,77.0 216,85.7 219,104.1 222,119.0 225,115.6 228,101.5 231,84.1 234,77.8 237,99.3 240,96.0 243,91.4 246,90.8 249,94.2 252,97.1 255,95.7 258,103.1 261,103.0 264,109.0 267,106.8 270,108.2 273,105.6 276,98.8 279,98.1 282,91.5 285,89.5 288,93.9 291,93.5 294,98.3 297,103.4 300,107.5 303,105.9 306,104.5 309,106.9 312,99.9 315,99.8 318,96.2 321,91.4 324,92.1 327,94.6 330,98.8 333,102.4 336,105.7 339,108.3 342,110.5 345,74.8 348,80.7 351,106.1 354,122.5 357,120.0 360,101.7 363,77.6 366,77.2 369,94.5 372,119.9 375,125.1 378,103.3 381,82.8 384,75.3 387,87.7 390,115.9 393,125.8 396,114.0 399,87.2 402,75.4 405,85.4 408,105.7 411,122.7 414,119.8 417,97.7 420,74.3 423,78.6 426,101.9 429,121.5 432,122.2 435,101.2 438,78.7 441,76.1 444,92.9 447,117.4" fill="none" stroke="#2f6fde" stroke-width="2"/>
+<line x1="30" y1="54" x2="30" y2="146" stroke="#8a919c" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="5 4"/>
+<line x1="135" y1="54" x2="135" y2="146" stroke="#8a919c" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="5 4"/>
+<line x1="240" y1="54" x2="240" y2="146" stroke="#8a919c" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="5 4"/>
+<line x1="345" y1="54" x2="345" y2="146" stroke="#8a919c" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="5 4"/>
+<line x1="450" y1="54" x2="450" y2="146" stroke="#8a919c" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="5 4"/>
+<text x="82" y="166" font-size="12" text-anchor="middle" font-weight="700" fill="#555c66">2秒</text>
+<text x="187" y="166" font-size="12" text-anchor="middle" font-weight="700" fill="#555c66">2秒</text>
+<text x="292" y="166" font-size="12" text-anchor="middle" font-weight="700" fill="#555c66">2秒</text>
+<text x="397" y="166" font-size="12" text-anchor="middle" font-weight="700" fill="#555c66">2秒</text>
+<text x="30" y="50" font-size="12" text-anchor="start" font-weight="700" fill="#2f6fde">加速度（25Hz）</text>
+<rect x="135" y="54" width="105" height="92" rx="4" fill="#e07b00" fill-opacity="0.15"/>
+<text x="470" y="84" font-size="12" text-anchor="start" font-weight="700" fill="#555c66">2秒ずつ区切る</text>
+<text x="470" y="102" font-size="12" text-anchor="start" font-weight="400" fill="#555c66">（1つの区切り = 窓）</text>
+<path d="M187 172 L187 196" stroke="#e07b00" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-e07b00)"/>
+<rect x="40" y="200" width="300" height="104" rx="8" fill="#fff6e0" stroke="#e07b00" stroke-width="2"/>
+<text x="190.0" y="230.1" font-size="14" text-anchor="middle" font-weight="700" fill="#2b2f36">特徴量（8個）</text>
+<text x="190.0" y="251.0" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">平均 x・y・z ／ 標準偏差 x・y・z</text>
+<text x="190.0" y="268.4" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">加速度の大きさの標準偏差</text>
+<text x="190.0" y="285.8" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">加速度の大きさの変化量</text>
+<line x1="344" y1="252" x2="384" y2="252" stroke="#8a919c" stroke-width="3" stroke-linecap="round" marker-end="url(#ah-8a919c)"/>
+<rect x="390" y="212" width="170" height="80" rx="8" fill="#e7f4ec" stroke="#1f7a3d" stroke-width="2"/>
+<text x="475.0" y="247.8" font-size="15" text-anchor="middle" font-weight="700" fill="#1f7a3d">決定木</text>
+<text x="475.0" y="269.2" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">model.py の predict()</text>
+<line x1="564" y1="252" x2="604" y2="252" stroke="#8a919c" stroke-width="3" stroke-linecap="round" marker-end="url(#ah-8a919c)"/>
+<rect x="610" y="212" width="130" height="80" rx="8" fill="#f3ecfa" stroke="#6b3fa0" stroke-width="2"/>
+<text x="675.0" y="248.7" font-size="18" text-anchor="middle" font-weight="700" fill="#6b3fa0">walk</text>
+<text x="675.0" y="271.8" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">（歩いている）</text>
+</svg>

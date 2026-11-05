@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 270" font-family="system-ui, 'Noto Sans JP', sans-serif" font-size="13">
+<defs></defs>
+<rect width="760" height="270" rx="10" fill="#ffffff"/>
+<text x="380" y="26" font-size="16" text-anchor="middle" font-weight="700" fill="#2b2f36">外付けの LED のつなぎ方</text>
+<rect x="30" y="50" width="160" height="180" rx="8" fill="#1f7a3d"/>
+<text x="110" y="150" font-size="18" text-anchor="middle" font-weight="700" fill="#ffffff">ピコ</text>
+<text x="182" y="94" font-size="12" text-anchor="end" font-weight="700" fill="#ffffff">GP15（20番）</text>
+<text x="182" y="204" font-size="12" text-anchor="end" font-weight="700" fill="#ffffff">GND（18番）</text>
+<circle cx="190" cy="90" r="6" fill="#e0a800"/>
+<circle cx="190" cy="200" r="6" fill="#e0a800"/>
+<line x1="196" y1="90" x2="300" y2="90" stroke="#2f6fde" stroke-width="3" stroke-linecap="round"/>
+<rect x="300" y="78" width="90" height="24" rx="4" fill="#f4e3c4" stroke="#8a6d3b" stroke-width="2"/>
+<rect x="318" y="78" width="8" height="24" rx="0" fill="#8b4513"/>
+<rect x="336" y="78" width="8" height="24" rx="0" fill="#d93a3a"/>
+<rect x="354" y="78" width="8" height="24" rx="0" fill="#8b4513"/>
+<text x="345" y="68" font-size="12" text-anchor="middle" font-weight="700" fill="#2b2f36">抵抗 220Ω〜1kΩ</text>
+<line x1="390" y1="90" x2="520" y2="90" stroke="#2f6fde" stroke-width="3" stroke-linecap="round"/>
+<line x1="520" y1="90" x2="520" y2="114" stroke="#2f6fde" stroke-width="3" stroke-linecap="round"/>
+<path d="M502 114 L538 114 L520 142 Z" stroke="#d93a3a" stroke-width="2" fill="#ffd5d5" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="502" y1="142" x2="538" y2="142" stroke="#d93a3a" stroke-width="3" stroke-linecap="round"/>
+<path d="M546 116 l14 -12 m-6 0 h6 v6" stroke="#e07b00" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M552 128 l14 -12 m-6 0 h6 v6" stroke="#e07b00" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="580" y="112" font-size="12" text-anchor="start" font-weight="700" fill="#d93a3a">長い足（＋）</text>
+<text x="580" y="128" font-size="12" text-anchor="start" font-weight="400" fill="#d93a3a">こちらを GP15 側に</text>
+<text x="580" y="152" font-size="12" text-anchor="start" font-weight="700" fill="#2b2f36">短い足（−）</text>
+<text x="580" y="168" font-size="12" text-anchor="start" font-weight="400" fill="#2b2f36">こちらを GND 側に</text>
+<line x1="520" y1="142" x2="520" y2="200" stroke="#2b2f36" stroke-width="3" stroke-linecap="round"/>
+<line x1="520" y1="200" x2="196" y2="200" stroke="#2b2f36" stroke-width="3" stroke-linecap="round"/>
+<text x="494" y="134" font-size="14" text-anchor="end" font-weight="700" fill="#d93a3a">LED</text>
+<text x="30" y="250.0" font-size="12" text-anchor="start" font-weight="400" fill="#555c66">LED には向きがあります。抵抗を入れないと、LED やピコが壊れることがあります。プログラムでは Pin(15, Pin.OUT) で使います。</text>
+</svg>

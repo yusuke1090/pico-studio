@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" font-family="system-ui, 'Noto Sans JP', sans-serif" font-size="13">
+<defs><marker id="ah-2f6fde" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2f6fde"/></marker><marker id="ah-6b3fa0" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6b3fa0"/></marker><marker id="ah-e0a800" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#e0a800"/></marker></defs>
+<rect width="760" height="320" rx="10" fill="#ffffff"/>
+<text x="380" y="26" font-size="16" text-anchor="middle" font-weight="700" fill="#2b2f36">測ったデータの3つの残し方</text>
+<rect x="20" y="110" width="160" height="80" rx="8" fill="#e7f4ec" stroke="#1f7a3d" stroke-width="2"/>
+<text x="100.0" y="146.1" font-size="16" text-anchor="middle" font-weight="700" fill="#1f7a3d">ピコ</text>
+<text x="100.0" y="168.1" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">センサーで測る</text>
+<rect x="300" y="52" width="440" height="70" rx="8" fill="#fff6e0" stroke="#e0a800" stroke-width="2"/>
+<text x="520.0" y="73.8" font-size="14" text-anchor="middle" font-weight="700" fill="#2b2f36">① ピコのフラッシュに保存</text>
+<text x="520.0" y="94.7" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">log.csv などのファイルに書く</text>
+<text x="520.0" y="112.1" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">PC なしで記録できる・容量は約1.4MB</text>
+<path d="M182 150 C 240 150, 240 87, 296 87" stroke="#e0a800" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-e0a800)"/>
+<rect x="300" y="132" width="440" height="70" rx="8" fill="#eef4ff" stroke="#2f6fde" stroke-width="2"/>
+<text x="520.0" y="153.8" font-size="14" text-anchor="middle" font-weight="700" fill="#2b2f36">② USB で PC に送って保存</text>
+<text x="520.0" y="174.7" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">print() → PC の pc_logger.py が受け取る</text>
+<text x="520.0" y="192.1" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">容量を気にしなくてよい・PC とつないでいる間だけ</text>
+<path d="M182 150 C 240 150, 240 167, 296 167" stroke="#2f6fde" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-2f6fde)"/>
+<rect x="300" y="212" width="440" height="70" rx="8" fill="#f3ecfa" stroke="#6b3fa0" stroke-width="2"/>
+<text x="520.0" y="233.8" font-size="14" text-anchor="middle" font-weight="700" fill="#2b2f36">③ WiFi で送る（Pico W）</text>
+<text x="520.0" y="254.7" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">MQTT などでクラウドへ</text>
+<text x="520.0" y="272.1" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">離れた場所から送れる・電池を多く使う</text>
+<path d="M182 150 C 240 150, 240 247, 296 247" stroke="#6b3fa0" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-6b3fa0)"/>
+<text x="20" y="308" font-size="12" text-anchor="start" font-weight="400" fill="#555c66">この章では ① と ② を説明します。③ は2章のリンク（umqtt.simple）を見てください。</text>
+</svg>

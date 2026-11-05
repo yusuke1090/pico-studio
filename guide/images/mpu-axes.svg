@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" font-family="system-ui, 'Noto Sans JP', sans-serif" font-size="13">
+<defs><marker id="ah-1f7a3d" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#1f7a3d"/></marker><marker id="ah-d93a3a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#d93a3a"/></marker><marker id="ah-e07b00" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#e07b00"/></marker></defs>
+<rect width="760" height="300" rx="10" fill="#ffffff"/>
+<text x="190" y="26" font-size="15" text-anchor="middle" font-weight="700" fill="#2b2f36">センサーの軸の向き</text>
+<rect x="110" y="90" width="160" height="120" rx="6" fill="#2457a6"/>
+<rect x="170" y="130" width="40" height="40" rx="3" fill="#111317"/>
+<text x="190" y="196" font-size="11" text-anchor="middle" font-weight="700" fill="#ffffff">GY-521</text>
+<circle cx="130" cy="100" r="4" fill="#e0a800"/>
+<circle cx="152" cy="100" r="4" fill="#e0a800"/>
+<circle cx="174" cy="100" r="4" fill="#e0a800"/>
+<circle cx="196" cy="100" r="4" fill="#e0a800"/>
+<line x1="190" y1="150" x2="330" y2="150" stroke="#d93a3a" stroke-width="4" stroke-linecap="round" marker-end="url(#ah-d93a3a)"/>
+<text x="338" y="155" font-size="16" text-anchor="start" font-weight="700" fill="#d93a3a">X</text>
+<line x1="190" y1="150" x2="190" y2="50" stroke="#1f7a3d" stroke-width="4" stroke-linecap="round" marker-end="url(#ah-1f7a3d)"/>
+<text x="200" y="52" font-size="16" text-anchor="start" font-weight="700" fill="#1f7a3d">Y</text>
+<circle cx="190" cy="150" r="10" fill="#ffffff" stroke="#2f6fde" stroke-width="3"/>
+<circle cx="190" cy="150" r="3.5" fill="#2f6fde"/>
+<text x="60" y="240" font-size="12" text-anchor="start" font-weight="700" fill="#2f6fde">Z は画面の手前に向かう向き（◉）</text>
+<text x="60" y="258" font-size="12" text-anchor="start" font-weight="400" fill="#2f6fde">向きは基板に印刷された矢印で確かめる</text>
+<text x="570" y="26" font-size="15" text-anchor="middle" font-weight="700" fill="#2b2f36">机に置いて止めると</text>
+<line x1="430" y1="180" x2="710" y2="180" stroke="#8a6d3b" stroke-width="6" stroke-linecap="round"/>
+<rect x="500" y="162" width="140" height="16" rx="3" fill="#2457a6"/>
+<line x1="570" y1="100" x2="570" y2="150" stroke="#e07b00" stroke-width="4" stroke-linecap="round" marker-end="url(#ah-e07b00)"/>
+<text x="582" y="120" font-size="13" text-anchor="start" font-weight="700" fill="#e07b00">重力</text>
+<rect x="470" y="200" width="200" height="80" rx="8" fill="#f4f6f8" stroke="#8a919c" stroke-width="1.5"/>
+<text x="570" y="225" font-size="13" text-anchor="middle" font-weight="400" fill="#2b2f36" font-family="ui-monospace, 'DejaVu Sans Mono', monospace">x ≒  0.0 g</text>
+<text x="570" y="244" font-size="13" text-anchor="middle" font-weight="400" fill="#2b2f36" font-family="ui-monospace, 'DejaVu Sans Mono', monospace">y ≒  0.0 g</text>
+<text x="570" y="263" font-size="13" text-anchor="middle" font-weight="400" fill="#2b2f36" font-family="ui-monospace, 'DejaVu Sans Mono', monospace">z ≒ +1.0 g</text>
+</svg>
