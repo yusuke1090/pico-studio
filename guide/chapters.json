@@ -9,5 +9,6 @@
   {"file": "07-sensors.md", "title": "7. センサーの操作"},
   {"file": "08-data.md", "title": "8. データの記録と送信"},
   {"file": "09-ml.md", "title": "9. 機械学習モデルの導入"},
-  {"file": "10-trouble.md", "title": "10. 困ったとき"}
+  {"file": "10-trouble.md", "title": "10. 困ったとき"},
+  {"file": "11-compare.md", "title": "11. ラズパイとピコの実装の比較"}
 ]
