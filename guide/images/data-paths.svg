@@ -20,5 +20,5 @@
 <text x="520.0" y="254.7" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">MQTT などでクラウドへ</text>
 <text x="520.0" y="272.1" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">離れた場所から送れる・電池を多く使う</text>
 <path d="M182 150 C 240 150, 240 247, 296 247" stroke="#6b3fa0" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-6b3fa0)"/>
-<text x="20" y="308" font-size="12" text-anchor="start" font-weight="400" fill="#555c66">この章では ① と ② を説明します。③ は2章のリンク（umqtt.simple）を見てください。</text>
+<text x="20" y="308" font-size="12" text-anchor="start" font-weight="400" fill="#555c66">この章では ① と ② を説明します。③ は3章のリンク（umqtt.simple）を見てください。</text>
 </svg>

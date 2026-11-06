@@ -34,7 +34,7 @@
 <rect x="190" y="294" width="170" height="86" rx="8" fill="#e7f4ec" stroke="#1f7a3d" stroke-width="2"/>
 <text x="275.0" y="324.9" font-size="13" text-anchor="middle" font-weight="700" fill="#2b2f36">MicroPython を書き込む</text>
 <text x="275.0" y="344.2" font-size="11" text-anchor="middle" font-weight="400" fill="#555c66">「最新の MicroPython を</text>
-<text x="275.0" y="360.1" font-size="11" text-anchor="middle" font-weight="400" fill="#555c66">書き込む」ボタン（3章）</text>
+<text x="275.0" y="360.1" font-size="11" text-anchor="middle" font-weight="400" fill="#555c66">書き込む」ボタン（4章）</text>
 <rect x="400" y="294" width="170" height="86" rx="8" fill="#e7f4ec" stroke="#1f7a3d" stroke-width="2"/>
 <text x="485.0" y="324.9" font-size="13" text-anchor="middle" font-weight="700" fill="#2b2f36">権限を設定する</text>
 <text x="485.0" y="344.2" font-size="11" text-anchor="middle" font-weight="400" fill="#555c66">0章「ポートを開く権限が</text>

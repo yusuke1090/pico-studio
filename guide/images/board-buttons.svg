@@ -118,7 +118,7 @@
 <line x1="296" y1="386" x2="252" y2="386" stroke="#e07b00" stroke-width="2" stroke-linecap="round"/>
 <circle cx="296" cy="386" r="3.5" fill="#e07b00"/>
 <text x="246" y="382" font-size="13" text-anchor="end" font-weight="700" fill="#2b2f36">ピン（片側20本）</text>
-<text x="246" y="399" font-size="13" text-anchor="end" font-weight="400" fill="#2b2f36">センサーをつなぐ（4章）</text>
+<text x="246" y="399" font-size="13" text-anchor="end" font-weight="400" fill="#2b2f36">センサーをつなぐ（5章）</text>
 <line x1="410" y1="50" x2="508" y2="50" stroke="#e07b00" stroke-width="2" stroke-linecap="round"/>
 <circle cx="410" cy="50" r="3.5" fill="#e07b00"/>
 <text x="514" y="46" font-size="13" text-anchor="start" font-weight="700" fill="#2b2f36">USB Type-C</text>
