@@ -105,7 +105,22 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
 #tip details div { margin-top: 2px; }
 /* ---------- ガイド ---------- */
 .guide-head { display: flex; gap: 6px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); }
-.guide-head select { flex: 1; min-width: 0; }
+.guide-panel { position: relative; }
+#guideToc { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; text-align: left; }
+#guideToc .title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#tocPanel { position: absolute; top: 50px; left: 12px; right: 12px; max-height: calc(100% - 62px); overflow: auto; z-index: 5;
+  padding: 4px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 20px rgba(0, 0, 0, .25); }
+#tocPanel[hidden] { display: none; }
+#tocPanel button { border: 0; background: none; border-radius: 4px; padding: 5px 8px; text-align: left; white-space: normal; }
+#tocPanel button:hover { background: var(--bg); }
+.toc-row { display: flex; align-items: center; }
+.toc-row .toc-go { flex: 1; min-width: 0; font-weight: 600; }
+.toc-row.current .toc-go { color: var(--accent); }
+#tocPanel .toc-fold { flex: none; width: 28px; padding: 5px 0; text-align: center; color: var(--muted); }
+.toc-fold[aria-expanded="true"] { transform: rotate(90deg); }
+.toc-sub { list-style: none; margin: 0 0 4px; padding: 0 0 0 28px; }
+.toc-sub[hidden] { display: none; }
+.toc-sub button { width: 100%; font-size: 13px; color: var(--muted); }
 .guide-body { flex: 1; overflow: auto; padding: 4px 20px 24px; line-height: 1.75; }
 .guide-body h1 { font-size: 21px; margin: 16px 0 12px; }
 .guide-body h2 { font-size: 17px; margin: 28px 0 10px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
@@ -159,10 +174,11 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
   <section class="panel guide-panel">
     <div class="guide-head">
       <button id="guidePrev" title="前の章">◀</button>
-      <select id="guideSel" title="章を選ぶ"></select>
+      <button id="guideToc" title="章を選ぶ" aria-expanded="false" aria-controls="tocPanel"><span class="title">読み込み中…</span><span aria-hidden="true">▾</span></button>
       <button id="guideNext" title="次の章">▶</button>
       <button id="guideClose" title="ガイドを閉じる">✕</button>
     </div>
+    <div id="tocPanel" hidden></div>
     <div class="guide-body" id="guideBody"><p class="empty">読み込み中…</p></div>
   </section>
   <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" tabindex="0"
@@ -710,7 +726,7 @@ async function showChapter(idx) {
   guide.index = idx;
   store.set("pico-studio-chapter", String(idx));
   const ch = guide.chapters[idx];
-  $("guideSel").value = String(idx);
+  $("guideToc").querySelector(".title").textContent = ch.title;
   $("guidePrev").disabled = idx === 0;
   $("guideNext").disabled = idx === guide.chapters.length - 1;
   const body = $("guideBody");
@@ -756,20 +772,76 @@ async function setGuideOpen(open) {
       $("guideBody").innerHTML = '<p class="empty">ガイドを読み込めませんでした</p>';
       return;
     }
-    const sel = $("guideSel");
-    guide.chapters.forEach((c, i) => {
-      const o = document.createElement("option"); o.value = String(i); o.textContent = c.title; sel.appendChild(o);
-    });
     const fromHash = location.hash.match(/chapter=(\d+)/);   // 例: http://localhost:8765/#chapter=5（章番号 = 並び順。0章から始まる）
     showChapter(fromHash ? +fromHash[1] : parseInt(store.get("pico-studio-chapter", "0"), 10) || 0);
   }
 }
 
+// 目次（章の中の見出しは ▶ で開く）
+const toc = { sections: [], loaded: false, open: new Set() };
+
+async function loadSections() {
+  if (toc.loaded) return;
+  toc.loaded = true;
+  toc.sections = await Promise.all(guide.chapters.map(async (c) => {
+    try {
+      const md = await (await fetch("/guide/" + c.file, { cache: "no-cache" })).text();
+      const doc = new DOMParser().parseFromString(renderMarkdown(md).html, "text/html");
+      return [...doc.querySelectorAll("h2")].map((h) => h.textContent);
+    } catch (e) { return []; }
+  }));
+}
+
+function renderToc() {
+  $("tocPanel").innerHTML = guide.chapters.map((c, i) => {
+    const subs = toc.sections[i] || [], open = toc.open.has(i);
+    return `<div class="toc-row${i === guide.index ? " current" : ""}">
+        <button class="toc-fold" data-fold="${i}" aria-expanded="${open}" aria-label="${esc(c.title)} の見出しを開く"${subs.length ? "" : " disabled"}>▶</button>
+        <button class="toc-go" data-ch="${i}">${esc(c.title)}</button></div>
+      <ul class="toc-sub"${open ? "" : " hidden"}>${subs.map((t, n) =>
+        `<li><button data-ch="${i}" data-sec="${n}">${esc(t)}</button></li>`).join("")}</ul>`;
+  }).join("");
+}
+
+function closeToc() {
+  $("tocPanel").hidden = true;
+  $("guideToc").setAttribute("aria-expanded", "false");
+}
+
+$("guideToc").onclick = async () => {
+  if (!$("tocPanel").hidden) return closeToc();
+  await loadSections();
+  toc.open = new Set([guide.index]);
+  renderToc();
+  $("tocPanel").hidden = false;
+  $("guideToc").setAttribute("aria-expanded", "true");
+  $("tocPanel").querySelector(".current").scrollIntoView({ block: "nearest" });
+};
+$("tocPanel").addEventListener("click", async (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.fold !== undefined) {
+    const i = +b.dataset.fold;
+    toc.open.has(i) ? toc.open.delete(i) : toc.open.add(i);
+    b.setAttribute("aria-expanded", String(toc.open.has(i)));
+    b.parentElement.nextElementSibling.hidden = !toc.open.has(i);
+    return;
+  }
+  closeToc();
+  await showChapter(+b.dataset.ch);
+  if (b.dataset.sec !== undefined) $("guideBody").querySelectorAll("h2")[+b.dataset.sec]?.scrollIntoView({ block: "start" });
+});
+document.addEventListener("mousedown", (e) => {
+  if (!$("tocPanel").contains(e.target) && !$("guideToc").contains(e.target)) closeToc();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("tocPanel").hidden) { closeToc(); $("guideToc").focus(); }
+});
+
 $("guideBtn").onclick = () => setGuideOpen(!$("main").classList.contains("with-guide"));
 $("guideClose").onclick = () => setGuideOpen(false);
 $("guidePrev").onclick = () => showChapter(guide.index - 1);
 $("guideNext").onclick = () => showChapter(guide.index + 1);
-$("guideSel").onchange = (e) => showChapter(+e.target.value);
 setGuideOpen(store.get("pico-studio-guide", "1") === "1");
 
 // ガイドと右側の仕切り（幅は % で持つので、ウィンドウを変えても比率が保たれる）
