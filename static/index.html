@@ -958,7 +958,10 @@ function shellLookup(text, pos) {
   const i = toks.findIndex((x) => p >= x.s && p <= x.e);
   if (i < 0) return null;
   const t = toks[i].t;
-  if (/^["']/.test(t)) return lookupAt(text, pos);   // mpremote exec "..." の中は Python
+  if (/^["']/.test(t)) {                             // mpremote exec "..." の中は Python
+    const quoted = glossary["$ " + t.slice(1, -1)];  // 文字全体に説明があれば、それを出す
+    return lookupAt(text, pos) || (typeof quoted === "string" ? { label: "引用符の中の文字", kind: "", text: quoted } : null);
+  }
 
   let b = i;                                         // | で区切った、今のコマンドの先頭
   while (b > 0 && toks[b - 1].t !== "|") b--;

@@ -1,4 +1,4 @@
-# 10. 困ったとき
+# 11. 困ったとき
 
 ## この章でわかること
 
@@ -80,7 +80,7 @@ ZeroDivisionError: division by zero
 | `OSError: [Errno 5] EIO` | I2C の通信に失敗した。配線・アドレス・電源を確認し、6章の I2C スキャンをする |
 | `OSError: [Errno 110] ETIMEDOUT` | センサーが応答しない。配線を確認、`freq=100000` に下げる |
 | `OSError: [Errno 2] ENOENT` | そのファイルがない。ファイル名のつづりと、「ピコのファイル」の一覧を確かめる |
-| `MemoryError` | メモリ不足。リストを小さくする、`array` を使う、こまめに保存する（8章） |
+| `MemoryError` | メモリ不足。リストを小さくする、`array` を使う、こまめに保存する（9章） |
 | `KeyboardInterrupt` | 「■ 停止」で止めたときに出る。エラーではない |
 
 ## 動きがおかしい
@@ -103,7 +103,7 @@ ZeroDivisionError: division by zero
 2. BOOT ボタンを押しながらつなぎ、「RPI-RP2」に flash_nuke.uf2 をコピーする（Pico Studio の「.uf2 ファイルを選ぶ」でもよい）
 3. フラッシュがすべて消える。もう一度 MicroPython を書き込む
 
-> ファイルが全部消えるので、残したいものは先にコピーしておいてください（8章の「PC に持ってくる」）。
+> ファイルが全部消えるので、残したいものは先にコピーしておいてください（9章の「PC に持ってくる」）。
 
 ## 調べるときのコツ
 

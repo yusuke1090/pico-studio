@@ -10,7 +10,7 @@
 <rect x="205" y="50" width="165" height="96" rx="8" fill="#e7f4ec" stroke="#1f7a3d" stroke-width="2"/>
 <text x="287.5" y="85.1" font-size="15" text-anchor="middle" font-weight="700" fill="#2b2f36">② 記録・判定</text>
 <text x="287.5" y="106.5" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">ピコが特徴量を作り</text>
-<text x="287.5" y="123.9" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">行動を判定（8・9章）</text>
+<text x="287.5" y="123.9" font-size="12" text-anchor="middle" font-weight="400" fill="#555c66">行動を判定（9・10章）</text>
 <line x1="372" y1="98" x2="386" y2="98" stroke="#8a919c" stroke-width="3" stroke-linecap="round" marker-end="url(#ah-8a919c)"/>
 <rect x="390" y="50" width="165" height="96" rx="8" fill="#fff6e0" stroke="#e0a800" stroke-width="2"/>
 <text x="472.5" y="85.1" font-size="15" text-anchor="middle" font-weight="700" fill="#2b2f36">③ 送る</text>
