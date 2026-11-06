@@ -8,5 +8,6 @@
   {"file": "06-sensors.md", "title": "6. センサーの操作"},
   {"file": "07-data.md", "title": "7. データの記録と送信"},
   {"file": "08-ml.md", "title": "8. 機械学習モデルの導入"},
-  {"file": "09-trouble.md", "title": "9. 困ったとき"}
+  {"file": "09-trouble.md", "title": "9. 困ったとき"},
+  {"file": "10-cli.md", "title": "10. コマンドで操作する"}
 ]
