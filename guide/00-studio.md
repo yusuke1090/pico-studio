@@ -45,7 +45,7 @@ Pico Studio は、PC の中で動く小さなサーバー（`server.py`）と、
 ターミナル（Ctrl + Alt + T で開く黒い画面）で、次の2行を打ちます。
 
 ```bash
-cd ~/pico-studio
+cd ~/apps/pico-studio
 ./start.sh
 ```
 
@@ -144,7 +144,7 @@ Linux では、最初の1回だけ、ピコのポートを使えるようにす�
 ターミナルで次を打ちます（途中でパスワードを聞かれます。打っても画面には何も出ませんが、そのまま打って Enter を押します）。
 
 ```bash
-cd ~/pico-studio
+cd ~/apps/pico-studio
 sudo cp 70-pico-studio.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules
 ```
