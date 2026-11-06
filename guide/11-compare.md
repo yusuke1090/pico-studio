@@ -14,6 +14,7 @@
 
 **ピコには Linux がありません。** ログインする先も、サービスを管理するしくみもありません。
 電源を入れると MicroPython が起動して、自分のプログラムが1つだけ動きます。
+1つのプログラムの中で複数の処理を動かすことはできます（「複数の処理を動かす」の節）。
 
 | 項目 | ラズパイ | ピコ |
 | --- | --- | --- |
@@ -101,7 +102,7 @@ mpremote reset
 
 ラズパイのコードです（GPIO17 に LED をつないだ場合）。
 
-```python
+```text
 from gpiozero import LED
 import time
 
@@ -129,6 +130,71 @@ while True:
 | I2C | smbus2 | `machine.I2C` |
 | アナログ入力 | 外付けの部品とそのライブラリ | `machine.ADC` |
 | 使える Python | 通常の Python。numpy なども使える | MicroPython。機能が少ない |
+
+## 複数の処理を動かす
+
+ラズパイでは、処理ごとに別のサービスを動かせます。ピコでは、**1つのプログラムの中にまとめます**。ピコを処理の数だけ用意する必要はありません。
+
+| ラズパイ | ピコ |
+| --- | --- |
+| 処理ごとに別のサービスを動かす | 1つの `main.py` の中で動かす |
+| ファイルを分ける | ファイルを分けて `import` する |
+| プロセスが同時に動く | `asyncio` で交代に動く |
+
+### 順番に行う
+
+測って、判定して、保存する、のように順番に行うなら、`main.py` に順に書きます。
+次のコードは例です。`a.py`、`b.py`、`c.py` をピコに保存してある前提です。
+
+```text
+import a, b, c
+
+while True:
+    data = a.read()            # センサーを読む
+    result = b.judge(data)     # 判定する
+    c.save(result)             # 保存する
+```
+
+### 同時に動かす
+
+`asyncio` を使うと、複数の処理を交代で動かせます。
+次のコードは、1秒ごとに測る処理と、0.5秒ごとに LED を点滅させる処理を、並べて動かします。
+
+```python run
+import asyncio
+from machine import Pin
+
+led = Pin(25, Pin.OUT)
+
+async def measure():
+    while True:
+        print("測る")
+        await asyncio.sleep(1)
+
+async def blink():
+    while True:
+        led.toggle()
+        await asyncio.sleep(0.5)
+
+async def main():
+    asyncio.create_task(measure())
+    await blink()
+
+asyncio.run(main())
+```
+
+### 注意すること
+
+- `asyncio` の中で `time.sleep()` を使うと、その間はほかの処理も止まります。`await asyncio.sleep()` を使います
+- 1か所でエラーが起きると、プログラム全体が止まります。ラズパイのように、1つのサービスだけが落ちて、ほかは動き続けるとはなりません
+- ピコのチップにはコアが2つあり、`_thread` で2つ目のコアも使えます。ただし MicroPython では実験的な機能なので、まず `asyncio` を使います
+
+### ピコを複数使うとき
+
+次のような場合は、ピコを複数使います。
+
+- 測る場所が離れている（首輪ごとに1台など）
+- ピンやメモリが足りない
 
 ## Linux の感覚でつまずきやすいところ
 
@@ -174,5 +240,6 @@ sh deploy.sh
 - ピコに Linux はない。ssh も systemd もなく、USB と mpremote で操作する
 - `scp` は `mpremote cp`、systemd のサービスは `main.py` にあたる
 - コードは同じ Python でも、ピンを動かすライブラリが違う
+- 複数の処理は1つのプログラムにまとめる。同時に動かすなら `asyncio`
 - 手順をまとめるスクリプトは PC に置く
 - 省電力とセンサーの読み取りはピコ、重い処理はラズパイが向いている
