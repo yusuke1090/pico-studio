@@ -154,12 +154,18 @@ filesystem     size     used    avail use% mounted on
 ## 手順6: コードを実行する
 
 「▶ 実行」にあたります。PC のテキストエディタでコードを書いて、`hello.py` のように保存しておきます。
+保存する場所はどこでも大丈夫です。ここでは `~/apps/pico-code` というフォルダを使います。
 
 ```bash
+mkdir -p ~/apps/pico-code
+cd ~/apps/pico-code
 mpremote run hello.py
 ```
 
 PC にあるファイルをピコへ送って実行します。結果はターミナルに出ます。ピコにファイルは残りません。
+
+> `mpremote run` が読むのは **PC のファイル** で、**ターミナルで今いるフォルダ** が基準です。今いるフォルダは `pwd` でわかります。
+> ほかのフォルダにいるときは、`mpremote run ~/apps/pico-code/hello.py` のように場所ごと指定します。
 
 1行だけ試すなら、ファイルを作らずに `exec` が使えます。
 
@@ -195,6 +201,12 @@ mpremote cp hello.py :hello.py
 
 ```bash
 mpremote cp hello.py :main.py
+```
+
+ピコに保存したファイルは、`run` では動かせません（`run` は PC のファイルを読むため）。動かすときは `exec` で読み込みます。
+
+```bash
+mpremote exec "import hello"
 ```
 
 ## 手順9: 保存したファイルを確認する
