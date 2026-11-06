@@ -39,9 +39,18 @@ main { display: grid; grid-template-columns: 260px 1fr; grid-template-rows: 1fr 
 .side { grid-area: side; } .code-panel { grid-area: code; } .console-panel { grid-area: console; }
 /* .panel の display: flex に負けないよう、main を付けて優先度を上げる */
 main .guide-panel { grid-area: guide; display: none; }
-main.with-guide { grid-template-columns: minmax(380px, 40%) 240px 1fr; grid-template-rows: 1fr 1fr;
-  grid-template-areas: "guide side code" "guide side console"; }
+/* --guide-w は仕切りのドラッグで変わる。280px と 564px は JS の GUIDE_MIN / RIGHT_MIN と同じ値にする */
+main.with-guide { grid-template-columns: clamp(280px, var(--guide-w, 40%), calc(100% - 564px)) 240px minmax(0, 1fr);
+  grid-template-rows: 1fr 1fr; grid-template-areas: "guide side code" "guide side console"; }
 main.with-guide .guide-panel { display: flex; }
+/* ガイドと同じマスに置き、右の余白（gap）へはみ出させて仕切りにする */
+.splitter { grid-area: guide; display: none; justify-self: end; width: 12px; margin-right: -12px;
+  position: relative; z-index: 1; cursor: col-resize; touch-action: none; outline: 0; }
+main.with-guide .splitter { display: block; }
+.splitter::after { content: ""; position: absolute; top: 50%; left: 50%; width: 4px; height: 48px;
+  transform: translate(-50%, -50%); border-radius: 2px; background: var(--border); }
+.splitter:hover::after, .splitter:focus-visible::after, body.resizing .splitter::after { background: var(--accent); }
+body.resizing { cursor: col-resize; user-select: none; }
 header .spacer { flex: 1; }
 #guideBtn.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
 .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
@@ -125,6 +134,7 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
 @media (max-width: 1000px) {
   main, main.with-guide { grid-template-columns: 1fr; grid-template-rows: none; height: auto;
     grid-template-areas: "guide" "side" "code" "console"; }
+  main.with-guide .splitter { display: none; }
   .guide-panel { height: 75vh; }
   .editor, #console { min-height: 320px; }
 }
@@ -152,6 +162,8 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
     </div>
     <div class="guide-body" id="guideBody"><p class="empty">読み込み中…</p></div>
   </section>
+  <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" tabindex="0"
+       aria-label="ガイドの幅" title="ドラッグで幅を変更（ダブルクリックで元に戻す）"></div>
   <div class="side">
     <section class="panel">
       <h2>接続の確認</h2>
@@ -756,6 +768,52 @@ $("guidePrev").onclick = () => showChapter(guide.index - 1);
 $("guideNext").onclick = () => showChapter(guide.index + 1);
 $("guideSel").onchange = (e) => showChapter(+e.target.value);
 setGuideOpen(store.get("pico-studio-guide", "1") === "1");
+
+// ガイドと右側の仕切り（幅は % で持つので、ウィンドウを変えても比率が保たれる）
+const GUIDE_MIN = 280, RIGHT_MIN = 564, GUIDE_DEFAULT = 40;
+const splitter = $("splitter");
+
+function mainBox() {
+  const el = $("main"), cs = getComputedStyle(el), r = el.getBoundingClientRect();
+  const left = r.left + parseFloat(cs.paddingLeft);
+  return { left, width: r.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) };
+}
+function setGuideWidth(pct, save = true) {
+  const { width } = mainBox();
+  const min = GUIDE_MIN / width * 100, max = (width - RIGHT_MIN) / width * 100;
+  pct = Math.min(Math.max(pct, min), max);
+  $("main").style.setProperty("--guide-w", pct.toFixed(2) + "%");
+  splitter.setAttribute("aria-valuenow", Math.round(pct));
+  if (save) store.set("pico-studio-guide-w", pct.toFixed(2));
+  return pct;
+}
+function guideWidth() {
+  return parseFloat($("main").style.getPropertyValue("--guide-w")) || GUIDE_DEFAULT;
+}
+
+splitter.addEventListener("pointerdown", (e) => {
+  if (e.button !== 0) return;
+  e.preventDefault();
+  splitter.setPointerCapture(e.pointerId);
+  document.body.classList.add("resizing");
+});
+splitter.addEventListener("pointermove", (e) => {
+  if (!splitter.hasPointerCapture(e.pointerId)) return;
+  const { left, width } = mainBox();
+  setGuideWidth((e.clientX - 6 - left) / width * 100);
+});
+const endResize = () => document.body.classList.remove("resizing");
+splitter.addEventListener("pointerup", endResize);
+splitter.addEventListener("pointercancel", endResize);
+splitter.addEventListener("dblclick", () => setGuideWidth(GUIDE_DEFAULT));
+splitter.addEventListener("keydown", (e) => {
+  const step = { ArrowLeft: -2, ArrowRight: 2 }[e.key];
+  if (!step) return;
+  e.preventDefault();
+  setGuideWidth(guideWidth() + step);
+});
+const savedGuideW = parseFloat(store.get("pico-studio-guide-w", ""));
+if (savedGuideW > 0) $("main").style.setProperty("--guide-w", savedGuideW + "%");
 
 // =====================================================================
 // 関数・引数の説明（コードの単語をクリックすると guide/glossary.json の説明を出す）
