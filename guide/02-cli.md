@@ -209,6 +209,24 @@ mpremote cp hello.py :main.py
 mpremote exec "import hello"
 ```
 
+### おすすめの流れ
+
+プログラムは、次の順番で作ると進めやすくなります。
+
+1. PC のテキストエディタでコードを書く
+2. `mpremote run hello.py` で試す（ピコには保存されません）
+3. 止めるときは Ctrl + C のあと `mpremote soft-reset`
+4. 直して、もう一度試す
+5. 完成したら、main.py として保存する
+6. ピコを再起動して、自動で動くか確かめる
+
+手順5と6のコマンドは次のとおりです。
+
+```bash
+mpremote cp hello.py :main.py
+mpremote reset
+```
+
 ## 手順9: 保存したファイルを確認する
 
 「ピコのファイル」にあたります。
