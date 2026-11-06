@@ -168,5 +168,7 @@
   "$ mpremote mip install": "語源: install は「入れる」という意味の英単語。\nライブラリをピコに入れる。例: mpremote mip install ライブラリ名",
   "$ pip": "語源: pip installs packages の略とされる。\nPython のライブラリを入れる。ピコでは使えない。",
   "$ pip install": "語源: install は「入れる」という意味の英単語。\nPython のライブラリを入れる。",
-  "$ apt upgrade": "語源: upgrade は「新しくする」という意味の英単語。\n入っているソフトを新しい版にする。"
+  "$ apt upgrade": "語源: upgrade は「新しくする」という意味の英単語。\n入っているソフトを新しい版にする。",
+  "writeto": "I2C の機器へデータを送る。\n例: i2c.writeto(0x44, bytes([0x24, 0x00])) は、アドレス 0x44 の機器に2バイト送る。",
+  "readfrom": "I2C の機器からデータを読む。\n例: i2c.readfrom(0x44, 6) は、アドレス 0x44 の機器から6バイト読む。"
 }
