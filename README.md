@@ -95,6 +95,7 @@ GitHub 上でも [guide/](guide/) フォルダの Markdown をそのまま読め
 - コードの関数・引数をクリックしたときの説明は `guide/glossary.json` に書く
   - キーは `"関数名.引数名"`（例: `"train_test_split.stratify"`）か `"単語"`（例: `"fit"`、`"Pin.OUT"`）
   - 関数名は最後の部分だけ（`serial.Serial` なら `Serial`）。`"関数名.引数名"` があれば、そちらが優先される
+  - コマンドの説明は `"$ コマンド"` の形で書く（例: `"$ sudo"`、`"$ apt install"`、`"$ ls -l"`）。` ```bash ` のコードと、`mpremote ls` のようなインラインのコマンドで出る
 
 ## 権限の設定（初回だけ）
 

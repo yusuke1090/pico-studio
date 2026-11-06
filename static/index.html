@@ -638,7 +638,7 @@ function renderMarkdown(src) {
         <div class="cb-head"><span class="grow">${label}</span>
           ${run ? '<button data-act="insert" class="primary">エディタに入れる</button>' : ""}
           <button data-act="copy">コピー</button></div>
-        <pre><code>${esc(code)}</code></pre></div>`);
+        <pre><code${lang === "bash" ? ' class="sh"' : ""}>${esc(code)}</code></pre></div>`);
       continue;
     }
     if (!line.trim()) { i++; continue; }
@@ -863,6 +863,44 @@ function lookupAt(text, pos) {
   return null;
 }
 
+// コマンドの説明。glossary のキーは "$ apt install" や "$ ls -l" のように $ で始める
+// （run や list のような単語が Python の説明と混ざらないように分けている）
+function shellKey(t) {
+  if (/^\/dev\/ttyACM/.test(t)) return "/dev/ttyACM0";
+  if (/\.uf2$/.test(t)) return "*.uf2";
+  return t.replace(/(.):$/, "$1");            // 2e8a: → 2e8a
+}
+function isShellCommand(text) {
+  return typeof glossary["$ " + text.trim().split(/\s+/)[0]] === "string";
+}
+function shellLookup(text, pos) {
+  const start = text.lastIndexOf("\n", pos - 1) + 1;
+  const nl = text.indexOf("\n", pos);
+  const line = text.slice(start, nl < 0 ? text.length : nl), p = pos - start;
+  let toks = [...line.matchAll(/"[^"]*"|'[^']*'|\S+/g)].map((m) => ({ t: m[0], s: m.index, e: m.index + m[0].length }));
+  const comment = toks.findIndex((x) => x.t.startsWith("#"));
+  if (comment >= 0) toks = toks.slice(0, comment);
+  const i = toks.findIndex((x) => p >= x.s && p <= x.e);
+  if (i < 0) return null;
+  const t = toks[i].t;
+  if (/^["']/.test(t)) return lookupAt(text, pos);   // mpremote exec "..." の中は Python
+
+  let b = i;                                         // | で区切った、今のコマンドの先頭
+  while (b > 0 && toks[b - 1].t !== "|") b--;
+  if (toks[b].t === "sudo" && b + 1 < toks.length) b++;
+  const cmd = toks[b].t, key = shellKey(t), prev = i > b ? toks[i - 1].t : "";
+  const cands = [];
+  if (i > b) cands.push(`${cmd} ${prev} ${key}`, `${cmd} ${key}`);
+  cands.push(key);
+  if (t.startsWith(":")) cands.push(":");
+  const kind = i === b || t === "sudo" ? "コマンド" : t.startsWith("-") ? "オプション" : "";
+  for (const c of cands) {
+    const v = glossary["$ " + c];
+    if (typeof v === "string") return { label: c.length > key.length ? c : t, kind, text: v };
+  }
+  return null;
+}
+
 function showTip(hit, x, y) {
   tipEl.innerHTML = `<div class="tip-head"><span class="tip-key">${esc(hit.label)}</span>
     ${hit.kind ? `<span class="tip-kind">${hit.kind}</span>` : ""}</div>
@@ -877,14 +915,18 @@ function hideTip() { tipEl.style.display = "none"; }
 
 // ガイドのコード
 $("guideBody").addEventListener("mouseup", (e) => {
-  const codeEl = e.target.closest("pre code");
+  const codeEl = e.target.closest("code");
   const sel = getSelection();
   if (!codeEl || !sel.rangeCount) return hideTip();
   const r = sel.getRangeAt(0);
   if (!codeEl.contains(r.startContainer)) return hideTip();
   const before = document.createRange();
   before.setStart(codeEl, 0); before.setEnd(r.startContainer, r.startOffset);
-  const hit = lookupAt(codeEl.textContent, before.toString().length);
+  const text = codeEl.textContent, pos = before.toString().length;
+  const isBlock = !!codeEl.closest("pre");
+  const shell = isBlock ? codeEl.classList.contains("sh") : isShellCommand(text);
+  if (!isBlock && !shell) return hideTip();
+  const hit = shell ? shellLookup(text, pos) : lookupAt(text, pos);
   hit ? showTip(hit, e.clientX, e.clientY) : hideTip();
 });
 // エディタ
