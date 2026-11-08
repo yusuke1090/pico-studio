@@ -62,7 +62,8 @@ header .spacer { flex: 1; }
 .checks { list-style: none; margin: 0; padding: 10px 12px; display: grid; gap: 8px; }
 .checks li { display: flex; gap: 8px; align-items: flex-start; }
 .checks li .dot { margin-top: 6px; flex: none; }
-.checks small { color: var(--muted); display: block; }
+.checks small { color: var(--muted); display: block; overflow-wrap: anywhere; }
+#sampleSel { flex: 0 1 220px; min-width: 120px; }
 .hint { margin: 0 12px 12px; padding: 8px 10px; border-radius: 6px; background: var(--bg);
   color: var(--muted); font-size: 12px; }
 .hint:empty { display: none; }
@@ -146,6 +147,11 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
 .codeblock.run .cb-head { color: var(--ok); }
 .codeblock pre { margin: 0; padding: 10px 12px; overflow-x: auto; background: var(--code-bg); }
 .codeblock pre code { border: 0; background: none; padding: 0; white-space: pre; }
+.lang-switch { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; flex: none; }
+.lang-switch button { border: 0; border-radius: 0; padding: 4px 10px; background: var(--bg); }
+.lang-switch button + button { border-left: 1px solid var(--border); }
+.lang-switch button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); }
+.guide-lang-note { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
 .guide-nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--border); }
 .guide-nav button { max-width: 48%; overflow: hidden; text-overflow: ellipsis; }
 
@@ -176,6 +182,10 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
       <button id="guidePrev" title="前の章">◀</button>
       <button id="guideToc" title="章を選ぶ" aria-expanded="false" aria-controls="tocPanel"><span class="title">読み込み中…</span><span aria-hidden="true">▾</span></button>
       <button id="guideNext" title="次の章">▶</button>
+      <div class="lang-switch" role="group" aria-label="ガイドのコードの言語">
+        <button data-lang="python" aria-pressed="true" title="Python のコードと説明を表示">Py</button>
+        <button data-lang="cpp" aria-pressed="false" title="C++ のコードと説明を表示">C++</button>
+      </div>
       <button id="guideClose" title="ガイドを閉じる">✕</button>
     </div>
     <div id="tocPanel" hidden></div>
@@ -189,12 +199,12 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
       <ul class="checks">
         <li><span class="dot" id="chkUsb"></span><div>USB で認識<small id="chkUsbText">-</small></div></li>
         <li><span class="dot" id="chkConn"></span><div>シリアル接続<small id="chkConnText">-</small></div></li>
-        <li><span class="dot" id="chkMp"></span><div>MicroPython の応答<small id="chkMpText">-</small></div></li>
+        <li><span class="dot" id="chkMp"></span><div><span id="chkMpLabel">MicroPython の応答</span><small id="chkMpText">-</small></div></li>
       </ul>
       <div class="hint" id="hint"></div>
     </section>
     <section class="panel" style="flex:1">
-      <h2><span class="grow">ピコのファイル</span><button id="filesBtn" title="一覧を更新">更新</button></h2>
+      <h2><span class="grow" id="filesTitle">ピコのファイル</span><button id="filesBtn" title="一覧を更新">更新</button></h2>
       <ul class="files" id="files"><li class="empty">接続すると表示されます</li></ul>
     </section>
   </div>
@@ -202,6 +212,16 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
   <section class="panel code-panel">
     <h2>コード</h2>
     <div class="toolbar">
+      <div class="lang-switch" role="group" aria-label="言語">
+        <button data-lang="python" aria-pressed="true">Python</button>
+        <button data-lang="cpp" aria-pressed="false">C++</button>
+      </div>
+      <select id="boardSel" title="ボードの種類（C++ のビルドに使う）" hidden>
+        <option value="pico">Pico</option>
+        <option value="pico_w">Pico W</option>
+        <option value="pico2">Pico 2</option>
+        <option value="pico2_w">Pico 2 W</option>
+      </select>
       <select id="sampleSel">
         <option value="">サンプルを選ぶ…</option>
       </select>
@@ -214,9 +234,9 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
       <textarea id="code" spellcheck="false" autocomplete="off"></textarea>
     </div>
     <div class="toolbar">
-      <input type="text" id="fileName" value="main.py" size="14" title="ピコに保存するときの名前">
+      <input type="text" id="fileName" value="main.py" size="14" title="保存するときの名前">
       <button id="saveBtn" title="Ctrl+S">ピコに保存</button>
-      <span class="kbd">main.py にすると電源を入れたとき自動で動きます</span>
+      <span class="kbd" id="saveHint">main.py にすると電源を入れたとき自動で動きます</span>
     </div>
   </section>
 
@@ -287,7 +307,20 @@ while True:
 `,
 };
 
-let state = { connected: false, running: false, last: 0, mpOk: null };
+let CPP_SAMPLES = {};   // C++ のサンプル（cpp/samples/*.cpp をサーバーから読む）
+let state = { connected: false, running: false, building: false, stage: "", mode: "python", last: 0, mpOk: null,
+  lang: (() => {
+    const h = location.hash.match(/lang=(python|cpp)/);   // 例: http://localhost:8765/#lang=cpp
+    if (h) return h[1];
+    try { return localStorage.getItem("pico-studio-lang") === "cpp" ? "cpp" : "python"; } catch (e) { return "python"; }
+  })() };
+const isCpp = () => state.lang === "cpp";
+const LANG = {
+  python: { codeKey: "pico-studio-code", fileKey: "pico-studio-file", file: "main.py", run: "▶ 実行", save: "ピコに保存",
+            hint: "main.py にすると電源を入れたとき自動で動きます", files: "ピコのファイル", check: "MicroPython の応答" },
+  cpp: { codeKey: "pico-studio-code-cpp", fileKey: "pico-studio-file-cpp", file: "main.cpp", run: "▶ ビルドして書き込む", save: "PC に保存",
+         hint: "書き込んだプログラムは、電源を入れると自動で動きます", files: "PC の C++ ファイル", check: "C++ の開発環境" },
+};
 let infoTimer = null;
 
 function toast(msg, ok = false) {
@@ -338,7 +371,11 @@ async function refreshPorts() {
   if (res.bootsel.detected) {
     setDot("chkUsb", "warn");
     $("chkUsbText").textContent = "BOOTSEL モード（書き込み待ち）";
-    html = res.bootsel.mount
+    html = res.bootsel.mount && isCpp()
+      ? `ピコが書き込みモードになっています。「▶ ビルドして書き込む」で、エディタの C++ のプログラムを書き込めます。<br>
+         <button id="flashFileBtn">.uf2 ファイルを選ぶ</button>
+         <input type="file" id="uf2File" accept=".uf2" hidden>`
+      : res.bootsel.mount
       ? `ピコが書き込みモードになっています。MicroPython を書き込むと使えるようになります。<br>
          <button id="flashLatestBtn" class="primary">最新の MicroPython を書き込む</button>
          <button id="flashFileBtn">.uf2 ファイルを選ぶ</button>
@@ -386,6 +423,7 @@ function bindFlash() {
 }
 
 async function checkMicroPython() {
+  if (isCpp() || state.mode !== "python") return;
   setDot("chkMp", ""); $("chkMpText").textContent = "確認中…";
   try {
     const i = await api("/api/info");
@@ -397,10 +435,28 @@ async function checkMicroPython() {
     $("chkMpText").style.whiteSpace = "pre-line";
     loadFiles();
   } catch (e) {
+    if (isCpp()) return;
     state.mpOk = false;
     setDot("chkMp", "err");
     $("chkMpText").textContent = e.message;
   }
+}
+
+const tilde = (p) => (state.home && p.startsWith(state.home + "/") ? "~" + p.slice(state.home.length) : p);
+// C++ の開発環境（Pico SDK とコンパイラ）があるか
+async function checkCppEnv() {
+  if (!isCpp()) return;
+  setDot("chkMp", ""); $("chkMpText").textContent = "確認中…";
+  try {
+    const e = await api("/api/cpp/env");
+    state.home = e.home;
+    if (!isCpp()) return;
+    setDot("chkMp", e.ok ? "ok" : "err");
+    $("chkMpText").style.whiteSpace = "pre-line";
+    $("chkMpText").textContent = e.ok
+      ? `Pico SDK ${e.sdk_version}\n${tilde(e.sdk)}\n保存先 ${tilde(e.project)}`
+      : e.problems.join("\n") + "\nガイド14章の「開発環境を用意する」を見てください";
+  } catch (err) { setDot("chkMp", "err"); $("chkMpText").textContent = err.message; }
 }
 
 // ---------- 状態のポーリング ----------
@@ -421,51 +477,93 @@ function appendConsole(items) {
   if (atBottom) consoleEl.scrollTop = consoleEl.scrollHeight;
 }
 
+// 出力の「main.cpp:12:5: error: …」をクリックすると、エディタのその行を選ぶ
+consoleEl.addEventListener("click", () => {
+  const sel = getSelection();
+  if (!sel.anchorNode || !consoleEl.contains(sel.anchorNode)) return;
+  const t = sel.anchorNode.textContent, p = sel.anchorOffset;
+  const line = t.slice(t.lastIndexOf("\n", p - 1) + 1, (t.indexOf("\n", p) + 1 || t.length + 1) - 1);
+  const m = line.match(/main\.cpp:(\d+)(?::(\d+))?/);
+  if (!m || !isCpp()) return;
+  const lines = code.value.split("\n"), n = Math.min(+m[1], lines.length);
+  const start = lines.slice(0, n - 1).reduce((a, l) => a + l.length + 1, 0);
+  code.focus();
+  code.setSelectionRange(start, start + lines[n - 1].length);
+  code.scrollTop = Math.max(0, (n - 5) * parseFloat(getComputedStyle(code).lineHeight));
+});
+
 async function poll() {
   try {
     const s = await api("/api/state?since=" + state.last);
     appendConsole(s.console);
     state.last = s.last;
-    const changed = s.connected !== state.connected;
+    const changed = s.connected !== state.connected || s.mode !== state.mode;
     state.connected = s.connected; state.running = s.running; state.port = s.port;
+    state.building = s.building; state.stage = s.stage; state.mode = s.mode;
     updateUi();
     if (changed) {
-      if (s.connected) setTimeout(checkMicroPython, 400);
-      else { state.mpOk = null; setDot("chkMp", ""); $("chkMpText").textContent = "-"; renderFiles(null); }
+      if (!isCpp()) {
+        if (s.connected && s.mode === "python") setTimeout(checkMicroPython, 400);
+        else { state.mpOk = null; setDot("chkMp", ""); renderFiles(null);
+               $("chkMpText").textContent = s.connected ? "C++ のプログラムの出力を表示中です（MicroPython は入っていません）" : "-"; }
+      }
       refreshPorts();
     }
   } catch (e) {
     $("connText").textContent = "サーバーに接続できません";
     setDot("connDot", "err");
   }
-  setTimeout(poll, state.running ? 150 : 400);
+  setTimeout(poll, state.running || state.building ? 150 : 400);
 }
 
+const STAGES = { build: "ビルド中", flash: "書き込み中", monitor: "ピコの再起動を待っています" };
 function updateUi() {
-  const c = state.connected, r = state.running;
-  setDot("connDot", c ? (r ? "warn" : "ok") : "");
-  $("connText").textContent = c ? (r ? "実行中" : "接続中") + "（" + state.port + "）" : "未接続";
+  const c = state.connected, r = state.running, b = state.building;
+  setDot("connDot", b ? "warn" : c ? (r ? "warn" : "ok") : "");
+  $("connText").textContent = b ? (STAGES[state.stage] || "ビルド中") + "…"
+    : c ? (r ? "実行中" : state.mode === "cpp" ? "C++ の出力を表示中" : "接続中") + "（" + state.port + "）" : "未接続";
   setDot("chkConn", c ? "ok" : "");
   $("chkConnText").textContent = c ? state.port : "-";
   $("connectBtn").disabled = c;
   $("disconnectBtn").disabled = !c;
   $("portSel").disabled = c;
-  $("runBtn").disabled = !c || r;
-  $("stopBtn").disabled = !c;
-  $("saveBtn").disabled = !c || r;
-  $("resetBtn").disabled = !c || r;
-  $("filesBtn").disabled = !c || r;
+  if (isCpp()) {
+    $("runBtn").disabled = b;
+    $("stopBtn").disabled = !b;
+    $("stopBtn").title = "ビルドを止める";
+    $("saveBtn").disabled = false;
+    $("resetBtn").disabled = true;
+    $("filesBtn").disabled = false;
+  } else {
+    $("runBtn").disabled = !c || r || b || state.mode !== "python";
+    $("stopBtn").disabled = !c || state.mode !== "python";
+    $("stopBtn").title = "実行中のプログラムを止める";
+    $("saveBtn").disabled = !c || r || state.mode !== "python";
+    $("resetBtn").disabled = !c || r || state.mode !== "python";
+    $("filesBtn").disabled = !c || r || state.mode !== "python";
+  }
+  $("connectBtn").disabled = c || b;
   $("sendBtn").disabled = !c;
 }
 
 // ---------- ファイル ----------
+const filesApi = () => (isCpp() ? "/api/cpp/" : "/api/");
 async function loadFiles() {
-  try { renderFiles((await api("/api/files")).files); } catch (e) { toast(e.message); }
+  try {
+    const r = await api(filesApi() + "files");
+    if (isCpp()) { state.cppDir = r.dir; $("filesTitle").title = r.dir; }
+    renderFiles(r.files);
+  } catch (e) { toast(e.message); }
 }
 function renderFiles(files) {
   const ul = $("files"); ul.innerHTML = "";
   if (!files) { ul.innerHTML = '<li class="empty">接続すると表示されます</li>'; return; }
-  if (!files.length) { ul.innerHTML = '<li class="empty">ファイルはありません</li>'; return; }
+  if (!files.length) {
+    ul.innerHTML = isCpp()
+      ? `<li class="empty">まだありません。「PC に保存」で ${esc(tilde(state.cppDir || "~/apps/pico-cpp"))} に保存されます</li>`
+      : '<li class="empty">ファイルはありません</li>';
+    return;
+  }
   for (const f of files) {
     const li = document.createElement("li");
     const name = document.createElement("span");
@@ -484,14 +582,14 @@ function renderFiles(files) {
 async function openFile(name) {
   if (state.running) return toast("実行中は開けません。停止してください。");
   try {
-    const r = await api("/api/file?name=" + encodeURIComponent(name));
+    const r = await api(filesApi() + "file?name=" + encodeURIComponent(name));
     $("code").value = r.content; $("fileName").value = name.replace(/^\//, "");
     onCodeChange();
   } catch (e) { toast(e.message); }
 }
 async function deleteFile(name) {
   if (!confirm(name + " を削除しますか？")) return;
-  try { await api("/api/delete", { name }); loadFiles(); } catch (e) { toast(e.message); }
+  try { await api(filesApi() + "delete", { name }); loadFiles(); } catch (e) { toast(e.message); }
 }
 
 // ---------- エディタ ----------
@@ -499,7 +597,7 @@ const code = $("code"), gutter = $("gutter");
 function onCodeChange() {
   const n = code.value.split("\n").length;
   gutter.textContent = Array.from({ length: n }, (_, i) => i + 1).join("\n");
-  try { localStorage.setItem("pico-studio-code", code.value); } catch (e) {}
+  try { localStorage.setItem(LANG[state.lang].codeKey, code.value); } catch (e) {}
 }
 code.addEventListener("input", onCodeChange);
 code.addEventListener("scroll", () => (gutter.scrollTop = code.scrollTop));
@@ -522,7 +620,7 @@ code.addEventListener("keydown", (e) => {
     const s = code.selectionStart;
     const line = code.value.slice(code.value.lastIndexOf("\n", s - 1) + 1, s);
     let indent = line.match(/^\s*/)[0];
-    if (/:\s*$/.test(line)) indent += "    ";
+    if (isCpp() ? /[{(]\s*$/.test(line) : /:\s*$/.test(line)) indent += "    ";
     code.setRangeText("\n" + indent, s, code.selectionEnd, "end");
     onCodeChange();
   }
@@ -532,24 +630,93 @@ document.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); }
 });
 
-for (const k of Object.keys(SAMPLES)) {
-  const o = document.createElement("option"); o.value = k; o.textContent = k; $("sampleSel").appendChild(o);
+const samplesFor = () => (isCpp() ? CPP_SAMPLES : SAMPLES);
+function fillSamples() {
+  const sel = $("sampleSel");
+  sel.innerHTML = '<option value="">サンプルを選ぶ…</option>';
+  for (const k of Object.keys(samplesFor())) {
+    const o = document.createElement("option"); o.value = k; o.textContent = k; sel.appendChild(o);
+  }
 }
 $("sampleSel").onchange = (e) => {
   const k = e.target.value; if (!k) return;
   if (code.value.trim() && !confirm("今のコードをサンプルに置き換えますか？")) { e.target.value = ""; return; }
-  code.value = SAMPLES[k]; e.target.value = ""; onCodeChange();
+  code.value = samplesFor()[k]; e.target.value = ""; onCodeChange();
 };
+async function loadCppSamples() {
+  try {
+    const r = await api("/api/cpp/samples");
+    CPP_SAMPLES = Object.fromEntries(r.samples.map((x) => [x.name, x.code]));
+  } catch (e) { CPP_SAMPLES = {}; }
+  if (isCpp()) {
+    fillSamples();
+    if (!code.value.trim()) { code.value = Object.values(CPP_SAMPLES)[0] || ""; onCodeChange(); }
+  }
+}
+
+// ---------- 言語の切り替え ----------
+function setLang(lang, { keepCode = false } = {}) {
+  if (lang === state.lang && !setLang.first) return;
+  const L = LANG[lang];
+  if (!setLang.first) {
+    try {
+      localStorage.setItem(LANG[state.lang].codeKey, code.value);
+      localStorage.setItem(LANG[state.lang].fileKey, $("fileName").value);
+    } catch (e) {}
+  }
+  setLang.first = false;
+  state.lang = lang;
+  try { localStorage.setItem("pico-studio-lang", lang); } catch (e) {}
+  document.querySelectorAll(".lang-switch button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+  $("boardSel").hidden = lang !== "cpp";
+  $("runBtn").textContent = L.run;
+  $("saveBtn").textContent = L.save;
+  $("saveHint").textContent = L.hint;
+  $("filesTitle").textContent = L.files;
+  $("chkMpLabel").textContent = L.check;
+  $("sendInput").placeholder = lang === "cpp" ? "ピコに送る（C++ では getchar() などで受け取る）" : "ピコに送る（REPL のコマンドや input() への入力）";
+  if (!keepCode) {
+    let saved = null, file = null;
+    try { saved = localStorage.getItem(L.codeKey); file = localStorage.getItem(L.fileKey); } catch (e) {}
+    code.value = saved ?? (lang === "cpp" ? Object.values(CPP_SAMPLES)[0] || "" : SAMPLES["hello: 文字と計算"]);
+    $("fileName").value = file || L.file;
+  }
+  onCodeChange();
+  fillSamples();
+  setDot("chkMp", ""); $("chkMpText").textContent = "-";
+  if (lang === "cpp") { checkCppEnv(); loadFiles(); }
+  else if (state.connected && state.mode === "python") checkMicroPython();
+  else { renderFiles(null); if (state.connected) $("chkMpText").textContent = "C++ のプログラムの出力を表示中です（MicroPython は入っていません）"; }
+  delete $("hint").dataset.src;
+  refreshPorts();
+  updateUi();
+  if (guide.loaded && guide.chapters.length) { toc.loaded = false; showChapter(guide.index, { keepScroll: true }); }
+}
+setLang.first = true;
+document.querySelectorAll(".lang-switch button").forEach((b) => (b.onclick = () => setLang(b.dataset.lang)));
+$("boardSel").value = (() => { try { return localStorage.getItem("pico-studio-board") || "pico"; } catch (e) { return "pico"; } })();
+$("boardSel").onchange = () => { try { localStorage.setItem("pico-studio-board", $("boardSel").value); } catch (e) {} };
 
 // ---------- 操作 ----------
 async function run() {
+  if (isCpp()) {
+    if (state.building) return;
+    try { await api("/api/cpp/run", { code: code.value, board: $("boardSel").value }); state.building = true; updateUi(); }
+    catch (e) { toast(e.message); }
+    return;
+  }
   if (!state.connected || state.running) return;
   try { await api("/api/run", { code: code.value }); state.running = true; updateUi(); } catch (e) { toast(e.message); }
 }
 async function save() {
-  if (!state.connected) return toast("ピコに接続してください");
   const name = $("fileName").value.trim();
   if (!name) return toast("ファイル名を入れてください");
+  if (isCpp()) {
+    try { const r = await api("/api/cpp/file", { name, content: code.value }); toast(r.path + " に保存しました", true); loadFiles(); }
+    catch (e) { toast(e.message); }
+    return;
+  }
+  if (!state.connected) return toast("ピコに接続してください");
   try { await api("/api/file", { name, content: code.value }); toast(name + " をピコに保存しました", true); loadFiles(); }
   catch (e) { toast(e.message); }
 }
@@ -562,11 +729,11 @@ $("refreshBtn").onclick = refreshPorts;
 $("connectBtn").onclick = async () => {
   const port = $("portSel").value;
   if (!port) return toast("ポートが選ばれていません。ピコをつないで「更新」を押してください。");
-  try { await api("/api/connect", { port }); } catch (e) { toast(e.message); }
+  try { await api("/api/connect", { port, mode: isCpp() ? "cpp" : "python" }); } catch (e) { toast(e.message); }
 };
 $("disconnectBtn").onclick = () => api("/api/disconnect", {}).catch((e) => toast(e.message));
 $("runBtn").onclick = run;
-$("stopBtn").onclick = () => api("/api/stop", {}).catch((e) => toast(e.message));
+$("stopBtn").onclick = () => api(isCpp() ? "/api/cpp/stop" : "/api/stop", {}).catch((e) => toast(e.message));
 $("saveBtn").onclick = save;
 $("resetBtn").onclick = () => api("/api/reset", {}).catch((e) => toast(e.message));
 $("clearBtn").onclick = () => { consoleEl.innerHTML = ""; api("/api/clear", {}).catch(() => {}); };
@@ -574,11 +741,6 @@ $("filesBtn").onclick = loadFiles;
 $("sendBtn").onclick = send;
 $("sendInput").addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
 
-try { code.value = localStorage.getItem("pico-studio-code") || SAMPLES["hello: 文字と計算"]; }
-catch (e) { code.value = SAMPLES["hello: 文字と計算"]; }
-onCodeChange();
-updateUi();
-refreshPorts();
 setInterval(() => { if (!state.connected) refreshPorts(); }, 3000);
 poll();
 
@@ -632,13 +794,27 @@ function inline(text) {
 }
 
 // 簡単な Markdown → HTML 変換（見出し・段落・リスト・表・引用・コード・画像・動画）
+// <!-- python --> 〜 <!-- /python -->、<!-- cpp --> 〜 <!-- /cpp --> は、選んでいる言語のときだけ表示する
+function filterLang(src, lang) {
+  const out = [];
+  let skip = null;
+  for (const line of src.split("\n")) {
+    const m = line.trim().match(/^<!--\s*(\/?)(python|cpp)\s*-->$/);
+    if (m) { skip = m[1] ? null : (m[2] === lang ? null : m[2]); continue; }
+    if (!skip) out.push(line);
+  }
+  return out.join("\n");
+}
+
 function renderMarkdown(src) {
-  const lines = src.replace(/\r\n/g, "\n").split("\n");
+  const lines = filterLang(src.replace(/\r\n/g, "\n"), state.lang).split("\n");
   const out = [];
   const codeBlocks = [];
   let i = 0;
   const isTableSep = (l) => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(l);
-  const cells = (l) => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+  // 表のマス。「\|」は区切りではなく、縦線の文字として表示する（GitHub と同じ）
+  const cells = (l) => l.trim().replace(/^\|/, "").replace(/(?<!\\)\|$/, "").split(/(?<!\\)\|/)
+    .map((c) => c.trim().replace(/\\\|/g, "|"));
 
   while (i < lines.length) {
     const line = lines[i];
@@ -650,10 +826,11 @@ function renderMarkdown(src) {
       while (i < lines.length && !/^```\s*$/.test(lines[i])) body.push(lines[i++]);
       i++;
       const code = body.join("\n");
-      const run = lang === "python" && flags.includes("run");
-      const label = run ? "▶ ピコで実行できるコード" : lang === "python" ? "PC で実行するコード"
-        : lang === "cpp" ? "C++ のコード（PC でビルドしてピコに書き込む）" : lang === "cmake" ? "CMakeLists.txt" : "";
-      codeBlocks.push(code);
+      const run = (lang === "python" || lang === "cpp") && flags.includes("run");
+      const label = run ? (lang === "cpp" ? "▶ ピコで動かせる C++ のプログラム" : "▶ ピコで実行できるコード")
+        : lang === "python" ? "PC で実行するコード"
+        : lang === "cpp" ? "C++ のコード（一部分）" : lang === "cmake" ? "CMakeLists.txt" : "";
+      codeBlocks.push({ code, lang });
       out.push(`<div class="codeblock${run ? " run" : ""}" data-code="${codeBlocks.length - 1}">
         <div class="cb-head"><span class="grow">${label}</span>
           ${run ? '<button data-act="insert" class="primary">エディタに入れる</button>' : ""}
@@ -721,8 +898,9 @@ async function copyText(text) {
   toast("コピーしました", true);
 }
 
-async function showChapter(idx) {
+async function showChapter(idx, opts = {}) {
   if (!guide.chapters.length) return;
+  const scrollRatio = $("guideBody").scrollTop / Math.max(1, $("guideBody").scrollHeight);
   idx = Math.max(0, Math.min(guide.chapters.length - 1, idx));
   guide.index = idx;
   store.set("pico-studio-chapter", String(idx));
@@ -740,25 +918,28 @@ async function showChapter(idx) {
       ${prev ? `<button data-go="${idx - 1}">◀ ${esc(prev.title)}</button>` : "<span></span>"}
       ${next ? `<button data-go="${idx + 1}">${esc(next.title)} ▶</button>` : "<span></span>"}</div>`;
     body.querySelectorAll(".codeblock").forEach((cb) => {
-      const code = codeBlocks[+cb.dataset.code];
+      const blk = codeBlocks[+cb.dataset.code];
       cb.querySelectorAll("button").forEach((b) => {
-        b.onclick = () => (b.dataset.act === "copy" ? copyText(code) : insertCode(code));
+        b.onclick = () => (b.dataset.act === "copy" ? copyText(blk.code) : insertCode(blk.code, blk.lang));
       });
     });
     body.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => showChapter(+b.dataset.go)));
-    body.scrollTop = 0;
+    if (opts.keepScroll) body.scrollTop = Math.min(scrollRatio * body.scrollHeight, body.scrollHeight);
+    else body.scrollTop = 0;
   } catch (e) {
     body.innerHTML = `<p class="empty">章を読み込めませんでした（${esc(String(e.message || e))}）</p>`;
   }
 }
 
-function insertCode(snippet) {
+function insertCode(snippet, lang = "python") {
+  if (lang !== state.lang) setLang(lang);
   if (code.value.trim() && code.value !== snippet &&
       !confirm("今のコードを、ガイドのコードに置き換えますか？")) return;
   code.value = snippet;
   onCodeChange();
   code.focus();
-  toast(state.connected ? "エディタに入れました。「▶ 実行」で動かせます" : "エディタに入れました。ピコに接続すると実行できます", true);
+  toast(isCpp() ? "エディタに入れました。「▶ ビルドして書き込む」で動かせます"
+    : state.connected ? "エディタに入れました。「▶ 実行」で動かせます" : "エディタに入れました。ピコに接続すると実行できます", true);
 }
 
 async function setGuideOpen(open) {
@@ -1025,6 +1206,10 @@ document.addEventListener("mousedown", (e) => { if (!tipEl.contains(e.target)) h
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideTip(); });
 $("guideBody").addEventListener("scroll", hideTip);
 code.addEventListener("scroll", hideTip);
+
+// 最初の表示（ガイドの変数ができてから呼ぶ）
+setLang(state.lang);
+loadCppSamples();
 </script>
 </body>
 </html>
