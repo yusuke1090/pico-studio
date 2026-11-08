@@ -442,6 +442,9 @@ async function checkMicroPython() {
   }
 }
 
+// サーバーが C++ モードより前のものだと、/api/cpp/... が "not found" になる
+const OLD_SERVER = "Pico Studio のサーバーが古いままです。ターミナルで Ctrl + C を押して止め、./start.sh で起動し直してください";
+const isOldServer = (e) => /not found/i.test(e.message || "");
 const tilde = (p) => (state.home && p.startsWith(state.home + "/") ? "~" + p.slice(state.home.length) : p);
 // C++ の開発環境（Pico SDK とコンパイラ）があるか
 async function checkCppEnv() {
@@ -456,7 +459,7 @@ async function checkCppEnv() {
     $("chkMpText").textContent = e.ok
       ? `Pico SDK ${e.sdk_version}\n${tilde(e.sdk)}\n保存先 ${tilde(e.project)}`
       : e.problems.join("\n") + "\nガイド14章の「開発環境を用意する」を見てください";
-  } catch (err) { setDot("chkMp", "err"); $("chkMpText").textContent = err.message; }
+  } catch (err) { setDot("chkMp", "err"); $("chkMpText").textContent = isOldServer(err) ? OLD_SERVER : err.message; }
 }
 
 // ---------- 状態のポーリング ----------
@@ -553,7 +556,10 @@ async function loadFiles() {
     const r = await api(filesApi() + "files");
     if (isCpp()) { state.cppDir = r.dir; $("filesTitle").title = r.dir; }
     renderFiles(r.files);
-  } catch (e) { toast(e.message); }
+  } catch (e) {
+    if (isCpp() && isOldServer(e)) { $("files").innerHTML = `<li class="empty">${OLD_SERVER}</li>`; return; }
+    toast(e.message);
+  }
 }
 function renderFiles(files) {
   const ul = $("files"); ul.innerHTML = "";
@@ -637,6 +643,10 @@ function fillSamples() {
   for (const k of Object.keys(samplesFor())) {
     const o = document.createElement("option"); o.value = k; o.textContent = k; sel.appendChild(o);
   }
+  if (isCpp() && !Object.keys(CPP_SAMPLES).length) {
+    const o = document.createElement("option"); o.disabled = true;
+    o.textContent = state.oldServer ? "（サーバーを起動し直すと出ます）" : "（読み込み中…）"; sel.appendChild(o);
+  }
 }
 $("sampleSel").onchange = (e) => {
   const k = e.target.value; if (!k) return;
@@ -647,7 +657,7 @@ async function loadCppSamples() {
   try {
     const r = await api("/api/cpp/samples");
     CPP_SAMPLES = Object.fromEntries(r.samples.map((x) => [x.name, x.code]));
-  } catch (e) { CPP_SAMPLES = {}; }
+  } catch (e) { CPP_SAMPLES = {}; if (isOldServer(e)) state.oldServer = true; }
   if (isCpp()) {
     fillSamples();
     if (!code.value.trim()) { code.value = Object.values(CPP_SAMPLES)[0] || ""; onCodeChange(); }
@@ -702,7 +712,7 @@ async function run() {
   if (isCpp()) {
     if (state.building) return;
     try { await api("/api/cpp/run", { code: code.value, board: $("boardSel").value }); state.building = true; updateUi(); }
-    catch (e) { toast(e.message); }
+    catch (e) { toast(isOldServer(e) ? OLD_SERVER : e.message); }
     return;
   }
   if (!state.connected || state.running) return;
