@@ -114,6 +114,8 @@
 
 ### C/C++ で書くとき
 
+書き方は14章にまとめてあります。
+
 - [Pico SDK](https://github.com/raspberrypi/pico-sdk) — 公式の C/C++ 開発キット
 - [pico-examples](https://github.com/raspberrypi/pico-examples) — Pico SDK の公式サンプル集
 - [arduino-pico](https://github.com/earlephilhower/arduino-pico) — Arduino の書き方でピコを使えるようにするもの

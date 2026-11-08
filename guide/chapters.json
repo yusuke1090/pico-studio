@@ -12,5 +12,6 @@
   {"file": "10-ml.md", "title": "10. 機械学習モデルの導入"},
   {"file": "11-trouble.md", "title": "11. 困ったとき"},
   {"file": "12-compare.md", "title": "12. ラズパイとピコの実装の比較"},
-  {"file": "13-development.md", "title": "13. 実際の開発の流れ"}
+  {"file": "13-development.md", "title": "13. 実際の開発の流れ"},
+  {"file": "14-cpp.md", "title": "14. C++ で実装する"}
 ]

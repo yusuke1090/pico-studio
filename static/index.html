@@ -651,7 +651,8 @@ function renderMarkdown(src) {
       i++;
       const code = body.join("\n");
       const run = lang === "python" && flags.includes("run");
-      const label = run ? "▶ ピコで実行できるコード" : lang === "python" ? "PC で実行するコード" : "";
+      const label = run ? "▶ ピコで実行できるコード" : lang === "python" ? "PC で実行するコード"
+        : lang === "cpp" ? "C++ のコード（PC でビルドしてピコに書き込む）" : lang === "cmake" ? "CMakeLists.txt" : "";
       codeBlocks.push(code);
       out.push(`<div class="codeblock${run ? " run" : ""}" data-code="${codeBlocks.length - 1}">
         <div class="cb-head"><span class="grow">${label}</span>

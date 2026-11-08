@@ -81,6 +81,7 @@ GitHub 上でも [guide/](guide/) フォルダの Markdown をそのまま読め
 | [11. 困ったとき](guide/11-trouble.md) | つながらないときの流れ図、接続・エラー・動作のトラブル、コマンドでの確認、初期化 |
 | [12. ラズパイとピコの実装の比較](guide/12-compare.md) | Linux との違い、ssh・scp・systemd との対応、同じプログラムの実装手順、複数の処理の動かし方、つまずきやすいところ、使い分け |
 | [13. 実際の開発の流れ](guide/13-development.md) | 牛の行動判定システムを例にした開発の順番、首輪・受信機・スマホの役割分担、無線の選び方、電池の計算、試験のしかた |
+| [14. C++ で実装する](guide/14-cpp.md) | Pico SDK の準備、CMake でのビルドと書き込み、MicroPython との対応表、Lチカ・ボタン・温度・MPU-6050・一定間隔の測定・決定木の判定・2つのコアを C++ で書く、MicroPython に戻す |
 
 `http://localhost:8765/#chapter=5` のように開くと、その章を直接表示する。
 
@@ -88,7 +89,7 @@ GitHub 上でも [guide/](guide/) フォルダの Markdown をそのまま読め
 
 - 章は `guide/*.md`（Markdown）。順番とタイトルは `guide/chapters.json` で決める
 - ` ```python run ` で始めたコードには「エディタに入れる」ボタンが付く（ピコで動くコード）。
-  ` ```python ` は PC で動かすコード、` ```text ` は説明用
+  ` ```python ` は PC で動かすコード、` ```cpp ` は C++ のコード、` ```cmake ` は CMakeLists.txt、` ```text ` は説明用
 - 画像は `guide/images/` に置いて `![説明](images/ファイル名.png)` と書く（png / jpg / gif / webp / svg）
 - 番号付きの手順の途中に画像やコードをはさんでも、続きの番号（例: `4.`）から書けばその番号から表示される
 - 手順の下に2文字以上字下げした `- ` を書くと、入れ子の箇条書きになる
