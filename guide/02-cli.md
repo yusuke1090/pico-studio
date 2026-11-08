@@ -1,5 +1,7 @@
 # 2. コマンドで操作する
 
+<!-- python -->
+
 ## この章でわかること
 
 - Pico Studio を使わず、ターミナルのコマンドだけでピコを操作する方法
@@ -296,3 +298,144 @@ mpremote rm hello.py
 - 確認の順番は、`lsusb`（USB）→ `ls -l /dev/ttyACM0`（シリアル）→ `mpremote exec`（MicroPython）
 - 実行は `run`、保存は `cp`。`:` が付いた名前はピコの中のファイル
 - Ctrl + C だけではピコのプログラムは止まらない。`mpremote soft-reset` で止める
+
+<!-- /python -->
+<!-- cpp -->
+
+## この章でわかること
+
+- Pico Studio を使わず、ターミナルのコマンドだけで C++ のプログラムをビルドして書き込む方法
+- どの順番で何を打てばよいか
+- Pico Studio のボタンと、コマンドの対応
+
+開発環境（Pico SDK とコンパイラ）の入れ方と、プロジェクトの作り方は14章にあります。先に14章の「開発環境を用意する」と「コマンドでビルドする」を済ませてください。
+コマンドの中の単語（`cmake` や `make` など）をクリックすると、その意味が吹き出しで出ます。
+
+## 全体の流れ
+
+| 順番 | やること | コマンド | Pico Studio では |
+| --- | --- | --- | --- |
+| 1 | USB で認識しているか確かめる | `lsusb -d 2e8a:` | 接続の確認の「USB で認識」 |
+| 2 | ビルドの準備（最初と、CMakeLists.txt を変えたとき） | `cmake -S . -B build` | （自動） |
+| 3 | ビルドする | `make -C build -j4 blink` | 「▶ ビルドして書き込む」の前半 |
+| 4 | 書き込みモードにする | `picotool reboot -f -u` | （自動） |
+| 5 | 書き込む | `cp build/blink.uf2 /run/media/$USER/RPI-RP2/` | 「▶ ビルドして書き込む」の後半 |
+| 6 | 出力を見る | `python3 -m serial.tools.miniterm /dev/ttyACM0 115200` | 出力欄 |
+| 7 | ピコの中のプログラムを調べる（必要なとき） | `picotool info -a` | （なし） |
+
+> **Pico Studio と同時には使えません。** 1つのポートを2つのソフトで使うと、やり取りが混ざって動かなくなります。
+> コマンドを使う前に、Pico Studio で「切断」を押してください。
+
+## 手順1: USB で認識しているか確かめる
+
+```bash
+lsusb -d 2e8a:
+```
+
+| 結果 | 状態 |
+| --- | --- |
+| `2e8a:000a Raspberry Pi Pico` | C++（Pico SDK）のプログラムが USB の出力つきで動いている |
+| `2e8a:0005 MicroPython Board in FS mode` | MicroPython で動いている |
+| `2e8a:0003 Raspberry Pi RP2 Boot`（Pico 2 は `2e8a:000f`） | 書き込みモード（BOOTSEL） |
+| 何も出ない | 認識されていない。または USB を使わないプログラムが動いている |
+
+## 手順2〜3: ビルドする
+
+14章で作ったプロジェクトのフォルダ（`~/apps/pico-cpp`）で行います。
+
+```bash
+cd ~/apps/pico-cpp
+cmake -S . -B build
+make -C build -j4 blink
+```
+
+- `cmake -S . -B build` は、今のフォルダの `CMakeLists.txt` を読んで、`build` フォルダにビルドの手順を作ります。最初と、`CMakeLists.txt` を変えたときだけ必要です
+- `make -C build -j4 blink` は、`build` フォルダで `blink` をビルドします。`build/blink.uf2` ができます
+- エラーは `blink.cpp:12:5: error: ...` のように出ます。12行目の5文字目という意味です
+
+## 手順4: 書き込みモードにする
+
+Pico SDK のプログラム（`stdio_init_all()` で USB の出力を使っているもの）が動いていれば、コマンドで書き込みモードにできます。方法は2つあります。
+
+```bash
+picotool reboot -f -u
+```
+
+picotool がないときや権限がないときは、ポートを 1200 bps で開いて閉じます。Pico SDK は、これを「書き込みモードにして」という合図として受け取ります（Pico Studio もこの方法を使っています）。
+
+```bash
+python3 -c "import serial; serial.Serial('/dev/ttyACM0', 1200).close()"
+```
+
+どちらもうまくいかないときは、BOOT を押しながら USB をつなぎ直します。`RPI-RP2` のドライブが出てくれば成功です。
+
+> MicroPython が動いているときは、`mpremote bootloader` で書き込みモードにできます。
+
+## 手順5: 書き込む
+
+```bash
+cp build/blink.uf2 /run/media/$USER/RPI-RP2/
+```
+
+コピーが終わると、ピコが自動で再起動して、プログラムが動き始めます。
+
+> ドライブの場所は PC によって違います。`/run/media/$USER/` に見つからないときは、`/media/$USER/` を見てください。
+> Pico 2 のドライブ名は `RP2350` です。
+
+picotool を使うと、書き込みモードへの切り替えから書き込みまでを1行でできます。
+
+```bash
+picotool load -x -f build/blink.uf2
+```
+
+## 手順6: 出力を見る
+
+```bash
+python3 -m serial.tools.miniterm /dev/ttyACM0 115200
+```
+
+- 止めるときは **Ctrl + ]** です
+- 書き込み直すとポートが一度消えるので、miniterm を止めてからつなぎ直します
+- 送った文字は、ピコの `getchar()` などで受け取れます
+
+## 手順7: ピコの中のプログラムを調べる
+
+picotool で、書き込まれているプログラムの名前・ビルドした日時・使っているピンなどを見られます（書き込みモードのとき）。
+
+```bash
+picotool info -a
+```
+
+プログラムに名前やバージョンを入れる方法は18章にあります。
+
+## 手順をスクリプトにする
+
+ビルドから出力を見るまでを、1つのスクリプトにまとめておくと楽です。次の内容を `~/apps/pico-cpp/run.sh` として保存します。
+
+```bash
+#!/bin/sh
+# 使い方: sh run.sh blink
+set -e
+cd "$(dirname "$0")"
+make -C build -j4 "$1"
+python3 -c "import serial; serial.Serial('/dev/ttyACM0', 1200).close()" 2>/dev/null || true
+echo "書き込みモードを待っています..."
+while [ ! -d /run/media/$USER/RPI-RP2 ]; do sleep 0.5; done
+cp "build/$1.uf2" /run/media/$USER/RPI-RP2/
+echo "書き込みました。出力を表示します（Ctrl+] で終わり）"
+sleep 3
+python3 -m serial.tools.miniterm /dev/ttyACM0 115200
+```
+
+```bash
+sh run.sh blink
+```
+
+## まとめ
+
+- ビルドは `cmake -S . -B build`（最初だけ）と `make -C build blink`
+- 書き込みは、書き込みモードのピコに `.uf2` をコピーする。`picotool load -x -f` なら1行
+- 書き込みモードには、`picotool reboot -f -u` か、ポートを 1200 bps で開いて閉じる
+- 出力は miniterm で見る。止めるのは Ctrl + ]
+
+<!-- /cpp -->

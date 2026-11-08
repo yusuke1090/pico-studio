@@ -46,6 +46,8 @@ MPU-6050 と同じ I2C の線に並べてつなげます。USB を抜いてか�
 
 I2C のアドレスは `0x44` です（ADDR ピンを 3.3V につなぐと `0x45`）。6章の I2C スキャンで確かめられます。
 
+<!-- python -->
+
 ```python run
 from machine import Pin, I2C
 import time
@@ -63,6 +65,58 @@ for i in range(5):
     time.sleep(1)
 ```
 
+<!-- /python -->
+<!-- cpp -->
+
+```cpp run
+#include <cstdio>
+#include "pico/stdlib.h"
+#include "hardware/i2c.h"
+
+constexpr uint8_t ADDR = 0x44;
+
+// 確認用のバイト（CRC）を計算する。データシートの決まり: 多項式 0x31、初期値 0xFF
+uint8_t crc8(const uint8_t* data, int len) {
+    uint8_t crc = 0xFF;
+    for (int i = 0; i < len; i++) {
+        crc ^= data[i];
+        for (int b = 0; b < 8; b++) crc = (crc & 0x80) ? (crc << 1) ^ 0x31 : (crc << 1);
+    }
+    return crc;
+}
+
+int main() {
+    stdio_init_all();
+    i2c_init(i2c0, 100 * 1000);
+    gpio_set_function(4, GPIO_FUNC_I2C);
+    gpio_set_function(5, GPIO_FUNC_I2C);
+    gpio_pull_up(4);
+    gpio_pull_up(5);
+
+    while (true) {
+        const uint8_t cmd[2] = {0x24, 0x00};             // 1回測るように指示する
+        i2c_write_blocking(i2c0, ADDR, cmd, 2, false);
+        sleep_ms(20);                                     // 測り終わるのを待つ
+        uint8_t d[6];                                     // 温度2・確認1・湿度2・確認1
+        if (i2c_read_blocking(i2c0, ADDR, d, 6, false) != 6) {
+            printf("読み取りに失敗しました\n");
+        } else if (crc8(d, 2) != d[2] || crc8(d + 3, 2) != d[5]) {
+            printf("確認用のバイトが合いません（ノイズ）\n");
+        } else {
+            float temp = -45 + 175 * ((d[0] << 8) | d[1]) / 65535.0f;
+            float hum = 100 * ((d[3] << 8) | d[4]) / 65535.0f;
+            printf("温度: %.1f C  湿度: %.1f %%\n", temp, hum);
+        }
+        sleep_ms(1000);
+    }
+}
+```
+
+- 製品では、確認用のバイト（CRC）を必ず確かめます。線が長いと、ノイズで値が化けることがあるためです
+- `printf` で `%` を出すときは `%%` と書きます
+
+<!-- /cpp -->
+
 ## 土壌水分センサーのつなぎ方と読み方
 
 アナログ入力（ADC）で読みます。ピコの ADC は 3.3V までなので、電源は必ず 3V3(OUT) からとります。5V で動かすと、出力の電圧が高くなって、ピコを壊すことがあります。
@@ -72,6 +126,8 @@ for i in range(5):
 | 3V3(OUT)（36番） | VCC |
 | GND（38番） | GND |
 | GP26 / ADC0（31番） | AOUT |
+
+<!-- python -->
 
 ```python run
 from machine import ADC
@@ -88,6 +144,41 @@ for i in range(10):
     print("値: {}  水分: {:.0f} %".format(value, percent))
     time.sleep(1)
 ```
+
+<!-- /python -->
+<!-- cpp -->
+
+```cpp run
+#include <algorithm>
+#include <cstdio>
+#include "pico/stdlib.h"
+#include "hardware/adc.h"
+
+constexpr int DRY = 3100;    // 空気中に置いたときの値（自分のセンサーの値に書き換える）
+constexpr int WET = 1250;    // 水に入れたときの値（自分のセンサーの値に書き換える）
+
+int main() {
+    stdio_init_all();
+    adc_init();
+    adc_gpio_init(26);
+    adc_select_input(0);
+
+    while (true) {
+        // 16回読んで平均する（値のふらつきを減らす）
+        int sum = 0;
+        for (int i = 0; i < 16; i++) sum += adc_read();
+        int value = sum / 16;
+        float percent = (DRY - value) * 100.0f / (DRY - WET);
+        percent = std::clamp(percent, 0.0f, 100.0f);     // 0〜100 の間におさめる
+        printf("値: %d  水分: %.0f %%\n", value, percent);
+        sleep_ms(1000);
+    }
+}
+```
+
+C++ の `adc_read()` は 0〜4095 なので、`DRY` と `WET` も 0〜4095 の範囲の値になります（Python の値の 16分の1くらい）。
+
+<!-- /cpp -->
 
 値はセンサーごとに違うので、最初に調べます。
 

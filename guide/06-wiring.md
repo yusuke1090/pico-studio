@@ -146,6 +146,8 @@ I2C の SDA・SCL には、3.3V への**プルアップ抵抗**（4.7kΩ 前後�
 
 配線したら、まずはセンサーが見えているかを確認します。
 
+<!-- python -->
+
 ```python run
 from machine import Pin, I2C
 
@@ -177,6 +179,66 @@ for addr in found:
 | `freq=400000` | 通信の速さ（400kHz） |
 | `i2c.scan()` | つながっているセンサーのアドレスを一覧で返す |
 
+<!-- /python -->
+<!-- cpp -->
+
+```cpp run
+#include <cstdio>
+#include "pico/stdlib.h"
+#include "hardware/i2c.h"
+
+// アドレスから、よく使うセンサーの名前を返す
+const char* sensor_name(int addr) {
+    switch (addr) {
+        case 0x68: return "MPU-6050";
+        case 0x69: return "MPU-6050 (AD0=1)";
+        case 0x76: case 0x77: return "BMP280 / BME280";
+        case 0x44: case 0x45: return "SHT31";
+        default: return "?";
+    }
+}
+
+int main() {
+    stdio_init_all();
+    sleep_ms(1500);
+    i2c_init(i2c0, 400 * 1000);
+    gpio_set_function(4, GPIO_FUNC_I2C);
+    gpio_set_function(5, GPIO_FUNC_I2C);
+    gpio_pull_up(4);
+    gpio_pull_up(5);
+
+    int found = 0;
+    for (int addr = 0x08; addr < 0x78; addr++) {      // 0x00〜0x07 と 0x78〜 は特別な番号なので飛ばす
+        uint8_t dummy;
+        if (i2c_read_blocking(i2c0, addr, &dummy, 1, false) >= 0) {
+            printf("見つかった: 0x%02X  %s\n", addr, sensor_name(addr));
+            found++;
+        }
+    }
+    if (found == 0) printf("センサーが見つかりません。配線を確認してください\n");
+    while (true) sleep_ms(1000);
+}
+```
+
+2つともつながっていれば、次のように出ます。
+
+```text
+見つかった: 0x68  MPU-6050
+見つかった: 0x76  BMP280 / BME280
+```
+
+見つかったアドレスが表示されれば、配線は正しくできています。
+
+| コード | 意味 |
+| --- | --- |
+| `i2c_init(i2c0, 400 * 1000)` | ピコの2つある I2C のうち、0番（`i2c0`）を 400kHz で使う |
+| `gpio_set_function(4, GPIO_FUNC_I2C)` | GP4 を I2C 用に切り替える。GP4 は I2C0 の SDA |
+| `gpio_pull_up(4)` | ピコの中のプルアップ抵抗も使う（モジュールの抵抗があれば無くてもよい） |
+| `i2c_read_blocking(i2c0, addr, ...)` | そのアドレスから1バイト読んでみる。返事がなければ負の数（エラー）が返る |
+| `switch (addr) { case ...: }` | `addr` の値ごとに分ける書き方 |
+
+<!-- /cpp -->
+
 ### 見つからないときのチェック
 
 1. USB を抜いて、配線をもう一度確認する（SDA と SCL の逆はよくある間違い）
@@ -184,7 +246,7 @@ for addr in found:
 3. GND がピコとつながっているか
 4. ピンヘッダのはんだ付けが浮いていないか
 5. ジャンパーワイヤーを別のものに替える（中で切れていることがある）
-6. `freq=100000` に下げてみる（線が長いときに効く）
+6. 通信を遅くしてみる（線が長いときに効く）。Python は `freq=100000`、C++ は `i2c_init(i2c0, 100 * 1000)`
 
 ## まとめ
 

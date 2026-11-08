@@ -50,6 +50,8 @@
 送るデータ: 牛の番号、休息 40秒、採食 20秒、歩行 0秒、反すう 0秒
 ```
 
+<!-- python -->
+
 ## 首輪の main.py の形
 
 首輪の `main.py` は、次のくり返しになります。測るところは7章、判定は10章のコードが元になります。
@@ -68,6 +70,42 @@ while True:
         send(counts)                 # 1分ごとに受信機へ送る
         reset_counts()
 ```
+
+<!-- /python -->
+<!-- cpp -->
+
+## 首輪のプログラムの形
+
+製品では、首輪のプログラムは C++ で書きます。形は次のくり返しになります。測るところは7章、判定は10章、電池を長く持たせる方法は17章が元になります。
+次のコードは形を示す例で、このままでは動きません。
+
+```text
+#include "model.h"                 // 10章で作った判定のコード
+
+int main() {
+    stdio_init_all();
+    watchdog_enable(5000, true);   // 5秒反応がなければ再起動（17章）
+    init_sensor();
+    init_radio();
+
+    while (true) {
+        read_window(samples);          // 2秒分の加速度を読む
+        make_features(samples, fe);    // 特徴量にする
+        counts[label_index(predict(fe))]++;   // 判定して、集計に足す
+
+        if (one_minute_passed()) {
+            send(counts);              // 1分ごとに受信機へ送る
+            reset_counts();
+        }
+        watchdog_update();             // 「動いている」と知らせる
+        sleep_until_next_window();     // 次の測定まで、電力を落として待つ（17章）
+    }
+}
+```
+
+製品にするときに考えることは、18章にまとめてあります。
+
+<!-- /cpp -->
 
 ## 開発の順番
 

@@ -74,10 +74,23 @@
 
 ### どれから読めばいい？
 
+<!-- python -->
+
 1. まずはこのガイドを順番に進める
 2. 書き方で迷ったら **MicroPython RP2 クイックリファレンス** を見る（一番よく使う）
 3. センサーの使い方は **Random Nerd Tutorials** で、型番を探す
 4. もっと詳しく知りたくなったら、公式の PDF（Python SDK・データシート）を見る
+
+<!-- /python -->
+<!-- cpp -->
+
+1. まずはこのガイドを順番に進める（C++ を選んで読む）
+2. 関数の使い方で迷ったら **Pico SDK の API ドキュメント** で関数名を探す
+3. 書き方の例は **pico-examples** で探す（GPIO・I2C・ADC・PWM・割り込み・省電力など、公式のサンプルが機能ごとにそろっている）
+4. センサーの使い方は **Random Nerd Tutorials**（Python・Arduino の例が多い）で型番を探し、データシートと見比べて C++ に書き直す
+5. もっと詳しく知りたくなったら、公式の PDF（C/C++ SDK・RP2040 データシート）を見る
+
+<!-- /cpp -->
 
 ### 公式ドキュメント（まず見るところ）
 
@@ -114,8 +127,14 @@
 
 ### C/C++ で書くとき
 
-書き方は14章にまとめてあります。
+書き方は14〜18章にまとめてあります。
 
+- [Pico SDK の API ドキュメント](https://www.raspberrypi.com/documentation/pico-sdk/)
+  — 関数の一覧と説明。`gpio_put` などの関数名で探す。一番よく使う
+- [Getting started with Raspberry Pi Pico-series（PDF）](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)
+  — 公式の C/C++ 入門書。開発環境の作り方、デバッグのしかた
+- [Raspberry Pi Pico-series C/C++ SDK（PDF）](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf)
+  — SDK の考え方と全体の説明
 - [Pico SDK](https://github.com/raspberrypi/pico-sdk) — 公式の C/C++ 開発キット
 - [pico-examples](https://github.com/raspberrypi/pico-examples) — Pico SDK の公式サンプル集
 - [arduino-pico](https://github.com/earlephilhower/arduino-pico) — Arduino の書き方でピコを使えるようにするもの

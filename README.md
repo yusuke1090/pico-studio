@@ -1,13 +1,14 @@
 # Pico Studio
 
-Raspberry Pi Pico（RP2040 / MicroPython）を、ブラウザから操作するためのローカルツール。
+Raspberry Pi Pico（RP2040 / RP2350）を、ブラウザから操作するためのローカルツール。MicroPython と C++（Pico SDK）の両方に対応。
 
 - ピコとPCの接続を確認する（USB認識・シリアル接続・MicroPythonの応答）
 - ブラウザで Python のコードを書き、ボタン1つでピコの上で実行する
 - 実行結果をリアルタイムに表示し、`input()` への入力やREPLのコマンドを送る
 - ピコの中のファイルを一覧・開く・保存・削除する（`main.py` に保存すると電源オンで自動実行）
 - BOOTSELモードのピコに MicroPython（.uf2）を書き込む
-- 教科書のような**ガイド**を横に表示しながら操作できる。コード例は「エディタに入れる」ですぐ実行できる
+- **C++ モード**: コード欄で「C++」を選ぶと、ボタン1つで PC でビルド → ピコを自動で書き込みモードにする → 書き込む → `printf` の出力を表示する。ビルドエラーの行をクリックすると、その行に飛ぶ
+- 教科書のような**ガイド**を横に表示しながら操作できる。コード例は「エディタに入れる」ですぐ実行できる。ガイドも Python / C++ を切り替えて読める
 
 サーバーは自分のPC（`127.0.0.1`）だけで動き、外部には公開しない。
 
@@ -22,6 +23,16 @@ Raspberry Pi Pico（RP2040 / MicroPython）を、ブラウザから操作する�
 ```sh
 sudo apt install python3-serial
 ```
+
+C++ も使うときは、さらに次のものが必要（くわしくはガイド14章）。
+
+```sh
+sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib build-essential git libusb-1.0-0-dev pkg-config
+git clone --branch 2.1.1 https://github.com/raspberrypi/pico-sdk.git ~/pico/pico-sdk
+cd ~/pico/pico-sdk && git submodule update --init
+```
+
+Pico SDK は `~/pico/pico-sdk` か、環境変数 `PICO_SDK_PATH` の場所から探す。
 
 ## 起動のしかた
 
@@ -52,6 +63,15 @@ python3 server.py --port 9000
 
 「サンプルを選ぶ」から、LED の点滅・温度センサー・PCとの送受信などのサンプルを読み込める。
 
+### C++ で使うとき
+
+1. コード欄の左上で **C++** を選び、ボードの種類（Pico / Pico W / Pico 2 / Pico 2 W）を選ぶ
+2. 「接続の確認」の3つ目「C++ の開発環境」が緑になっていることを確かめる
+3. 「▶ ビルドして書き込む」（`Ctrl + Enter`）。ピコに MicroPython が入っていても、C++ のプログラムが入っていても、BOOT を押さずに書き込める（初回のビルドは数分）
+4. 「PC に保存」（`Ctrl + S`）は `~/apps/pico-cpp`（環境変数 `PICO_CPP_DIR` で変えられる）に保存する。そこに置いた `.h` は `#include` できる
+
+`http://localhost:8765/#lang=cpp` のように開くと、C++ を選んだ状態で始まる。
+
 ### MicroPython がまだ入っていないとき
 
 1. ピコの **BOOT** ボタンを押したまま USB をつなぐ
@@ -64,6 +84,8 @@ python3 server.py --port 9000
 
 画面右上の「📘 ガイド」で、ラズパイピコの使い方をまとめたガイドを横に表示できる。
 GitHub 上でも [guide/](guide/) フォルダの Markdown をそのまま読める。
+
+4章から先は Python と C++ の両方で書いてあり、画面の言語の選択で切り替わる。
 
 | 章 | 内容 |
 | --- | --- |
@@ -81,14 +103,19 @@ GitHub 上でも [guide/](guide/) フォルダの Markdown をそのまま読め
 | [11. 困ったとき](guide/11-trouble.md) | つながらないときの流れ図、接続・エラー・動作のトラブル、コマンドでの確認、初期化 |
 | [12. ラズパイとピコの実装の比較](guide/12-compare.md) | Linux との違い、ssh・scp・systemd との対応、同じプログラムの実装手順、複数の処理の動かし方、つまずきやすいところ、使い分け |
 | [13. 実際の開発の流れ](guide/13-development.md) | 牛の行動判定システムを例にした開発の順番、首輪・受信機・スマホの役割分担、無線の選び方、電池の計算、試験のしかた |
-| [14. C++ で実装する](guide/14-cpp.md) | Pico SDK の準備、CMake でのビルドと書き込み、MicroPython との対応表、Lチカ・ボタン・温度・MPU-6050・一定間隔の測定・決定木の判定・2つのコアを C++ で書く、MicroPython に戻す |
+| [14. C++ の開発環境と基本](guide/14-cpp.md) | Pico SDK の準備、Pico Studio のビルドのしくみ、CMake でのビルドと書き込み、MicroPython との対応表、mpu6050.h、MicroPython に戻す |
+| [15. マイコン向けの C++ の書き方](guide/15-cpp-style.md) | 型の選び方、float と整数、メモリの置き場所、使ってよい標準ライブラリ、エラーの扱い、クラスとファイルの分け方、状態機械 |
+| [16. 割り込み・タイマー・2つのコア](guide/16-cpp-interrupts.md) | GPIO の割り込み、くり返しタイマー、リングバッファ、2つのコアと FIFO、クリティカルセクション |
+| [17. 省電力と長く動かすための工夫](guide/17-cpp-power.md) | 電力を減らす方法、電池の電圧、ウォッチドッグ、設定のフラッシュ保存 |
+| [18. 製品にするための準備](guide/18-cpp-product.md) | PC でのテスト、バージョンの埋め込み、Debug Probe と gdb、量産の書き込み、ユニーク ID、出荷前のチェックリスト |
 
 `http://localhost:8765/#chapter=5` のように開くと、その章を直接表示する。
 
 ### ガイドの書き方
 
 - 章は `guide/*.md`（Markdown）。順番とタイトルは `guide/chapters.json` で決める
-- ` ```python run ` で始めたコードには「エディタに入れる」ボタンが付く（ピコで動くコード）。
+- 言語ごとの説明は `<!-- python -->` 〜 `<!-- /python -->`、`<!-- cpp -->` 〜 `<!-- /cpp -->` で囲む。画面で選んでいる言語の部分だけ表示される（印の行は、それだけで1行にする）
+- ` ```python run ` / ` ```cpp run ` で始めたコードには「エディタに入れる」ボタンが付く（ピコで動くコード。C++ は `main` まである1つのプログラムにして、最初に `stdio_init_all()` を呼ぶ）。
   ` ```python ` は PC で動かすコード、` ```cpp ` は C++ のコード、` ```cmake ` は CMakeLists.txt、` ```text ` は説明用
 - 画像は `guide/images/` に置いて `![説明](images/ファイル名.png)` と書く（png / jpg / gif / webp / svg）
 - 番号付きの手順の途中に画像やコードをはさんでも、続きの番号（例: `4.`）から書けばその番号から表示される
@@ -138,13 +165,18 @@ sudo usermod -aG dialout $USER
 ブラウザ (static/index.html)
    │  HTTP (localhost:8765)
    ▼
-server.py ── pyserial ──▶ /dev/ttyACM0 ──▶ ピコ (MicroPython)
+server.py ── pyserial ──▶ /dev/ttyACM0 ──▶ ピコ (MicroPython / C++)
+   │
+   └─ cpp_build.py ── cmake / make（Pico SDK）──▶ app.uf2 ──▶ RPI-RP2 ドライブ
 ```
 
 - `server.py` が USB シリアルでピコとつながり、MicroPython の **raw REPL**
   （`Ctrl-A` で入る、プログラムを丸ごと送って実行するモード）でコードを実行する
 - 実行中の出力はサーバーが受け取り、ブラウザが 0.15〜0.4 秒ごとに取りに行って表示する
 - ファイル操作も、ピコの上で小さな Python コードを実行して行う
+- C++ では、`cpp_build.py` がコードを `~/.cache/pico-studio/cpp/app/main.cpp` に書いて CMake でビルドする。
+  書き込みモードには、MicroPython なら `machine.bootloader()`、Pico SDK のプログラムなら 1200 bps でポートを開いて閉じる合図で切り替え、
+  `RPI-RP2` ドライブに .uf2 をコピーする。再起動したら、シリアルポートを出力の表示だけに使う（REPL は使わない）
 - 他のサイトから勝手に操作されないように、サーバーは `127.0.0.1` だけで待ち受け、
   別のオリジンからの POST は拒否する
 
@@ -152,11 +184,15 @@ server.py ── pyserial ──▶ /dev/ttyACM0 ──▶ ピコ (MicroPython)
 
 ```
 server.py               ローカルサーバー（ピコとの通信と API）
+cpp_build.py            C++ モード（ビルド・書き込みモードへの切り替え・書き込み・PC のファイル）
+cpp/include/            C++ で #include できるヘッダー（mpu6050.h、ws2812.h）
+cpp/samples/            C++ のサンプル（1行目のコメントがサンプルの名前）
 static/index.html       画面（HTML / CSS / JavaScript を1ファイルに）
 guide/                  ガイド（Markdown・図）。画面の横に表示される
 start.sh                起動してブラウザを開くスクリプト
 70-pico-studio.rules    シリアルポートの権限を設定する udev ルール
 tests/fake_pico.py      テスト用の「偽のピコ」
+tests/test_cpp_mode.py  C++ モードのテスト（偽の cmake / make / SDK を使う）
 ```
 
 ## ピコなしで試す（開発用）
@@ -173,6 +209,12 @@ curl -X POST -H 'Content-Type: application/json' \
 
 中身は CPython で実行しているので、`machine` などピコ専用のモジュールは使えない。
 
+C++ モードは、偽の cmake / make / Pico SDK と偽の書き込みドライブでテストできる。
+
+```sh
+python3 tests/test_cpp_mode.py
+```
+
 ## API
 
 | メソッド | パス | 内容 |
@@ -182,7 +224,7 @@ curl -X POST -H 'Content-Type: application/json' \
 | GET | `/api/info` | MicroPython のバージョン・空き容量 |
 | GET | `/api/files` | ピコのファイル一覧 |
 | GET | `/api/file?name=...` | ファイルの中身 |
-| POST | `/api/connect` `{"port"}` | 接続 |
+| POST | `/api/connect` `{"port","mode"}` | 接続（`mode` が `"cpp"` なら出力の表示だけ） |
 | POST | `/api/disconnect` | 切断 |
 | POST | `/api/run` `{"code"}` | コードを実行 |
 | POST | `/api/stop` | 実行中のプログラムを止める（Ctrl-C） |
@@ -192,3 +234,11 @@ curl -X POST -H 'Content-Type: application/json' \
 | POST | `/api/delete` `{"name"}` | ファイルを削除 |
 | POST | `/api/flash` | 送った .uf2 を書き込む |
 | POST | `/api/flash-latest` | 最新の MicroPython をダウンロードして書き込む |
+| GET | `/api/cpp/env` | C++ の開発環境（SDK・コンパイラ）の確認 |
+| GET | `/api/cpp/samples` | C++ のサンプル |
+| GET | `/api/cpp/files` | PC の C++ ファイルの一覧（`~/apps/pico-cpp`） |
+| GET | `/api/cpp/file?name=...` | PC の C++ ファイルの中身 |
+| POST | `/api/cpp/run` `{"code","board"}` | ビルドして書き込み、出力の表示を始める |
+| POST | `/api/cpp/stop` | ビルドを止める |
+| POST | `/api/cpp/file` `{"name","content"}` | PC に保存 |
+| POST | `/api/cpp/delete` `{"name"}` | PC のファイルを削除 |

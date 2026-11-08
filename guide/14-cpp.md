@@ -1,16 +1,24 @@
-# 14. C++ で実装する
+# 14. C++ の開発環境と基本
 
 ## この章でわかること
 
 - MicroPython と C++ の進め方の違い
-- PC に C++ の開発環境（Pico SDK）を用意する手順
-- ビルドして .uf2 を作り、ピコに書き込む手順
+- PC に C++ の開発環境（Pico SDK とコンパイラ）を用意する手順
+- Pico Studio が C++ をどうビルドして書き込んでいるか
+- Pico Studio を使わずに、コマンドでビルドする方法（CMake）
 - MicroPython の書き方と C++ の書き方の対応
-- これまでの章のプログラム（Lチカ・ボタン・温度・MPU-6050・一定間隔の測定・決定木の判定）を C++ で書く方法
-- 2つのコアを使う方法と、MicroPython に戻す方法
+- MicroPython に戻す方法
 
-C++ の文法の基本（変数・関数・クラス）がわかる前提で書いています。
-ここでは Raspberry Pi 公式の **Pico SDK** を使います。
+C++ の文法の基本（変数・関数・クラス）がわかる前提で書いています。ここでは Raspberry Pi 公式の **Pico SDK** を使います。
+個別の使い方（LED・ボタン・ADC・I2C センサー・データの記録・機械学習）は、4〜10章を C++ に切り替えて読んでください。
+C++ だけの話は、次の章にあります。
+
+| 章 | 内容 |
+| --- | --- |
+| 15章 | マイコン向けの C++ の書き方（型、メモリ、クラス、ファイルの分け方） |
+| 16章 | 割り込み・タイマー・2つのコア |
+| 17章 | 省電力とウォッチドッグ、設定の保存 |
+| 18章 | 製品にするための準備（テスト、デバッグ、量産の書き込み） |
 
 ## MicroPython との違い
 
@@ -20,9 +28,9 @@ C++ の文法の基本（変数・関数・クラス）がわかる前提で書�
 | 速さ | 遅い | 10〜100 倍速い |
 | ピコに入っているもの | MicroPython と、自分の .py ファイル | 自分のプログラムだけ（.uf2 にまとまっている） |
 | 対話で試す（REPL） | できる | できない |
-| ファイルの保存 | `open()` でピコに保存できる | ファイルのしくみがない。PC に送って保存する |
-| `print` の出力 | Pico Studio の出力欄 | シリアルモニター（この章の「出力を見る」） |
-| Pico Studio | 使える | .uf2 の書き込みだけ使える |
+| ファイルの保存 | `open()` でピコに保存できる | ファイルのしくみがない。フラッシュに数値のまま書くか、PC に送る（9章） |
+| `print` の出力 | Pico Studio の出力欄 | `printf`。Pico Studio の出力欄か、シリアルモニター（この章の「出力を見る」） |
+| Pico Studio | 「▶ 実行」ですぐ動く | 「▶ ビルドして書き込む」でビルドから書き込みまで自動 |
 | 起動時に動かす | `main.py` を置く | 書き込んだプログラムが、電源を入れると必ず動く |
 
 **C++ のプログラムを書き込むと、MicroPython は消えます。** MicroPython に戻すときは、もう一度 MicroPython を書き込みます（この章の「MicroPython に戻す」）。
@@ -84,11 +92,44 @@ source ~/.bashrc
 > VS Code を使っているなら、拡張機能の **Raspberry Pi Pico** を入れると、ここまでの準備とビルド・書き込みをボタンでできます。
 > この章では、何が起きているかわかるように、コマンドで進めます。
 
-## 最初のプログラム（Lチカ）
+## Pico Studio で確かめる
+
+1. Pico Studio を起動し（すでに起動していたら、ブラウザを再読み込み）、コード欄で **C++** を選ぶ
+2. 「接続の確認」の3つ目の **「C++ の開発環境」** が緑になり、Pico SDK のバージョンが出れば準備完了
+3. 「サンプルを選ぶ」→「LED を点滅させる」→「▶ ビルドして書き込む」
+4. 1回目は SDK 全体をビルドするので数分かかる。ボードの LED が点滅し、出力欄に `LED ON` / `LED OFF` が出れば成功
+
+Pico Studio は、SDK を `~/pico/pico-sdk`（または環境変数 `PICO_SDK_PATH`）から探します。
+
+## Pico Studio のビルドのしくみ
+
+「▶ ビルドして書き込む」を押すと、Pico Studio は次のことを自動で行います。
+
+1. コード欄のコードを、`~/.cache/pico-studio/cpp/app/main.cpp` に書く
+2. 同じフォルダに `CMakeLists.txt` を作り、`cmake`（初回とボードを変えたとき）と `make` でビルドする
+3. ピコを書き込みモードにする
+   - MicroPython が動いていれば、`machine.bootloader()` を送る
+   - C++ のプログラムが動いていれば、ポートを 1200 bps で開いて閉じる（Pico SDK の決まり。`stdio_init_all()` を呼んでいるプログラムだけ）
+4. `RPI-RP2` ドライブに `app.uf2` をコピーする
+5. ピコが再起動したら、シリアルポートにつないで `printf` の出力を表示する
+
+Pico Studio のビルドでは、次の設定が最初から入っています。
+
+| 項目 | 内容 |
+| --- | --- |
+| 使えるライブラリ | `pico_stdlib`、`hardware_adc`、`hardware_i2c`、`hardware_spi`、`hardware_pwm`、`hardware_uart`、`hardware_pio`、`hardware_dma`、`hardware_flash`、`hardware_watchdog`、`hardware_clocks`、`hardware_sync`、`hardware_timer`、`hardware_irq`、`pico_multicore`、`pico_unique_id`（Pico W では `pico_cyw43_arch_none` も） |
+| `#include "…"` を探す場所 | Pico Studio に入っているヘッダー（`mpu6050.h`、`ws2812.h`）と、`~/apps/pico-cpp` |
+| `printf` の出力先 | USB（`pico_enable_stdio_usb`） |
+| C++ のバージョン | C++17 |
+
+使わないライブラリは、ビルドのときに自動で取り除かれるので、プログラムは大きくなりません。
+ここにないライブラリ（Pico W の無線で TCP/IP を使う `pico_cyw43_arch_lwip_*` など）や、PIO のプログラム（`.pio`）を使いたいときは、次の「コマンドでビルドする」の方法で、自分で `CMakeLists.txt` を書きます。
+
+## コマンドでビルドする
+
+製品のプログラムは、複数のファイルに分けたり、git で管理したりします。そのときは、自分でプロジェクトのフォルダと `CMakeLists.txt` を作り、コマンドでビルドします。
 
 ### フォルダを作る
-
-この章のプログラムは、全部1つのフォルダ（プロジェクト）にまとめます。
 
 ```bash
 mkdir -p ~/apps/pico-cpp
@@ -104,17 +145,16 @@ cp $PICO_SDK_PATH/external/pico_sdk_import.cmake .
 ~/apps/pico-cpp/
 ├── CMakeLists.txt          ビルドの設定
 ├── pico_sdk_import.cmake   SDK を読み込む（コピーしたもの）
-├── blink.cpp               Lチカ
-├── button.cpp              ボタン
-├── temp.cpp                内蔵温度センサー
-├── mpu6050.h               MPU-6050 を読むクラス
-├── mpu.cpp                 MPU-6050 の読み取り
-├── sampling.cpp            一定間隔の測定（PC に送る）
-├── model.h                 決定木（train.py で作る）
-├── judge.cpp               決定木で判定する
-├── multicore.cpp           2つのコアを使う
+├── blink.cpp               Lチカ（このあと作る）
+├── mpu6050.h               MPU-6050 を読むクラス（下の「mpu6050.h の全体」）
+├── mpu.cpp                 MPU-6050 を読む（7章のコード）
+├── model.h                 決定木（10章の train.py で作る）
+├── judge.cpp               決定木で判定する（10章のコード）
 └── build/                  ビルドしてできたファイル（.uf2 など）
 ```
+
+4〜10章の C++ のコードは、ファイルに保存して `pico_app(...)` の行を足せば、どれもこのプロジェクトでビルドできます。
+Pico Studio の「PC に保存」も、このフォルダ（`~/apps/pico-cpp`）に保存します。
 
 ### CMakeLists.txt
 
@@ -250,8 +290,8 @@ sudo build/_deps/picotool/picotool load -x -f build/blink.uf2
 ### 出力を見る
 
 `printf` の出力は、USB シリアル（`/dev/ttyACM0`）に出ています。
-Pico Studio は MicroPython 用なので、ここでは使えません（「接続」すると「MicroPython の応答がありません」と出ます）。
-代わりに、pyserial に入っている **miniterm** で見ます。
+Pico Studio なら、コード欄で C++ を選んで「接続」すると、出力欄に出ます。
+コマンドで見るときは、pyserial に入っている **miniterm** を使います。
 
 ```bash
 python3 -m serial.tools.miniterm /dev/ttyACM0 115200
@@ -305,85 +345,10 @@ while (!stdio_usb_connected()) sleep_ms(100);
 - ADC の値の範囲が違います。MicroPython の `read_u16()` は 0〜65535 に広げた値、C++ の `adc_read()` はそのままの 12 ビット（0〜4095）です
 - ADC の番号は、GP26 が 0、GP27 が 1、GP28 が 2、内蔵温度センサーが 4 です
 
-## ボタン（USR）
+## mpu6050.h の全体
 
-USR ボタン（GP24）を押している間、LED を点けます。4章のボタンと同じ動きです。
-
-```cpp
-#include <cstdio>
-#include "pico/stdlib.h"
-
-constexpr uint LED_PIN = 25;
-constexpr uint BTN_PIN = 24;
-
-int main() {
-    stdio_init_all();
-
-    gpio_init(LED_PIN);
-    gpio_set_dir(LED_PIN, GPIO_OUT);
-
-    gpio_init(BTN_PIN);
-    gpio_set_dir(BTN_PIN, GPIO_IN);
-    gpio_pull_up(BTN_PIN);             // 押していないときは 1 になる
-
-    bool last = false;
-    while (true) {
-        bool pressed = !gpio_get(BTN_PIN);   // 押すと 0 なので、反対にする
-        gpio_put(LED_PIN, pressed);
-        if (pressed != last) {
-            printf(pressed ? "押されている\n" : "離された\n");
-            last = pressed;
-        }
-        sleep_ms(10);
-    }
-}
-```
-
-`CMakeLists.txt` の最後に、次の行を足します。
-
-```cmake
-pico_app(button)
-```
-
-ビルドして書き込む手順は、Lチカと同じです（`make -j4 button` → `button.uf2` を書き込む）。
-
-## 内蔵温度センサー（ADC）
-
-```cpp
-#include <cstdio>
-#include "pico/stdlib.h"
-#include "hardware/adc.h"
-
-int main() {
-    stdio_init_all();
-
-    adc_init();
-    adc_set_temp_sensor_enabled(true);   // 内蔵温度センサーを使う
-    adc_select_input(4);                 // 4番 = 内蔵温度センサー
-
-    while (true) {
-        uint16_t raw = adc_read();                   // 0〜4095
-        float volt = raw * 3.3f / 4096;
-        float temp = 27.0f - (volt - 0.706f) / 0.001721f;   // データシートの式
-        printf("raw=%4u  %.3f V  %.1f C\n", raw, volt, temp);
-        sleep_ms(1000);
-    }
-}
-```
-
-```cmake
-pico_app(temp hardware_adc)
-```
-
-- `hardware_adc` を足すのを忘れると、ビルドのときに `hardware/adc.h: No such file or directory` と出ます
-- `3.3f` の `f` は、`float` の数という意味です。`f` がないと `double` になり、ピコでは計算が遅くなります（ピコの CPU には小数の計算をする回路がないため）
-
-## MPU-6050（I2C）
-
-7章の MPU-6050 を C++ で読みます。配線は6章と同じ（SDA = GP4、SCL = GP5）です。
-このあとの例でも使うので、読み取りの部分を **クラス** にして、`mpu6050.h` に分けます。
-
-### mpu6050.h
+7章で使う MPU-6050 のクラスです。Pico Studio には最初から入っています（`cpp/include/mpu6050.h`）。
+コマンドでビルドするときは、プロジェクトのフォルダに次の内容で `mpu6050.h` を作ります。
 
 ```cpp
 #pragma once
@@ -472,300 +437,30 @@ private:
 MicroPython では、エラーのときに `OSError` が出てプログラムが止まりました。
 C++ の SDK は止まらずに**負の数を返す**だけなので、戻り値を確かめるようにしています。
 
-### mpu.cpp
+## プログラムを足す
 
-7章と同じように、0.2秒ごとに表示します。
-
-```cpp
-#include <cstdio>
-#include "pico/stdlib.h"
-#include "mpu6050.h"
-
-Mpu6050 mpu(i2c0);
-
-int main() {
-    stdio_init_all();
-    sleep_ms(2000);                   // PC が miniterm でつなぐのを待つ
-
-    if (!mpu.begin(4, 5)) {
-        printf("MPU-6050 が見つかりません。配線を確かめてください\n");
-    }
-    printf("WHO_AM_I: 0x%02x\n", mpu.who_am_i());
-
-    while (true) {
-        float acc[3], gyro[3], temp;
-        if (mpu.read_all(acc, gyro, temp)) {
-            printf("加速度[g] x=%+.2f y=%+.2f z=%+.2f  角速度[deg/s] x=%+6.1f y=%+6.1f z=%+6.1f\n",
-                   acc[0], acc[1], acc[2], gyro[0], gyro[1], gyro[2]);
-        } else {
-            printf("読み取りに失敗しました\n");
-        }
-        sleep_ms(200);
-    }
-}
-```
-
-```cmake
-pico_app(mpu hardware_i2c)
-```
-
-机に置いたまま動かすと、7章と同じように z が 1g 前後になります。
-
-```text
-WHO_AM_I: 0x68
-加速度[g] x=+0.02 y=-0.01 z=+1.01  角速度[deg/s] x=  -1.2 y=  +0.8 z=  +0.3
-```
-
-## 決まった間隔で測って PC に送る
-
-7章の「決まった間隔でデータを取る」と、9章の「USB で PC に送る」を合わせたものです。
-C++ では、**次に測る時刻**を `delayed_by_ms` で決めて、`sleep_until` でその時刻まで待ちます。
-
-```cpp
-#include <cstdio>
-#include "pico/stdlib.h"
-#include "mpu6050.h"
-
-constexpr int HZ = 50;                 // 1秒に50回
-constexpr int INTERVAL_MS = 1000 / HZ; // 20ms ごと
-
-Mpu6050 mpu(i2c0);
-
-int main() {
-    stdio_init_all();
-    mpu.begin(4, 5);
-
-    absolute_time_t start = get_absolute_time();
-    absolute_time_t next = start;
-    while (true) {
-        float ax, ay, az;
-        if (mpu.read_accel(ax, ay, az)) {
-            int ms = static_cast<int>(absolute_time_diff_us(start, get_absolute_time()) / 1000);
-            printf("%d,%.3f,%.3f,%.3f\n", ms, ax, ay, az);
-        }
-        next = delayed_by_ms(next, INTERVAL_MS);   // 次に測る時刻
-        sleep_until(next);                         // その時刻まで待つ
-    }
-}
-```
-
-```cmake
-pico_app(sampling hardware_i2c)
-```
-
-- 出力の形は9章のピコ側と同じ（`ms,ax,ay,az`）なので、**9章の `pc_logger.py` で、そのまま PC に保存できます**
-- `sleep_until` は、読み取りや `printf` にかかった時間を差し引いて待つので、間隔がずれません。MicroPython の `ticks_add` と `ticks_diff` を使った書き方と同じ考え方です
-- C++ なら `HZ` を 200〜500 にしても間に合います（MicroPython では、`print` を毎回すると 50Hz でも遅れることがあります）
-- もっと正確にしたいときは、`add_repeating_timer_us` でタイマー割り込みを使います
-
-## 決定木を C++ で動かす
-
-10章で学習した決定木を、C++ で動かします。
-PC で学習するところは10章と同じで、**書き出す形だけ C++ にします**。
-
-### 1. train.py に C++ の書き出しを足す
-
-10章の `train.py` の最後に、次のコードを足します。`model.py` と一緒に `model.h` もできるようになります。
-
-```python
-def export_cpp(clf, names):
-    """決定木を C++ の if 文に変換する"""
-    t = clf.tree_
-    lines = ["// train.py で自動生成した決定木", "#pragma once", "",
-             "inline const char* predict(const float* f) {"]
-
-    def walk(node, depth):
-        pad = "    " * depth
-        if t.feature[node] >= 0:                      # 分岐のノード
-            i = t.feature[node]
-            lines.append(f"{pad}if (f[{i}] <= {t.threshold[node]:.6f}f) {{  // {names[i]}")
-            walk(t.children_left[node], depth + 1)
-            lines.append(f"{pad}}} else {{")
-            walk(t.children_right[node], depth + 1)
-            lines.append(f"{pad}}}")
-        else:                                         # 葉（判定結果）
-            label = clf.classes_[t.value[node][0].argmax()]
-            lines.append(f'{pad}return "{label}";')
-
-    walk(0, 1)
-    lines.append("}")
-    return "\n".join(lines) + "\n"
-
-
-with open("model.h", "w") as f:
-    f.write(export_cpp(clf, NAMES))
-print("model.h を作りました")
-```
-
-`python3 train.py` を実行すると、次のような `model.h` ができます（中身は学習したデータで変わります）。
-
-```text
-// train.py で自動生成した決定木
-#pragma once
-
-inline const char* predict(const float* f) {
-    if (f[6] <= 0.041200f) {  // std_mag
-        return "rest";
-    } else {
-        if (f[7] <= 0.183000f) {  // diff_mag
-            return "walk";
-        } else {
-            return "run";
-        }
-    }
-}
-```
-
-できた `model.h` を `~/apps/pico-cpp/` にコピーします。
-
-### 2. judge.cpp
-
-10章の「ステップ3: ピコで判定する」と同じ動きです。2秒分（25Hz × 50回）を集めて、特徴量を計算し、判定します。
-
-```cpp
-#include <cmath>
-#include <cstdio>
-#include "pico/stdlib.h"
-#include "mpu6050.h"
-#include "model.h"
-
-constexpr int HZ = 25;
-constexpr int N = HZ * 2;              // 2秒分
-
-Mpu6050 mpu(i2c0);
-float xs[N], ys[N], zs[N];             // 集めたデータ（大きさを決めておく）
-
-// 2秒分を、決まった間隔で集める
-void window() {
-    absolute_time_t next = get_absolute_time();
-    for (int i = 0; i < N; i++) {
-        mpu.read_accel(xs[i], ys[i], zs[i]);
-        next = delayed_by_ms(next, 1000 / HZ);
-        sleep_until(next);
-    }
-}
-
-float mean(const float* a) {
-    float s = 0;
-    for (int i = 0; i < N; i++) s += a[i];
-    return s / N;
-}
-
-float stdev(const float* a, float m) {
-    float s = 0;
-    for (int i = 0; i < N; i++) s += (a[i] - m) * (a[i] - m);
-    return sqrtf(s / N);
-}
-
-// 10章の features() と同じ計算。順番も同じにする
-void features(float fe[8]) {
-    float mag[N];
-    for (int i = 0; i < N; i++) mag[i] = sqrtf(xs[i] * xs[i] + ys[i] * ys[i] + zs[i] * zs[i]);
-
-    float mx = mean(xs), my = mean(ys), mz = mean(zs), mm = mean(mag);
-    float diff = 0;
-    for (int i = 1; i < N; i++) diff += fabsf(mag[i] - mag[i - 1]);
-
-    fe[0] = mx;  fe[1] = my;  fe[2] = mz;
-    fe[3] = stdev(xs, mx);  fe[4] = stdev(ys, my);  fe[5] = stdev(zs, mz);
-    fe[6] = stdev(mag, mm);
-    fe[7] = diff / (N - 1);
-}
-
-int main() {
-    stdio_init_all();
-    mpu.begin(4, 5);
-
-    while (true) {
-        window();
-        float fe[8];
-        features(fe);
-
-        uint64_t t0 = time_us_64();
-        const char* label = predict(fe);
-        unsigned us = static_cast<unsigned>(time_us_64() - t0);
-        printf("判定: %s  （判定にかかった時間 %u us）\n", label, us);
-    }
-}
-```
-
-```cmake
-pico_app(judge hardware_i2c)
-```
-
-2秒ごとに判定結果が出ます（数値は例です）。
-
-```text
-判定: rest  （判定にかかった時間 2 us）
-判定: walk  （判定にかかった時間 2 us）
-```
-
-- 判定にかかる時間は、MicroPython より大幅に短くなります
-- `features()` は、**10章のデータを集めたときと同じ計算**にします。`std` は「N で割る」ほう（numpy の標準と同じ）です
-- `xs` などは、関数の外で大きさを決めて作っています。MicroPython のように `append` で増やすより、メモリの使い方がわかりやすく、途中でメモリが足りなくなることもありません
-
-## 2つのコアを使う
-
-ピコのチップにはコアが2つあります。MicroPython の `_thread` は実験的な機能でしたが、C++ では普通に使えます。
-次の例では、コア1が LED を点滅させ、コア0（`main` が動くほう）が温度を測ります。
-
-```cpp
-#include <cstdio>
-#include "pico/stdlib.h"
-#include "pico/multicore.h"
-#include "hardware/adc.h"
-
-constexpr uint LED_PIN = 25;
-
-// コア1で動く関数。終わらないようにする
-void core1_main() {
-    gpio_init(LED_PIN);
-    gpio_set_dir(LED_PIN, GPIO_OUT);
-    bool on = false;
-    while (true) {
-        on = !on;
-        gpio_put(LED_PIN, on);
-        sleep_ms(250);
-    }
-}
-
-int main() {
-    stdio_init_all();
-    multicore_launch_core1(core1_main);   // コア1で動かし始める
-
-    adc_init();
-    adc_set_temp_sensor_enabled(true);
-    adc_select_input(4);
-
-    while (true) {
-        float volt = adc_read() * 3.3f / 4096;
-        printf("温度 %.1f C\n", 27.0f - (volt - 0.706f) / 0.001721f);
-        sleep_ms(1000);
-    }
-}
-```
-
-```cmake
-pico_app(multicore pico_multicore hardware_adc)
-```
-
-- それぞれのコアが自分の `while` を回すので、片方が待っていても、もう片方は止まりません
-- 2つのコアで同じ変数を使うときは、同時に書き換えないように注意します。数値を渡すだけなら `multicore_fifo_push_blocking` と `multicore_fifo_pop_blocking` が簡単です
-- 1つのコアの中で複数の処理を交代で動かすなら、12章の `asyncio` と同じように、時刻を見て順に処理する書き方にします
-
-## 全部をビルドする
-
-ここまでの `pico_app(...)` を全部足した `CMakeLists.txt` の最後の部分です。
+4〜10章のコードを足すときは、ファイルに保存して、`CMakeLists.txt` の最後に `pico_app(...)` の行を足します。2つ目からは、使うライブラリを書きます。
 
 ```cmake
 pico_app(blink)
-pico_app(button)
-pico_app(temp hardware_adc)
-pico_app(mpu hardware_i2c)
-pico_app(sampling hardware_i2c)
-pico_app(judge hardware_i2c)
-pico_app(multicore pico_multicore hardware_adc)
+pico_app(temp hardware_adc)                 # ADC を使う（5章）
+pico_app(mpu hardware_i2c)                  # I2C を使う（7章）
+pico_app(judge hardware_i2c)                # 10章
+pico_app(rgb hardware_pio hardware_clocks)  # ws2812.h を使う（4章）
+pico_app(logger hardware_i2c hardware_flash)   # フラッシュに記録する（9章）
+pico_app(multicore pico_multicore)          # 2つのコア（16章）
 ```
+
+| 使うもの | 足すライブラリ |
+| --- | --- |
+| ADC | `hardware_adc` |
+| I2C / SPI / UART | `hardware_i2c` / `hardware_spi` / `hardware_uart` |
+| PWM | `hardware_pwm` |
+| PIO（`ws2812.h`） | `hardware_pio hardware_clocks` |
+| フラッシュ | `hardware_flash` |
+| ウォッチドッグ | `hardware_watchdog` |
+| 2つのコア | `pico_multicore` |
+| Pico W の LED | `pico_cyw43_arch_none` |
 
 `CMakeLists.txt` を変えたら、`build` フォルダで `cmake ..` をやり直してから `make` します。
 
@@ -799,9 +494,10 @@ sh flash.sh blink
 
 C++ のプログラムを書き込んだあとで、また MicroPython と Pico Studio を使いたいときは、MicroPython を書き込み直します。
 
-1. ピコの **BOOT** を押したまま USB をつなぐ
-2. Pico Studio の「最新の MicroPython を書き込む」を押す（0章）
-3. 「更新」を押してから接続する
+1. Pico Studio のコード欄で **Python** を選ぶ
+2. ピコの **BOOT** を押したまま USB をつなぐ
+3. 「最新の MicroPython を書き込む」を押す（0章）
+4. 「更新」を押してから接続する
 
 - ピコに保存していたファイル（`main.py` など）は、残っていることが多いですが、**消えることもあります**。大事なファイルは、C++ を書き込む前に PC にコピーしておきます（2章の `mpremote cp`）
 - 全部を消して最初からにしたいときは、11章の flash_nuke.uf2 を使います
@@ -820,15 +516,15 @@ C++ のプログラムを書き込んだあとで、また MicroPython と Pico 
 | Pico W で LED が点かない | Pico W の LED は GP25 ではない。`pico_cyw43_arch` を使う |
 | Pico 2 で動かない | `cmake -DPICO_BOARD=pico2 ..` でビルドし直す（`build` フォルダを消してから） |
 | ビルドの途中で picotool のダウンロードに失敗する | `libusb-1.0-0-dev` と `pkg-config` を入れて、もう一度 `cmake ..` する |
-| I2C の読み取りが失敗する | 7章・11章と同じように配線とアドレスを確かめる。MicroPython の I2C スキャン（6章）で見つかるかを先に確かめると早い |
+| I2C の読み取りが失敗する | 7章・11章と同じように配線とアドレスを確かめる。I2C スキャン（6章）で見つかるかを先に確かめると早い |
+| Pico Studio の「C++ の開発環境」が赤い | 足りないものが表示される。SDK を `~/pico/pico-sdk` 以外に置いたときは、`PICO_SDK_PATH` を設定してから Pico Studio を起動し直す |
+| Pico Studio で書き込みモードにならない | 前のプログラムが `stdio_init_all()` を呼んでいないか、止まっている。BOOT を押しながら USB をつなぎ直して、もう一度押す |
 
 ## まとめ
 
-- C++ は、PC でビルドして .uf2 を書き込む。速いが、すぐ試すことはできない
-- 開発環境は `gcc-arm-none-eabi` と Pico SDK。SDK の場所は `PICO_SDK_PATH` で教える
-- `CMakeLists.txt` にプログラムと使うライブラリ（`hardware_i2c` など）を書き、`cmake ..` → `make` でビルドする
-- 書き込みは BOOTSEL のピコに .uf2 をコピーする。Pico Studio の「.uf2 ファイルを選ぶ」でもできる
-- 出力は miniterm で見る。Pico Studio の「接続」は MicroPython 用
+- C++ は、PC でビルドして .uf2 を書き込む。速くて製品向きだが、すぐ試すことはできない
+- 開発環境は `gcc-arm-none-eabi` と Pico SDK。SDK は `~/pico/pico-sdk` に置くか、`PICO_SDK_PATH` で教える
+- Pico Studio では「C++」を選んで「▶ ビルドして書き込む」。書き込みモードへの切り替えも自動
+- 自分でプロジェクトを作るときは、`CMakeLists.txt` にプログラムと使うライブラリを書き、`cmake` → `make` でビルドする
 - `Pin` は `gpio_init` / `gpio_put`、`readfrom_mem` は `i2c_write_blocking` + `i2c_read_blocking`、`ticks_add` は `delayed_by_ms` + `sleep_until`
-- 決定木は `train.py` から `model.h` を書き出せば、そのまま C++ で使える
-- 試すのは MicroPython、決まった処理を速く・長く動かすのは C++、と使い分ける
+- 試すのは MicroPython、製品にするのは C++、と使い分ける

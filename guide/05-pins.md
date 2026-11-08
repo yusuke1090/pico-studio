@@ -15,9 +15,21 @@
 ピコのピンには、2つの番号があります。**混同しやすいので注意**してください。
 
 - **物理ピン番号（1〜40）**: ボードの左上から反時計回りに数えた、場所の番号。配線するときに使う
+
+<!-- python -->
+
 - **GP 番号（GP0〜GP28）**: プログラムで使う番号。`Pin(4)` の 4 はこちら
 
 たとえば GP4 は、物理ピン番号では6番です。「6番の穴に線をさして、プログラムでは `Pin(4)` と書く」となります。
+
+<!-- /python -->
+<!-- cpp -->
+
+- **GP 番号（GP0〜GP28）**: プログラムで使う番号。`gpio_init(4)` の 4 はこちら
+
+たとえば GP4 は、物理ピン番号では6番です。「6番の穴に線をさして、プログラムでは `gpio_init(4)` と書く」となります。
+
+<!-- /cpp -->
 
 ## ピン配置（公式ピコ）
 
@@ -47,6 +59,8 @@ USB を上にして、表から見た図です。
 
 GP0〜GP28 のどれでも、デジタルの入出力に使えます。デジタルとは「0 か 1 か」の2つだけを扱うことです。
 
+<!-- python -->
+
 | 使い方 | 書き方 | 動き | 例 |
 | --- | --- | --- | --- |
 | **出力** | `Pin(n, Pin.OUT)` | 0V（0）か 3.3V（1）を出す | LED、ブザー |
@@ -63,6 +77,49 @@ inp = Pin(14, Pin.IN, Pin.PULL_UP)
 print("GP14 の値:", inp.value())    # 何もつないでいなければ 1
 ```
 
+<!-- /python -->
+<!-- cpp -->
+
+| 使い方 | 書き方 | 動き | 例 |
+| --- | --- | --- | --- |
+| **出力** | `gpio_set_dir(n, GPIO_OUT)` | 0V（0）か 3.3V（1）を出す | LED、ブザー |
+| **入力** | `gpio_set_dir(n, GPIO_IN)` | 電圧が高いか低いかを 1 / 0 で読む | ボタン、スイッチ |
+
+どちらも、先に `gpio_init(n)` でピンを使えるようにしてから設定します。
+
+```cpp run
+#include <cstdio>
+#include "pico/stdlib.h"
+
+int main() {
+    stdio_init_all();
+    sleep_ms(1500);
+
+    gpio_init(15);
+    gpio_set_dir(15, GPIO_OUT);
+    gpio_put(15, 1);               // 3.3V にする
+    gpio_put(15, 0);               // 0V にする
+
+    gpio_init(14);
+    gpio_set_dir(14, GPIO_IN);
+    gpio_pull_up(14);
+    printf("GP14 の値: %d\n", gpio_get(14));   // 何もつないでいなければ 1
+
+    while (true) sleep_ms(1000);
+}
+```
+
+複数のピンをまとめて扱う関数もあります。
+
+| 関数 | 意味 |
+| --- | --- |
+| `gpio_init_mask(mask)` | `mask` のビットが 1 のピンをまとめて使えるようにする。例: `(1u << 14) \| (1u << 15)` は GP14 と GP15 |
+| `gpio_set_dir_out_masked(mask)` | まとめて出力にする |
+| `gpio_put_masked(mask, value)` | まとめて出す |
+| `gpio_get_all()` | 全部のピンの状態を1つの数で読む（ビット n が GPn） |
+
+<!-- /cpp -->
+
 ### プルアップ・プルダウン
 
 ボタンを押していないとき、入力ピンはどこにもつながっていない状態（浮いている状態）になり、値が 0 と 1 の間でふらつきます。
@@ -70,10 +127,23 @@ print("GP14 の値:", inp.value())    # 何もつないでいなければ 1
 
 ![プルアップのしくみ](images/pullup.svg)
 
+<!-- python -->
+
 - `Pin.PULL_UP`: 何もつながっていないとき **1**。ボタンは GPIO と **GND** の間につなぐ（押すと 0）
 - `Pin.PULL_DOWN`: 何もつながっていないとき **0**。ボタンは GPIO と **3V3** の間につなぐ（押すと 1）
 
 よく使うのはプルアップです。「押すと 0」になるので、プログラムでは `== 0` で押されたかを調べます。
+
+<!-- /python -->
+<!-- cpp -->
+
+- `gpio_pull_up(n)`: 何もつながっていないとき **1**。ボタンは GPIO と **GND** の間につなぐ（押すと 0）
+- `gpio_pull_down(n)`: 何もつながっていないとき **0**。ボタンは GPIO と **3V3** の間につなぐ（押すと 1）
+- `gpio_disable_pulls(n)`: どちらも使わない
+
+よく使うのはプルアップです。「押すと 0」になるので、プログラムでは `gpio_get(n) == 0` で押されたかを調べます。
+
+<!-- /cpp -->
 
 ## アナログ入力（ADC）
 
@@ -87,6 +157,8 @@ print("GP14 の値:", inp.value())    # 何もつないでいなければ 1
 1. USB を抜く
 2. ボリュームの3本の足を、左から **3V3(OUT)（36番）・GP26（31番）・GND（33番）** につなぐ
 3. USB をつないで、下のコードを実行する
+<!-- python -->
+
 4. つまみを回すと、値が 0〜65535 の間で変わる
 
 ```python run
@@ -103,10 +175,49 @@ for i in range(20):
 
 何もつないでいないと、値はばらばらに変わります（浮いているため）。
 
+<!-- /python -->
+<!-- cpp -->
+
+4. つまみを回すと、値が 0〜4095 の間で変わる
+
+```cpp run
+#include <cstdio>
+#include "pico/stdlib.h"
+#include "hardware/adc.h"
+
+int main() {
+    stdio_init_all();
+    adc_init();
+    adc_gpio_init(26);             // GP26 をアナログ入力にする
+    adc_select_input(0);           // ADC0（= GP26）を読む
+
+    while (true) {
+        uint16_t raw = adc_read(); // 0〜4095（12ビット）
+        float volt = raw * 3.3f / 4095;
+        printf("値: %4u  電圧: %.2f V\n", raw, volt);
+        sleep_ms(500);
+    }
+}
+```
+
+| コード | 意味 |
+| --- | --- |
+| `adc_init()` | ADC を使えるようにする（最初に1回） |
+| `adc_gpio_init(26)` | GP26 をアナログ入力用に切り替える |
+| `adc_select_input(0)` | どの ADC を読むか。GP26 = 0、GP27 = 1、GP28 = 2、温度センサー = 4 |
+| `adc_read()` | 読む。0〜4095 の12ビットの値（Python の `read_u16()` は 0〜65535 に広げた値） |
+
+何もつないでいないと、値はばらばらに変わります（浮いているため）。
+`3.3f` の `f` は「float の数」という意味です。ピコの CPU は小数の計算が苦手なので、`double`（`f` なし）より `float` を使います。
+
+<!-- /cpp -->
+
 > ボリュームの両端（3V3 と GND）を逆にすると、回す向きと値の増え方が逆になるだけで、壊れはしません。
 > ただし、真ん中の足を 3V3 や GND に直接つながないでください。
 
 ### チップの温度を読む
+
+<!-- python -->
 
 `ADC(4)` はチップ内蔵の温度センサーです。何もつながなくても試せます。
 
@@ -117,6 +228,31 @@ v = sensor.read_u16() * 3.3 / 65535
 print("チップの温度: {:.1f} ℃".format(27 - (v - 0.706) / 0.001721))
 ```
 
+<!-- /python -->
+<!-- cpp -->
+
+ADC の4番はチップ内蔵の温度センサーです。何もつながなくても試せます。
+
+```cpp run
+#include <cstdio>
+#include "pico/stdlib.h"
+#include "hardware/adc.h"
+
+int main() {
+    stdio_init_all();
+    sleep_ms(1500);
+    adc_init();
+    adc_set_temp_sensor_enabled(true);   // 温度センサーの電源を入れる
+    adc_select_input(4);
+
+    float v = adc_read() * 3.3f / 4096;
+    printf("チップの温度: %.1f C\n", 27.0f - (v - 0.706f) / 0.001721f);
+    while (true) sleep_ms(1000);
+}
+```
+
+<!-- /cpp -->
+
 チップ自体の温度なので、部屋の温度より少し高めに出ます。
 
 ## PWM で LED の明るさを変える
@@ -125,6 +261,8 @@ GPIO は 0V か 3.3V しか出せませんが、**とても速く点けたり消
 「点いている時間の割合」（デューティ比）を変えると、明るさが変わります。
 
 4章の外付け LED（GP15）を使って試します。
+
+<!-- python -->
 
 ```python run
 from machine import Pin, PWM
@@ -146,6 +284,51 @@ pwm.deinit()                   # PWM をやめる
 ```
 
 - `duty_u16(0)` で消える、`duty_u16(32768)` で半分、`duty_u16(65535)` で一番明るい
+
+<!-- /python -->
+<!-- cpp -->
+
+```cpp run
+#include "pico/stdlib.h"
+#include "hardware/pwm.h"
+
+constexpr uint PIN = 15;
+
+int main() {
+    stdio_init_all();
+    gpio_set_function(PIN, GPIO_FUNC_PWM);     // GP15 を PWM 用にする
+    uint slice = pwm_gpio_to_slice_num(PIN);   // GP15 が使う PWM の回路（スライス）の番号
+
+    // 周期を決める。125MHz ÷ 分周 125 ÷ (wrap+1) 1000 = 1kHz（1秒に1000回）
+    pwm_set_clkdiv(slice, 125.0f);
+    pwm_set_wrap(slice, 999);
+    pwm_set_enabled(slice, true);
+
+    for (int n = 0; n < 3; n++) {
+        for (int d = 0; d <= 1000; d += 25) {  // だんだん明るく
+            pwm_set_gpio_level(PIN, d);
+            sleep_ms(20);
+        }
+        for (int d = 1000; d >= 0; d -= 25) {  // だんだん暗く
+            pwm_set_gpio_level(PIN, d);
+            sleep_ms(20);
+        }
+    }
+    pwm_set_gpio_level(PIN, 0);
+    while (true) sleep_ms(1000);
+}
+```
+
+| コード | 意味 |
+| --- | --- |
+| `gpio_set_function(PIN, GPIO_FUNC_PWM)` | ピンを PWM 用に切り替える |
+| `pwm_gpio_to_slice_num(PIN)` | ピンが使う PWM の回路の番号。2本のピンで1つの回路を使う |
+| `pwm_set_clkdiv` と `pwm_set_wrap` | 速さを決める。CPU の 125MHz を 125 で割り、0〜999 を数えると 1kHz |
+| `pwm_set_gpio_level(PIN, d)` | 点いている時間の割合。`wrap` が 999 なら、0 で消える、500 で半分、1000 で一番明るい |
+
+- Pico 2 は CPU が 150MHz なので、同じ計算で 1.2kHz になります。LED では違いはわかりません
+
+<!-- /cpp -->
 - サーボモーターの角度や、ブザーの音の高さも PWM で決めます
 
 ## 通信用のピン
@@ -159,7 +342,34 @@ pwm.deinit()                   # PWM をやめる
 | **UART** | 2本（TX・RX） | GPS や他のマイコンとの通信 | UART0: GP0(TX)・GP1(RX) |
 
 I2C・SPI・UART は、上の表以外のピンにも割り当てられます。
+<!-- python -->
+
 どのピンが使えるかは [RP2 クイックリファレンス](https://docs.micropython.org/en/latest/rp2/quickref.html) を見てください。
+
+<!-- /python -->
+<!-- cpp -->
+
+どのピンが使えるかは [Pico のデータシート](https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf) のピン配置図を見てください。
+
+C++ では、ピンを通信用に切り替えてから使います。I2C の例です（くわしくは7章）。
+
+```cpp
+#include "hardware/i2c.h"
+
+i2c_init(i2c0, 400 * 1000);              // I2C0 を 400kHz で使う
+gpio_set_function(4, GPIO_FUNC_I2C);     // GP4 を SDA に
+gpio_set_function(5, GPIO_FUNC_I2C);     // GP5 を SCL に
+gpio_pull_up(4);
+gpio_pull_up(5);
+```
+
+| 方式 | 準備の関数 | ピンの切り替え |
+| --- | --- | --- |
+| I2C | `i2c_init(i2c0, 速さ)` | `GPIO_FUNC_I2C` |
+| SPI | `spi_init(spi0, 速さ)` | `GPIO_FUNC_SPI` |
+| UART | `uart_init(uart0, 115200)` | `GPIO_FUNC_UART` |
+
+<!-- /cpp -->
 このガイドでは、6章からの I2C センサーで GP4・GP5 を使います。
 
 ## 壊さないための注意
@@ -175,7 +385,18 @@ I2C・SPI・UART は、上の表以外のピンにも割り当てられます。
 
 - プログラムでは GP 番号を使う。物理ピン番号と間違えない
 - センサーの電源は 3V3(OUT)、GND は全部共通にする
+<!-- python -->
+
 - ボタンはプルアップで「押すと 0」
 - アナログは GP26〜28 で 0〜65535、明るさは PWM で変える
+
+<!-- /python -->
+<!-- cpp -->
+
+- ボタンはプルアップで「押すと 0」（C++ は `gpio_pull_up`）
+- アナログは GP26〜28。C++ の `adc_read()` は 0〜4095。明るさは PWM で変える
+- C++ では `gpio_set_function` でピンを PWM・I2C などの役割に切り替える
+
+<!-- /cpp -->
 - I2C はまず GP4（SDA）・GP5（SCL）
 - ピコは 3.3V。5V を入れない
