@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Pico Studio: ラズパイピコ (MicroPython / C++) をブラウザから操作するローカルサーバー。
+"""Pico Studio: ラズパイピコがつながっているかを確かめ、MicroPython で手早く試すためのローカルサーバー。
+
+C++ の開発は VS Code の拡張機能「Raspberry Pi Pico」で行い、ここでは出力の表示と開発環境の確認だけをする。
 
 http://localhost:8765 を開いて使う。外部ライブラリは pyserial だけ。
 """
@@ -20,7 +22,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 import serial
 import serial.tools.list_ports
 
-import cpp_build
+import devenv
 
 HERE = Path(__file__).resolve().parent
 STATIC = HERE / "static"
@@ -40,6 +42,7 @@ CONTENT_TYPES = {
 }
 
 RP_VID = 0x2E8A          # Raspberry Pi (RP2040 / RP2350)
+MICROPYTHON_PID = 0x0005  # MicroPython の USB の番号。Pico SDK（C++）のプログラムは 0x000a など
 BOOTSEL_PIDS = {0x0003, 0x000F}  # RP2040 / RP2350 の BOOTSEL モード
 RAW_BANNER = b"raw REPL; CTRL-B to exit\r\n>"
 FIRMWARE_PAGE = "https://micropython.org/download/RPI_PICO/"
@@ -260,8 +263,8 @@ class Pico:
 
     def _need_python(self):
         if self.mode != "python":
-            raise DeviceError("C++ のプログラムの出力を表示中です。MicroPython を使うときは、"
-                              "言語を Python にして接続し直してください。")
+            raise DeviceError("このピコでは C++ のプログラムが動いています（出力の表示だけできます）。"
+                              "MicroPython で試すときは、BOOT を押しながらつなぎ、MicroPython を書き込んでください。")
 
     def exec_capture(self, code, timeout=10):
         """コードを実行して、出力を文字列で返す（コンソールには出さない）。"""
@@ -397,9 +400,18 @@ def list_ports():
             "description": p.description or "",
             "vid": p.vid, "pid": p.pid,
             "is_pico": p.vid == RP_VID,
+            "kind": ("micropython" if p.pid == MICROPYTHON_PID else "cpp") if p.vid == RP_VID else "other",
         })
     ports.sort(key=lambda p: (not p["is_pico"], p["device"]))
     return ports
+
+
+def port_kind_mode(device):
+    """ポートのピコで動いているものから、つなぎ方を決める（MicroPython なら REPL、C++ なら出力を表示するだけ）"""
+    for p in list_ports():
+        if p["device"] == device and p["kind"] == "cpp":
+            return "cpp"
+    return "python"
 
 
 def bootsel_state():
@@ -452,7 +464,6 @@ def flash_uf2(data):
 # ---------- HTTP ----------
 console = Console()
 pico = Pico(console)
-cpp = cpp_build.CppRunner(console, pico, bootsel_state, flash_uf2)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -511,7 +522,7 @@ class Handler(BaseHTTPRequestHandler):
             elif url.path == "/api/state":
                 items, last = console.since(int(q.get("since", ["0"])[0]))
                 self._json({"connected": pico.connected, "port": pico.port, "mode": pico.mode,
-                            "running": pico.running, "building": cpp.busy, "stage": cpp.stage,
+                            "running": pico.running,
                             "console": items, "last": last})
             elif url.path == "/api/ports":
                 self._json({"ports": list_ports(), "bootsel": bootsel_state()})
@@ -521,17 +532,11 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"files": pico.list_files()})
             elif url.path == "/api/file":
                 self._json({"content": pico.read_file(q["name"][0])})
-            elif url.path == "/api/cpp/env":
-                self._json(cpp_build.check_env())
-            elif url.path == "/api/cpp/samples":
-                self._json({"samples": cpp_build.samples()})
-            elif url.path == "/api/cpp/files":
-                self._json({"files": cpp_build.list_files(), "dir": str(cpp_build.PROJECT)})
-            elif url.path == "/api/cpp/file":
-                self._json({"content": cpp_build.read_file(q["name"][0])})
+            elif url.path == "/api/env":
+                self._json(devenv.check())
             else:
                 self._json({"error": "not found"}, 404)
-        except (DeviceError, cpp_build.BuildError) as e:
+        except DeviceError as e:
             self._json({"error": str(e)}, 409)
         except FileNotFoundError as e:
             self._json({"error": f"ファイルがありません: {e.filename}"}, 404)
@@ -555,7 +560,7 @@ class Handler(BaseHTTPRequestHandler):
 
             body = json.loads(self._body() or b"{}")
             if url.path == "/api/connect":
-                pico.connect(body["port"], "cpp" if body.get("mode") == "cpp" else "python")
+                pico.connect(body["port"], body.get("mode") or port_kind_mode(body["port"]))
             elif url.path == "/api/disconnect":
                 pico.disconnect()
             elif url.path == "/api/run":
@@ -570,21 +575,13 @@ class Handler(BaseHTTPRequestHandler):
                 pico.write_file(body["name"], body["content"])
             elif url.path == "/api/delete":
                 pico.delete_file(body["name"])
-            elif url.path == "/api/cpp/run":
-                cpp.start(body["code"], body.get("board", "pico"))
-            elif url.path == "/api/cpp/stop":
-                cpp.cancel()
-            elif url.path == "/api/cpp/file":
-                return self._json({"ok": True, "path": cpp_build.write_file(body["name"], body["content"])})
-            elif url.path == "/api/cpp/delete":
-                cpp_build.delete_file(body["name"])
             elif url.path == "/api/clear":
                 with console.lock:
                     console.items.clear()
             else:
                 return self._json({"error": "not found"}, 404)
             self._json({"ok": True})
-        except (DeviceError, cpp_build.BuildError) as e:
+        except DeviceError as e:
             self._json({"error": str(e)}, 409)
         except FileNotFoundError as e:
             self._json({"error": f"ファイルがありません: {e.filename}"}, 404)

@@ -1,3 +1,6 @@
-# Raspberry Pi Pico (RP2040 / RP2350) のシリアルポートを、ログイン中のユーザーが使えるようにする
+# Raspberry Pi Pico (RP2040 / RP2350) を、ログイン中のユーザーが sudo なしで使えるようにする
 # uaccess は 73-seat-late.rules で処理されるので、それより前の番号（70）にしておく必要がある
+# シリアルポート（Pico Studio、Serial Monitor、printf の出力）
 SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", TAG+="uaccess"
+# USB の機器そのもの（picotool での書き込み。VS Code の Run Project (USB) も picotool を使う）
+SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", TAG+="uaccess"

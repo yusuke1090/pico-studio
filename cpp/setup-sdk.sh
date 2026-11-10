@@ -1,5 +1,7 @@
 #!/bin/sh
-# C++ の開発環境（コンパイラと Pico SDK）をまとめて入れる。何回打っても大丈夫。
+# コマンドで C++ をビルドするための道具（コンパイラ・Pico SDK・picotool）をまとめて入れる。何回打っても大丈夫。
+# VS Code の拡張機能「Raspberry Pi Pico」だけで開発するなら、これは要らない（拡張機能が ~/.pico-sdk に入れる）。
+# くわしくはガイドの付録A。
 #   sh ~/apps/pico-studio/cpp/setup-sdk.sh
 # 途中で sudo のパスワードを聞かれる（打っても画面には出ない）。
 set -e
@@ -30,9 +32,9 @@ else
     echo "登録しました（新しいターミナルから使えます）"
 fi
 
-echo "== 4/5 プロジェクトのフォルダ（~/apps/pico-cpp）を用意する"
-PICO_SDK_PATH="$SDK_DIR" python3 "$STUDIO/cpp_build.py" init
-PICO_SDK_PATH="$SDK_DIR" python3 "$STUDIO/cpp_build.py" check
+echo "== 4/5 コマンド用のプロジェクトのフォルダ（~/apps/pico-cpp）を用意する"
+PICO_SDK_PATH="$SDK_DIR" python3 "$STUDIO/devenv.py" init
+PICO_SDK_PATH="$SDK_DIR" python3 "$STUDIO/devenv.py" check || true   # VS Code がなくても、コマンド用には使える
 
 echo "== 5/5 picotool（USB でピコを操作するツール）を入れる: ~/.local/bin/picotool"
 # SDK がビルドの途中で作る picotool は USB の機能なしなので、別にビルドする
@@ -59,7 +61,7 @@ if [ ! -f /etc/udev/rules.d/60-picotool.rules ] && [ -f "$PT_SRC/udev/60-picotoo
 fi
 
 echo
-echo "完了しました。Pico Studio を起動し直す（Ctrl + C → ./start.sh）と、C++ が使えます。"
+echo "完了しました。"
 echo "コマンドでビルドするとき:"
 echo "  cd ~/apps/pico-cpp && cmake -S . -B build && make -C build -j4 blink"
 echo "picotool は新しいターミナルから使えます（picotool version で確かめる）"
