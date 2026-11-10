@@ -206,7 +206,7 @@ gdb の中で、次のように打ちます。
 | `print 変数` | 変数の値を見る |
 | `backtrace` | 今どの関数の中にいるか（止まったときの場所を調べる） |
 
-VS Code の拡張機能「Raspberry Pi Pico」を使うと、同じことを画面のボタンでできます。
+VS Code の拡張機能「Raspberry Pi Pico」を使うと、同じことを画面のボタンでできます（19章）。
 くわしくは [Getting started with Raspberry Pi Pico-series](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) のデバッグの章を見てください。
 
 > Debug Probe がないときは、もう1台のピコを Debug Probe として使うこともできます（[debugprobe](https://github.com/raspberrypi/debugprobe)）。

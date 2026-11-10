@@ -108,6 +108,7 @@ GitHub 上でも [guide/](guide/) フォルダの Markdown をそのまま読め
 | [16. 割り込み・タイマー・2つのコア](guide/16-cpp-interrupts.md) | GPIO の割り込み、くり返しタイマー、リングバッファ、2つのコアと FIFO、クリティカルセクション |
 | [17. 省電力と長く動かすための工夫](guide/17-cpp-power.md) | 電力を減らす方法、電池の電圧、ウォッチドッグ、設定のフラッシュ保存 |
 | [18. 製品にするための準備](guide/18-cpp-product.md) | PC でのテスト、バージョンの埋め込み、Debug Probe と gdb、量産の書き込み、ユニーク ID、出荷前のチェックリスト |
+| [19. VS Code で C++ を開発する](guide/19-vscode.md) | 拡張機能「Raspberry Pi Pico」の入れ方、新しいプロジェクト、ビルド・書き込み・出力、Quick Access の各メニュー、デバッグ、Pico Studio との使い分け（図つき） |
 
 `http://localhost:8765/#chapter=5` のように開くと、その章を直接表示する。
 

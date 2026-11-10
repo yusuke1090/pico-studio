@@ -17,5 +17,6 @@
   {"file": "15-cpp-style.md", "title": "15. マイコン向けの C++ の書き方"},
   {"file": "16-cpp-interrupts.md", "title": "16. 割り込み・タイマー・2つのコア"},
   {"file": "17-cpp-power.md", "title": "17. 省電力と長く動かすための工夫"},
-  {"file": "18-cpp-product.md", "title": "18. 製品にするための準備"}
+  {"file": "18-cpp-product.md", "title": "18. 製品にするための準備"},
+  {"file": "19-vscode.md", "title": "19. VS Code で C++ を開発する"}
 ]
