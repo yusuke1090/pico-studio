@@ -42,7 +42,10 @@ if command -v picotool >/dev/null 2>&1 && ! picotool version 2>&1 | grep -q "wit
     echo "すでにあります: $(command -v picotool)"
 else
     [ -d "$PT_SRC" ] || git clone --branch "$PT_VERSION" https://github.com/raspberrypi/picotool.git "$PT_SRC"
-    cmake -S "$PT_SRC" -B "$PT_SRC/build" -DPICO_SDK_PATH="$SDK_DIR" -DCMAKE_BUILD_TYPE=Release
+    # CMAKE_POLICY_VERSION_MINIMUM: SDK の中の mbedtls が古い書き方なので、CMake 4 以降でも通るようにする
+    # -Wno-dev: picotool を作る人向けの注意（動きには関係ない）を出さない
+    cmake -S "$PT_SRC" -B "$PT_SRC/build" -DPICO_SDK_PATH="$SDK_DIR" -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -Wno-dev
     make -C "$PT_SRC/build" -j4 picotool
     mkdir -p "$HOME/.local/bin"
     cp "$PT_SRC/build/picotool" "$HOME/.local/bin/picotool"
