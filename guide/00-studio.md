@@ -376,6 +376,7 @@ sh ~/apps/pico-studio/cpp/setup-sdk.sh
 | Pico SDK 2.1.1 と、SDK が使うライブラリ（USB・無線など） | `~/pico/pico-sdk` |
 | SDK の場所の登録（`PICO_SDK_PATH`） | `~/.bashrc` の最後に1行 |
 | C++ のプロジェクトのフォルダ | `~/apps/pico-cpp` |
+| picotool（USB でピコを操作するツール。コマンドで使うとき用） | `~/.local/bin/picotool` |
 
 最後に `OK: C++ でビルドできます` と出たら、Pico Studio を起動し直します（Ctrl + C → `./start.sh`）。「C++ の開発環境」が緑になれば準備完了です。
 スクリプトがすることのくわしい説明と、元に戻す方法は、14章の「開発環境を用意する」にあります。

@@ -27,7 +27,7 @@ sudo apt install python3-serial
 C++ も使うときは、さらに次のものが必要（くわしくはガイド14章）。
 
 ```sh
-sh cpp/setup-sdk.sh          # apt でコンパイラなど、~/pico/pico-sdk に Pico SDK、~/apps/pico-cpp にプロジェクト
+sh cpp/setup-sdk.sh          # apt でコンパイラなど、~/pico/pico-sdk に Pico SDK、~/apps/pico-cpp にプロジェクト、~/.local/bin に picotool
 python3 cpp_build.py check   # そろっているか確かめる
 ```
 

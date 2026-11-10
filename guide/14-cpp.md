@@ -73,14 +73,15 @@ python3 ~/apps/pico-studio/cpp_build.py check
 
 ### このスクリプトがすること
 
-スクリプトは、上から順に次の4つを行います。中身は `~/apps/pico-studio/cpp/setup-sdk.sh` で読めます。
+スクリプトは、上から順に次の5つを行います。中身は `~/apps/pico-studio/cpp/setup-sdk.sh` で読めます。
 
 | 順番 | すること | 入る場所 | 中身 |
 | --- | --- | --- | --- |
-| 1/4 | コンパイラなどを入れる（`sudo apt install`） | `/usr/bin` など（PC 全体） | 下の「1. コンパイラなどを入れる」の表のパッケージ |
-| 2/4 | Pico SDK 2.1.1 をダウンロードする（`git clone` と `git submodule update --init`） | `~/pico/pico-sdk` | SDK 本体と、SDK が使うライブラリ（下の表） |
-| 3/4 | SDK の場所を登録する | `~/.bashrc` の最後に1行 | `export PICO_SDK_PATH=/home/ユーザー名/pico/pico-sdk` |
-| 4/4 | プロジェクトのフォルダを用意して、そろったか確かめる | `~/apps/pico-cpp` | `CMakeLists.txt`、`pico_sdk_import.cmake`、`.gitignore`、`blink.cpp`、`mpu6050.h`、`ws2812.h` |
+| 1/5 | コンパイラなどを入れる（`sudo apt install`） | `/usr/bin` など（PC 全体） | 下の「1. コンパイラなどを入れる」の表のパッケージ |
+| 2/5 | Pico SDK 2.1.1 をダウンロードする（`git clone` と `git submodule update --init`） | `~/pico/pico-sdk` | SDK 本体と、SDK が使うライブラリ（下の表） |
+| 3/5 | SDK の場所を登録する | `~/.bashrc` の最後に1行 | `export PICO_SDK_PATH=/home/ユーザー名/pico/pico-sdk` |
+| 4/5 | プロジェクトのフォルダを用意して、そろったか確かめる | `~/apps/pico-cpp` | `CMakeLists.txt`、`pico_sdk_import.cmake`、`.gitignore`、`blink.cpp`、`mpu6050.h`、`ws2812.h` |
+| 5/5 | picotool を作って入れる（`git clone` してビルド）。sudo なしで使えるように udev ルールも入れる | `~/pico/picotool`（ソース）、`~/.local/bin/picotool`、`/etc/udev/rules.d/60-picotool.rules` | USB でピコを書き込みモードにする・書き込む・中を調べるツール（2章・18章）。なくてもビルドと Pico Studio の書き込みはできる |
 
 SDK と一緒にダウンロードされるライブラリ（サブモジュール）は次のとおりです。
 
@@ -94,8 +95,9 @@ SDK と一緒にダウンロードされるライブラリ（サブモジュー�
 
 - ダウンロードとインストールで、合わせて **1GB 前後**のディスクを使います（目安です）。インターネットにつながっている必要があります
 - `~/.bashrc` に書いた1行は、**新しく開いたターミナル**から効きます。開いたままのターミナルでは `source ~/.bashrc` を打つか、開き直します
-- 3/4 は、`~/.bashrc` にすでに `PICO_SDK_PATH` があれば何もしません。SDK を別の場所に置きたいときは、`PICO_SDK_PATH=/置きたい場所 sh ~/apps/pico-studio/cpp/setup-sdk.sh` のように打ちます
-- 4/4 は、すでにあるファイルを上書きしません
+- 3/5 は、`~/.bashrc` にすでに `PICO_SDK_PATH` があれば何もしません。SDK を別の場所に置きたいときは、`PICO_SDK_PATH=/置きたい場所 sh ~/apps/pico-studio/cpp/setup-sdk.sh` のように打ちます
+- 4/5 は、すでにあるファイルを上書きしません
+- 5/5 は、USB の機能がある picotool がすでにあれば何もしません
 
 ### あとからできるもの
 
@@ -105,14 +107,15 @@ SDK と一緒にダウンロードされるライブラリ（サブモジュー�
 | --- | --- | --- |
 | Pico Studio のビルド用のフォルダ | `~/.cache/pico-studio/cpp` | 「▶ ビルドして書き込む」で使う。消しても、次のビルドで作り直す |
 | コマンドでビルドしたもの | `~/apps/pico-cpp/build` | `.uf2` など。消しても `cmake` からやり直せる |
-| picotool | それぞれの `build` フォルダの中 | `.uf2` を作るのに使うツール。ビルドのときに SDK が自動でダウンロードしてビルドする（インターネットが必要） |
+| picotool（`.uf2` を作る用） | それぞれの `build/_deps` の中 | ビルドのときに SDK が自動でダウンロードして作る（インターネットが必要）。USB の機能はないので、ピコの操作には 5/5 で入れた picotool を使う |
 
 ### 元に戻すとき
 
 C++ の開発環境を消したいときは、次のようにします。
 
 ```bash
-rm -rf ~/pico/pico-sdk ~/.cache/pico-studio
+rm -rf ~/pico/pico-sdk ~/pico/picotool ~/.local/bin/picotool ~/.cache/pico-studio
+sudo rm /etc/udev/rules.d/60-picotool.rules
 sudo apt remove gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
 ```
 
@@ -121,7 +124,7 @@ sudo apt remove gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eab
 
 ### 1つずつ入れる
 
-スクリプトを使わずに、自分で1つずつ入れるときの手順です。スクリプトの 1/4〜3/4 と同じことをします。
+スクリプトを使わずに、自分で1つずつ入れるときの手順です。スクリプトの 1/5〜3/5 と同じことをします（picotool の作り方は [picotool の README](https://github.com/raspberrypi/picotool) を見てください）。
 
 #### 1. コンパイラなどを入れる
 
@@ -340,16 +343,16 @@ cp blink.uf2 /run/media/$USER/RPI-RP2/
 
 #### BOOT を押さずに書き込む（picotool）
 
-毎回 BOOT を押すのが面倒なときは、ビルドのときに一緒にできた **picotool** を使います。
+毎回 BOOT を押すのが面倒なときは、**picotool** を使います（`setup-sdk.sh` の 5/5 で `~/.local/bin/picotool` に入ります）。
 `printf` を USB に出しているプログラムが動いていれば、`-f` を付けると、自動で書き込みモードにして書き込みます。
 
 ```bash
 cd ~/apps/pico-cpp
-sudo build/_deps/picotool/picotool load -x -f build/blink.uf2
+picotool load -x -f build/blink.uf2
 ```
 
-- picotool の場所は、PC によって変わることがあります。見つからないときは `find ~/apps/pico-cpp/build -name picotool -type f` で探します
-- `sudo` なしで使うには、[picotool の udev ルール](https://github.com/raspberrypi/picotool/blob/master/udev/60-picotool.rules) を入れます
+- MicroPython が動いているときは `-f` が効きません。先に `mpremote bootloader` で書き込みモードにしてから、`picotool load -x build/blink.uf2` を打ちます
+- ビルドの途中で `build/_deps` の中にも picotool ができますが、これは `.uf2` を作るためだけのもので、USB の機能がありません（ピコの操作には使えません）
 
 ### 出力を見る
 

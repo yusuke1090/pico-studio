@@ -325,7 +325,7 @@ sh ~/apps/pico-studio/cpp/setup-sdk.sh
 | 1 | USB で認識しているか確かめる | `lsusb -d 2e8a:` | 接続の確認の「USB で認識」 |
 | 2 | ビルドの準備（最初と、CMakeLists.txt を変えたとき） | `cmake -S . -B build` | （自動） |
 | 3 | ビルドする | `make -C build -j4 blink` | 「▶ ビルドして書き込む」の前半 |
-| 4 | 書き込みモードにする | `picotool reboot -f -u` | （自動） |
+| 4 | 書き込みモードにする | MicroPython なら `mpremote bootloader`、C++ なら `picotool reboot -f -u` | （自動） |
 | 5 | 書き込む | `cp build/blink.uf2 /run/media/$USER/RPI-RP2/` | 「▶ ビルドして書き込む」の後半 |
 | 6 | 出力を見る | `python3 -m serial.tools.miniterm /dev/ttyACM0 115200` | 出力欄 |
 | 7 | ピコの中のプログラムを調べる（必要なとき） | `picotool info -a` | （なし） |
@@ -363,21 +363,36 @@ make -C build -j4 blink
 
 ## 手順4: 書き込みモードにする
 
-Pico SDK のプログラム（`stdio_init_all()` で USB の出力を使っているもの）が動いていれば、コマンドで書き込みモードにできます。方法は2つあります。
+**ピコで今なにが動いているかで、方法が違います。** 手順1の `lsusb -d 2e8a:` で確かめます。
+
+| `lsusb` の表示 | 動いているもの | 書き込みモードにするコマンド |
+| --- | --- | --- |
+| `2e8a:0005 MicroPython Board` | MicroPython | `mpremote bootloader` |
+| `2e8a:000a Raspberry Pi Pico` | C++ のプログラム（`stdio_init_all()` あり） | `picotool reboot -f -u`、または下の 1200 bps の方法 |
+| `2e8a:0003`（Pico 2 は `000f`） | もう書き込みモード | 何もしなくてよい |
+| 何も出ない | USB を使わないプログラム、または止まっている | BOOT を押しながら USB をつなぎ直す |
+
+**初めて C++ を書き込むとき**は、まだ MicroPython が動いているので、`mpremote bootloader` を使います。
+
+```bash
+mpremote bootloader
+```
+
+C++ のプログラムが動いているときは、picotool を使います。
 
 ```bash
 picotool reboot -f -u
 ```
 
-picotool がないときや権限がないときは、ポートを 1200 bps で開いて閉じます。Pico SDK は、これを「書き込みモードにして」という合図として受け取ります（Pico Studio もこの方法を使っています）。
+picotool がないときは、ポートを 1200 bps で開いて閉じます。Pico SDK のプログラムは、これを「書き込みモードにして」という合図として受け取ります（Pico Studio もこの方法を使っています）。
 
 ```bash
 python3 -c "import serial; serial.Serial('/dev/ttyACM0', 1200).close()"
 ```
 
-どちらもうまくいかないときは、BOOT を押しながら USB をつなぎ直します。`RPI-RP2` のドライブが出てくれば成功です。
+`RPI-RP2` のドライブが出てくれば成功です。うまくいかないときは、BOOT を押しながら USB をつなぎ直します。
 
-> MicroPython が動いているときは、`mpremote bootloader` で書き込みモードにできます。
+> `picotool` が「見つかりません」と出るときは、`sh ~/apps/pico-studio/cpp/setup-sdk.sh` を打ち直すと入ります（14章）。ビルドの途中で `build/_deps` にできる picotool は、USB の機能なしで作られているので、ピコの操作には使えません。
 
 ## 手順5: 書き込む
 

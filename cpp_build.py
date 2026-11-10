@@ -441,6 +441,11 @@ if __name__ == "__main__":
         env = check_env()
         print("OK: C++ でビルドできます（Pico SDK " + env["sdk_version"] + "）" if env["ok"]
               else "足りないもの:\n・" + "\n・".join(env["problems"]))
+        pt = shutil.which("picotool")
+        usb = pt and "without USB" not in subprocess.run([pt, "version"], capture_output=True, text=True).stdout
+        print(f"picotool: {pt}" if usb else
+              "picotool: なし（なくてもビルドと Pico Studio の書き込みはできる。"
+              "コマンドで使うなら sh ~/apps/pico-studio/cpp/setup-sdk.sh）")
         sys.exit(0 if env["ok"] else 1)
     else:
         print("使い方:\n  python3 cpp_build.py init [フォルダ]   プロジェクトのフォルダを作る（省略すると ~/apps/pico-cpp）\n"
