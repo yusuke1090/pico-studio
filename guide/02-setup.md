@@ -16,6 +16,8 @@ Ubuntu の場合です。最初の1回だけ行います。
 | --- | --- | --- |
 | **VS Code** | プログラムを書くソフト | この章の手順1 |
 | **拡張機能「Raspberry Pi Pico」** | ビルド・書き込み・デバッグをボタンでできるようにする。コンパイラや Pico SDK も自動で入れてくれる | この章の手順2 |
+| **拡張機能「Serial Monitor」** | `printf` の出力を VS Code の中で見る | この章の手順2 |
+| udev ルール | ピコを sudo なしで使う（書き込み・出力を見る） | この章の手順3 |
 | Pico Studio | ピコがつながっているかを確かめる（5章） | この章の手順3 |
 | （必要なら）コマンド用の道具 | VS Code を使わず、ターミナルでビルド・書き込みする | 付録A |
 
@@ -47,7 +49,16 @@ sudo apt install ~/ダウンロード/code_*.deb
 sudo apt install git tar python3 build-essential
 ```
 
-> `printf` の出力を VS Code の中で見るために、拡張機能 **Serial Monitor**（作者: Microsoft）も入れておきます（3章）。
+### Serial Monitor も入れる
+
+`printf` の出力を VS Code の中で見るために、拡張機能 **Serial Monitor**（作者: Microsoft）も入れます（3章で使います）。
+拡張機能の検索欄に `Serial Monitor` と入れて、作者が Microsoft のものをインストールします。ターミナルからなら、次のコマンドでも入ります。
+
+```bash
+code --install-extension ms-vscode.vscode-serial-monitor
+```
+
+ほかのおすすめの拡張機能は、4章の「おすすめの拡張機能」にあります。
 
 ## 拡張機能が入れるもの
 
@@ -107,7 +118,8 @@ python3 ~/apps/pico-studio/devenv.py check
 
 ## まとめ
 
-- 必要なのは VS Code と拡張機能「Raspberry Pi Pico」。コンパイラと SDK は拡張機能が `~/.pico-sdk` に入れる
+- 必要なのは VS Code と拡張機能「Raspberry Pi Pico」「Serial Monitor」。コンパイラと SDK は拡張機能が `~/.pico-sdk` に入れる
+- udev ルールを入れて、ピコを sudo なしで使えるようにする（前に入れていても、入れ直す）
 - 初めてプロジェクトを作るときに、数分かけてダウンロードする
 - Pico Studio を使うには pyserial と udev ルール
 - そろったかは、Pico Studio の「C++ の開発環境」か `devenv.py check` で確かめる
