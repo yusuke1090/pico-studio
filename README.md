@@ -27,12 +27,12 @@ sudo apt install python3-serial
 C++ も使うときは、さらに次のものが必要（くわしくはガイド14章）。
 
 ```sh
-sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib build-essential git libusb-1.0-0-dev pkg-config
-git clone --branch 2.1.1 https://github.com/raspberrypi/pico-sdk.git ~/pico/pico-sdk
-cd ~/pico/pico-sdk && git submodule update --init
+sh cpp/setup-sdk.sh          # apt でコンパイラなど、~/pico/pico-sdk に Pico SDK、~/apps/pico-cpp にプロジェクト
+python3 cpp_build.py check   # そろっているか確かめる
 ```
 
 Pico SDK は `~/pico/pico-sdk` か、環境変数 `PICO_SDK_PATH` の場所から探す。
+コマンドでビルドするプロジェクトだけを作るときは `python3 cpp_build.py init [フォルダ]`（フォルダの `.cpp` が1つずつプログラムになる `CMakeLists.txt` ができる）。
 
 ## 起動のしかた
 
@@ -184,7 +184,8 @@ server.py ── pyserial ──▶ /dev/ttyACM0 ──▶ ピコ (MicroPython /
 
 ```
 server.py               ローカルサーバー（ピコとの通信と API）
-cpp_build.py            C++ モード（ビルド・書き込みモードへの切り替え・書き込み・PC のファイル）
+cpp_build.py            C++ モード（ビルド・書き込みモードへの切り替え・書き込み・PC のファイル）。init / check のコマンドもある
+cpp/setup-sdk.sh        C++ の開発環境をまとめて入れるスクリプト
 cpp/include/            C++ で #include できるヘッダー（mpu6050.h、ws2812.h）
 cpp/samples/            C++ のサンプル（1行目のコメントがサンプルの名前）
 static/index.html       画面（HTML / CSS / JavaScript を1ファイルに）

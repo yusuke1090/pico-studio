@@ -53,6 +53,23 @@ Arduino の書き方（`setup()` と `loop()`）で C++ を書く **arduino-pico
 
 Ubuntu の場合です。PC のターミナルで行います。
 
+### まとめて入れる（おすすめ）
+
+次のコマンドを打つと、下の 1〜3 と、プロジェクトのフォルダ（`~/apps/pico-cpp`）の用意まで、まとめて行います。途中でパスワードを聞かれます（打っても画面には出ません）。
+
+```bash
+sh ~/apps/pico-studio/cpp/setup-sdk.sh
+```
+
+最後に `OK: C++ でビルドできます` と出れば完了です。ターミナルを開き直してから使います。
+何回打っても大丈夫です（あるものはそのまま使います）。足りないものだけを確かめたいときは、次のコマンドを打ちます。
+
+```bash
+python3 ~/apps/pico-studio/cpp_build.py check
+```
+
+1つずつ入れたいときや、何をしているか知りたいときは、次の 1〜3 を見てください。
+
 ### 1. コンパイラなどを入れる
 
 ```bash
@@ -129,70 +146,64 @@ Pico Studio のビルドでは、次の設定が最初から入っています�
 
 製品のプログラムは、複数のファイルに分けたり、git で管理したりします。そのときは、自分でプロジェクトのフォルダと `CMakeLists.txt` を作り、コマンドでビルドします。
 
-### フォルダを作る
+### プロジェクトのフォルダを作る
 
 ```bash
-mkdir -p ~/apps/pico-cpp
-cd ~/apps/pico-cpp
-cp $PICO_SDK_PATH/external/pico_sdk_import.cmake .
+python3 ~/apps/pico-studio/cpp_build.py init
 ```
 
-`pico_sdk_import.cmake` は、プロジェクトから SDK を読み込むためのファイルです。SDK に入っているものをコピーして使います。
-
-最後は、次の形になります。
+`~/apps/pico-cpp` に、ビルドに必要なファイルができます（「まとめて入れる」のスクリプトを使った人は、もうできています）。
+すでにあるファイルは上書きしないので、何回打っても大丈夫です。別のフォルダに作るときは `init ~/apps/collar` のようにフォルダを書きます。
 
 ```text
 ~/apps/pico-cpp/
-├── CMakeLists.txt          ビルドの設定
-├── pico_sdk_import.cmake   SDK を読み込む（コピーしたもの）
-├── blink.cpp               Lチカ（このあと作る）
-├── mpu6050.h               MPU-6050 を読むクラス（下の「mpu6050.h の全体」）
-├── mpu.cpp                 MPU-6050 を読む（7章のコード）
-├── model.h                 決定木（10章の train.py で作る）
-├── judge.cpp               決定木で判定する（10章のコード）
-└── build/                  ビルドしてできたファイル（.uf2 など）
+├── CMakeLists.txt          ビルドの設定（下で説明）
+├── pico_sdk_import.cmake   SDK を読み込む（SDK からコピーしたもの）
+├── .gitignore              git で build フォルダを管理しないための設定
+├── blink.cpp               Lチカ（最初のプログラム）
+├── mpu6050.h               MPU-6050 を読むクラス（7章）
+├── ws2812.h                RGB LED を光らせるクラス（4章）
+└── build/                  ビルドしてできたファイル（.uf2 など）。cmake を打つとできる
 ```
 
-4〜10章の C++ のコードは、ファイルに保存して `pico_app(...)` の行を足せば、どれもこのプロジェクトでビルドできます。
-Pico Studio の「PC に保存」も、このフォルダ（`~/apps/pico-cpp`）に保存します。
+Pico Studio の「PC に保存」も、このフォルダに保存します。初めて保存したときに、このフォルダがなければ自動で作ります。
 
 ### CMakeLists.txt
 
-ビルドの設定です。次の内容で `CMakeLists.txt` を作ります。
+ビルドの設定です。**このフォルダの `.cpp` が、1つずつプログラムになります**（`blink.cpp` → `build/blink.uf2`）。
+4〜10章の C++ のコードは、`.cpp` として保存すれば、どれもそのままビルドできます。中心の部分は次のとおりです。
 
 ```cmake
 cmake_minimum_required(VERSION 3.13)
-
 include(pico_sdk_import.cmake)        # pico_sdk_init より前に読む
-
 project(pico_cpp C CXX ASM)
-set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
-
 pico_sdk_init()
 
-# プログラムを1つ追加する関数。pico_app(名前 使うライブラリ...)
-function(pico_app name)
-    add_executable(${name} ${name}.cpp)
-    target_link_libraries(${name} pico_stdlib ${ARGN})
-    pico_enable_stdio_usb(${name} 1)     # printf を USB に出す
-    pico_enable_stdio_uart(${name} 0)    # UART（GP0, GP1）には出さない
-    pico_add_extra_outputs(${name})      # .uf2 も作る
-endfunction()
+set(PICO_LIBS pico_stdlib hardware_adc hardware_i2c ...)   # 使うライブラリ（Pico Studio と同じ）
 
-pico_app(blink)
+file(GLOB APP_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
+foreach(src IN LISTS APP_SOURCES)
+    get_filename_component(name "${src}" NAME_WE)   # blink.cpp → blink
+    add_executable(${name} "${src}")
+    target_link_libraries(${name} ${PICO_LIBS})
+    pico_enable_stdio_usb(${name} 1)                # printf を USB に出す
+    pico_add_extra_outputs(${name})                 # .uf2 も作る
+endforeach()
 ```
 
 | 行 | 意味 |
 | --- | --- |
 | `project(pico_cpp C CXX ASM)` | プロジェクトの名前と、使う言語（C、C++、アセンブリ） |
 | `pico_sdk_init()` | SDK の準備 |
+| `set(PICO_LIBS ...)` | 使うライブラリ。`pico_stdlib` は GPIO・時間・`printf` などの基本、`hardware_i2c` は I2C など |
+| `file(GLOB ... *.cpp)` | フォルダの `.cpp` を全部探す |
 | `add_executable(blink blink.cpp)` | `blink.cpp` から `blink` というプログラムを作る |
-| `target_link_libraries(... pico_stdlib)` | 使うライブラリ。`pico_stdlib` は GPIO・時間・`printf` などの基本 |
 | `pico_enable_stdio_usb(... 1)` | `printf` の出力を USB シリアルに出す。**これがないと出力が見えない** |
 | `pico_add_extra_outputs` | 書き込み用の `.uf2` ファイルも作る |
 
-このあとプログラムを足すときは、最後に `pico_app(...)` の行を足していきます。
+- `test_` で始まる `.cpp` は、PC 用のテスト（18章）なので、ピコ用にはビルドしません
+- 1つのプログラムを複数の `.cpp` に分けたいとき（15章）は、`add_executable(collar collar.cpp sensor.cpp)` のように、自分で行を書き足します
 
 ### blink.cpp
 
@@ -238,24 +249,22 @@ MicroPython と比べると、次のようになります。
 
 ```bash
 cd ~/apps/pico-cpp
-mkdir -p build
-cd build
-cmake ..
-make -j4 blink
+cmake -S . -B build
+make -C build -j4 blink
 ```
 
-- `cmake ..` は、1つ上のフォルダの `CMakeLists.txt` を読んで、ビルドの手順（Makefile）を作ります。`CMakeLists.txt` を変えたとき以外は、2回目からは要りません
-- `make -j4 blink` で `blink` だけをビルドします。`-j4` は4つ同時に進めて速くするオプションです。`make -j4` だけなら全部をビルドします
+- `cmake -S . -B build` は、今のフォルダ（`.`）の `CMakeLists.txt` を読んで、`build` フォルダにビルドの手順（Makefile）を作ります。**最初と、`.cpp` を足したり消したりしたとき**に打ちます
+- `make -C build -j4 blink` で、`build` フォルダで `blink` だけをビルドします。`-j4` は4つ同時に進めて速くするオプションです。`blink` を省くと全部をビルドします
 - 1回目は SDK 全体をビルドするので、数分かかります。2回目からは変えたところだけなので、数秒です
 
-うまくいくと、`build` フォルダに `blink.uf2` ができます。
+うまくいくと、`build/blink.uf2` ができます。
 
 ```bash
-ls -l blink.uf2
+ls -l build/blink.uf2
 ```
 
-> Pico 2 のときは、`cmake -DPICO_BOARD=pico2 ..` のようにボードの種類を指定します（Pico W は `pico_w`、Pico 2 W は `pico2_w`）。
-> 種類を変えるときは、`build` フォルダを消してから `cmake` をやり直します。
+> Pico 2 のときは、`cmake -S . -B build -DPICO_BOARD=pico2` のようにボードの種類を指定します（Pico W は `pico_w`、Pico 2 W は `pico2_w`）。
+> 種類を変えるときは、`rm -rf build` で `build` フォルダを消してから `cmake` をやり直します。
 
 ### 書き込む
 
@@ -321,7 +330,7 @@ while (!stdio_usb_connected()) sleep_ms(100);
 ## MicroPython と C++ の対応表
 
 これまでの章で使った書き方が、C++ では何にあたるかの一覧です。
-`CMakeLists.txt` の列は、`pico_app(...)` に足すライブラリです（`pico_stdlib` は最初から入っています）。
+`CMakeLists.txt` の列は、その機能が入っているライブラリです。Pico Studio と `cpp_build.py init` で作ったプロジェクトには、どれも最初から入っています。
 
 | やること | MicroPython | C++（Pico SDK） | CMakeLists.txt |
 | --- | --- | --- | --- |
@@ -439,38 +448,15 @@ C++ の SDK は止まらずに**負の数を返す**だけなので、戻り値�
 
 ## プログラムを足す
 
-4〜10章のコードを足すときは、ファイルに保存して、`CMakeLists.txt` の最後に `pico_app(...)` の行を足します。2つ目からは、使うライブラリを書きます。
-
-```cmake
-pico_app(blink)
-pico_app(temp hardware_adc)                 # ADC を使う（5章）
-pico_app(mpu hardware_i2c)                  # I2C を使う（7章）
-pico_app(judge hardware_i2c)                # 10章
-pico_app(rgb hardware_pio hardware_clocks)  # ws2812.h を使う（4章）
-pico_app(logger hardware_i2c hardware_flash)   # フラッシュに記録する（9章）
-pico_app(multicore pico_multicore)          # 2つのコア（16章）
-```
-
-| 使うもの | 足すライブラリ |
-| --- | --- |
-| ADC | `hardware_adc` |
-| I2C / SPI / UART | `hardware_i2c` / `hardware_spi` / `hardware_uart` |
-| PWM | `hardware_pwm` |
-| PIO（`ws2812.h`） | `hardware_pio hardware_clocks` |
-| フラッシュ | `hardware_flash` |
-| ウォッチドッグ | `hardware_watchdog` |
-| 2つのコア | `pico_multicore` |
-| Pico W の LED | `pico_cyw43_arch_none` |
-
-`CMakeLists.txt` を変えたら、`build` フォルダで `cmake ..` をやり直してから `make` します。
+4〜10章のコードを足すときは、`~/apps/pico-cpp` に `.cpp` として保存して（Pico Studio の「PC に保存」でもよい）、`cmake` を打ち直します。
 
 ```bash
-cd ~/apps/pico-cpp/build
-cmake ..
-make -j4
+cd ~/apps/pico-cpp
+cmake -S . -B build
+make -C build -j4 temp
 ```
 
-`build` フォルダに、プログラムごとの .uf2 ができます。書き込めるのは1つだけなので、使いたいものを選んで書き込みます。
+使えるライブラリは Pico Studio と同じです（この章の「Pico Studio のビルドのしくみ」の表）。ここにないもの（Pico W の無線で TCP/IP を使う `pico_cyw43_arch_lwip_threadsafe_background` など）を使うときは、`CMakeLists.txt` の `set(PICO_LIBS ...)` に足します。
 
 ### 手順をスクリプトにする
 
@@ -480,9 +466,9 @@ make -j4
 #!/bin/sh
 # 使い方: sh flash.sh blink   （先にピコを書き込みモードにしておく）
 set -e
-cd "$(dirname "$0")/build"
-make -j4 "$1"
-cp "$1.uf2" /run/media/$USER/RPI-RP2/
+cd "$(dirname "$0")"
+make -C build -j4 "$1"
+cp "build/$1.uf2" /run/media/$USER/RPI-RP2/
 echo "$1.uf2 を書き込みました"
 ```
 
@@ -506,16 +492,18 @@ C++ のプログラムを書き込んだあとで、また MicroPython と Pico 
 
 | 症状 | 原因と直し方 |
 | --- | --- |
-| `cmake ..` で `PICO_SDK_PATH` が見つからないと出る | 「SDK の場所を登録する」をしていない。ターミナルを開き直したか確かめる |
+| `cd: /home/…/pico-cpp: そのようなファイルやディレクトリはありません` | プロジェクトのフォルダがまだない。`python3 ~/apps/pico-studio/cpp_build.py init` |
+| `does not appear to contain CMakeLists.txt` | `CMakeLists.txt` がないフォルダで `cmake` を打った。`cd ~/apps/pico-cpp` してから打つ |
+| `cmake` で `PICO_SDK_PATH` が見つからないと出る | 「SDK の場所を登録する」をしていない。ターミナルを開き直したか確かめる。`python3 ~/apps/pico-studio/cpp_build.py check` で足りないものがわかる |
 | `arm-none-eabi-gcc` が見つからないと出る | `gcc-arm-none-eabi` を入れていない |
-| `fatal error: hardware/i2c.h: No such file or directory` | `pico_app(...)` に `hardware_i2c` を足していない（ADC なら `hardware_adc`） |
+| `fatal error: hardware/i2c.h: No such file or directory` | 自分で書いた `CMakeLists.txt` に `hardware_i2c` を足していない（ADC なら `hardware_adc`） |
 | `undefined reference to 'multicore_launch_core1'` | `pico_multicore` を足していない |
 | `printf` の出力が出ない | `pico_enable_stdio_usb(... 1)` があるか。`git submodule update --init` をしたか。Pico Studio が同じポートに接続していないか |
 | 最初の数行だけ出ない | PC がつなぐ前に出ている。「出力を見る」の `stdio_usb_connected()` を使う |
 | `/dev/ttyACM0` が出てこない | `pico_enable_stdio_usb` がないと、USB シリアルのポート自体ができない |
 | Pico W で LED が点かない | Pico W の LED は GP25 ではない。`pico_cyw43_arch` を使う |
 | Pico 2 で動かない | `cmake -DPICO_BOARD=pico2 ..` でビルドし直す（`build` フォルダを消してから） |
-| ビルドの途中で picotool のダウンロードに失敗する | `libusb-1.0-0-dev` と `pkg-config` を入れて、もう一度 `cmake ..` する |
+| ビルドの途中で picotool のダウンロードに失敗する | `libusb-1.0-0-dev` と `pkg-config` を入れて、もう一度 `cmake -S . -B build` する |
 | I2C の読み取りが失敗する | 7章・11章と同じように配線とアドレスを確かめる。I2C スキャン（6章）で見つかるかを先に確かめると早い |
 | Pico Studio の「C++ の開発環境」が赤い | 足りないものが表示される。SDK を `~/pico/pico-sdk` 以外に置いたときは、`PICO_SDK_PATH` を設定してから Pico Studio を起動し直す |
 | Pico Studio で書き込みモードにならない | 前のプログラムが `stdio_init_all()` を呼んでいないか、止まっている。BOOT を押しながら USB をつなぎ直して、もう一度押す |

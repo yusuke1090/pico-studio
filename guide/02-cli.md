@@ -308,13 +308,20 @@ mpremote rm hello.py
 - どの順番で何を打てばよいか
 - Pico Studio のボタンと、コマンドの対応
 
-開発環境（Pico SDK とコンパイラ）の入れ方と、プロジェクトの作り方は14章にあります。先に14章の「開発環境を用意する」と「コマンドでビルドする」を済ませてください。
+最初に1回だけ、開発環境（Pico SDK とコンパイラ）と、プロジェクトのフォルダ（`~/apps/pico-cpp`）を用意します。次のコマンドで、まとめて用意できます（くわしくは14章）。
+
+```bash
+sh ~/apps/pico-studio/cpp/setup-sdk.sh
+```
+
+最後に `OK: C++ でビルドできます` と出たら、ターミナルを開き直してから、下の手順に進みます。
 コマンドの中の単語（`cmake` や `make` など）をクリックすると、その意味が吹き出しで出ます。
 
 ## 全体の流れ
 
 | 順番 | やること | コマンド | Pico Studio では |
 | --- | --- | --- | --- |
+| 0 | 開発環境とプロジェクトを用意する（最初の1回だけ） | `sh ~/apps/pico-studio/cpp/setup-sdk.sh` | 接続の確認の「C++ の開発環境」 |
 | 1 | USB で認識しているか確かめる | `lsusb -d 2e8a:` | 接続の確認の「USB で認識」 |
 | 2 | ビルドの準備（最初と、CMakeLists.txt を変えたとき） | `cmake -S . -B build` | （自動） |
 | 3 | ビルドする | `make -C build -j4 blink` | 「▶ ビルドして書き込む」の前半 |
@@ -341,7 +348,8 @@ lsusb -d 2e8a:
 
 ## 手順2〜3: ビルドする
 
-14章で作ったプロジェクトのフォルダ（`~/apps/pico-cpp`）で行います。
+プロジェクトのフォルダ（`~/apps/pico-cpp`）で行います。このフォルダの `.cpp` が、1つずつプログラムになります（`blink.cpp` → `build/blink.uf2`）。
+`cd` で「そのようなファイルやディレクトリはありません」と出たら、フォルダがまだありません。`python3 ~/apps/pico-studio/cpp_build.py init` で作ります。
 
 ```bash
 cd ~/apps/pico-cpp
@@ -349,7 +357,7 @@ cmake -S . -B build
 make -C build -j4 blink
 ```
 
-- `cmake -S . -B build` は、今のフォルダの `CMakeLists.txt` を読んで、`build` フォルダにビルドの手順を作ります。最初と、`CMakeLists.txt` を変えたときだけ必要です
+- `cmake -S . -B build` は、今のフォルダの `CMakeLists.txt` を読んで、`build` フォルダにビルドの手順を作ります。最初と、`.cpp` を足したり消したりしたときに打ちます
 - `make -C build -j4 blink` は、`build` フォルダで `blink` をビルドします。`build/blink.uf2` ができます
 - エラーは `blink.cpp:12:5: error: ...` のように出ます。12行目の5文字目という意味です
 

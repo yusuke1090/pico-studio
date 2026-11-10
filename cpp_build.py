@@ -45,7 +45,7 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 
 add_executable(app app/main.cpp)
-target_include_directories(app PRIVATE ${{CMAKE_CURRENT_LIST_DIR}}/include "{project}")
+target_include_directories(app PRIVATE "{project}" ${{CMAKE_CURRENT_LIST_DIR}}/include)
 target_link_libraries(app {libs})
 if (PICO_CYW43_SUPPORTED)
     target_link_libraries(app pico_cyw43_arch_none)
@@ -53,6 +53,41 @@ endif()
 pico_enable_stdio_usb(app 1)
 pico_enable_stdio_uart(app 0)
 pico_add_extra_outputs(app)
+"""
+
+
+# ~/apps/pico-cpp（コマンドでビルドするプロジェクト）の CMakeLists.txt
+PROJECT_CMAKE = """\
+# Pico Studio が作ったプロジェクト（python3 ~/apps/pico-studio/cpp_build.py init）
+# このフォルダの *.cpp が、1つずつプログラムになる（blink.cpp → build/blink.uf2）。
+# test_ で始まるファイルは PC 用のテスト（18章）なので、ピコ用にはビルドしない。
+# .cpp を足したり消したりしたら、もう一度 cmake -S . -B build を打つ。
+cmake_minimum_required(VERSION 3.13)
+include(pico_sdk_import.cmake)        # pico_sdk_init より前に読む
+project(pico_cpp C CXX ASM)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+pico_sdk_init()
+
+# 使うライブラリ（Pico Studio のビルドと同じ）。使わないものはリンクのときに取り除かれる
+set(PICO_LIBS {libs})
+
+file(GLOB APP_SOURCES CONFIGURE_DEPENDS "${{CMAKE_CURRENT_LIST_DIR}}/*.cpp")
+foreach(src IN LISTS APP_SOURCES)
+    get_filename_component(name "${{src}}" NAME_WE)
+    if(name MATCHES "^test_")
+        continue()
+    endif()
+    add_executable(${{name}} "${{src}}")
+    target_include_directories(${{name}} PRIVATE "${{CMAKE_CURRENT_LIST_DIR}}")
+    target_link_libraries(${{name}} ${{PICO_LIBS}})
+    if(PICO_CYW43_SUPPORTED)
+        target_link_libraries(${{name}} pico_cyw43_arch_none)
+    endif()
+    pico_enable_stdio_usb(${{name}} 1)     # printf を USB に出す
+    pico_enable_stdio_uart(${{name}} 0)    # UART（GP0, GP1）には出さない
+    pico_add_extra_outputs(${{name}})      # .uf2 も作る
+endforeach()
 """
 
 
@@ -122,9 +157,45 @@ def read_file(name):
 
 def write_file(name, content):
     path = _project_file(name)
+    first = not (PROJECT / "CMakeLists.txt").exists()
     PROJECT.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
+    if first:
+        init_project(PROJECT, quiet=True)      # 初めての保存なら、コマンドでもビルドできる形にしておく
     return str(path)
+
+
+def init_project(folder=None, quiet=False):
+    """コマンドでビルドできるプロジェクトのフォルダを作る。すでにあるファイルは上書きしない。"""
+    folder = Path(folder or PROJECT).expanduser()
+    folder.mkdir(parents=True, exist_ok=True)
+    made = []
+
+    def put(name, text):
+        p = folder / name
+        if not p.exists():
+            p.write_text(text, encoding="utf-8")
+            made.append(name)
+
+    put("CMakeLists.txt", PROJECT_CMAKE.format(libs=LIBRARIES))
+    put(".gitignore", "build/\nbuild-*/\n")
+    for h in sorted(BUNDLED_INCLUDE.glob("*.h")):
+        put(h.name, h.read_text(encoding="utf-8"))
+    if not any(folder.glob("*.cpp")):
+        put("blink.cpp", (SAMPLES / "02-blink.cpp").read_text(encoding="utf-8"))
+    sdk = sdk_path()
+    if sdk:
+        put("pico_sdk_import.cmake", (sdk / "external" / "pico_sdk_import.cmake").read_text())
+    if not quiet:
+        print(f"{folder} を用意しました")
+        for m in made:
+            print("  作成:", m)
+        if not made:
+            print("  （足りないファイルはありませんでした）")
+        if not (folder / "pico_sdk_import.cmake").exists():
+            print("※ Pico SDK が見つからないので、pico_sdk_import.cmake は作っていません。\n"
+                  "  SDK を入れてから（sh ~/apps/pico-studio/cpp/setup-sdk.sh）、もう一度このコマンドを打ってください。")
+    return made
 
 
 def delete_file(name):
@@ -344,3 +415,17 @@ def try_udisks_mount():
         if dev.exists() and shutil.which("udisksctl"):
             subprocess.run(["udisksctl", "mount", "-b", str(dev.resolve())],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) >= 2 and sys.argv[1] == "init":
+        init_project(sys.argv[2] if len(sys.argv) > 2 else None)
+    elif len(sys.argv) >= 2 and sys.argv[1] == "check":
+        env = check_env()
+        print("OK: C++ でビルドできます（Pico SDK " + env["sdk_version"] + "）" if env["ok"]
+              else "足りないもの:\n・" + "\n・".join(env["problems"]))
+        sys.exit(0 if env["ok"] else 1)
+    else:
+        print("使い方:\n  python3 cpp_build.py init [フォルダ]   プロジェクトのフォルダを作る（省略すると ~/apps/pico-cpp）\n"
+              "  python3 cpp_build.py check            開発環境がそろっているか確かめる")

@@ -147,6 +147,25 @@ class CppModeTest(unittest.TestCase):
         cpp_build.delete_file("blink.cpp")
         self.assertNotIn("blink.cpp", [f["name"] for f in cpp_build.list_files()])
 
+    def test_init_project(self):
+        folder = TMP / "newproj"
+        made = cpp_build.init_project(folder, quiet=True)
+        for name in ("CMakeLists.txt", ".gitignore", "mpu6050.h", "ws2812.h", "blink.cpp", "pico_sdk_import.cmake"):
+            self.assertIn(name, made)
+        cm = (folder / "CMakeLists.txt").read_text()
+        self.assertIn("file(GLOB APP_SOURCES", cm)
+        self.assertIn("hardware_i2c", cm)
+        (folder / "blink.cpp").write_text("// 自分で直した\n")
+        self.assertEqual(cpp_build.init_project(folder, quiet=True), [])      # 2回目は何も上書きしない
+        self.assertEqual((folder / "blink.cpp").read_text(), "// 自分で直した\n")
+
+    def test_first_save_makes_project(self):
+        project = Path(os.environ["PICO_CPP_DIR"])
+        cpp_build.write_file("hello.cpp", "int main() {}\n")
+        self.assertTrue((project / "CMakeLists.txt").exists())
+        self.assertTrue((project / "mpu6050.h").exists())
+        self.assertFalse((project / "blink.cpp").exists())                    # すでに .cpp があれば足さない
+
     def test_samples(self):
         names = [s["name"] for s in cpp_build.samples()]
         self.assertIn("LED を点滅させる", names)
