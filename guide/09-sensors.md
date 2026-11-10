@@ -148,7 +148,11 @@ public:
 
     bool read_all(float acc[3], float gyro[3], float& temp) {
         uint8_t d[14];
-        if (!read_regs(0x3B, d, 14)) return false;      // 0x3B から14バイトまとめて読む
+        if (!read_regs(0x3B, d, 14)) {                  // 0x3B から14バイトまとめて読む
+            for (int i = 0; i < 3; i++) acc[i] = gyro[i] = 0;   // 読めなければ 0 にして false を返す
+            temp = 0;
+            return false;
+        }
         for (int i = 0; i < 3; i++) {
             acc[i] = to_i16(d[i * 2], d[i * 2 + 1]) / 16384.0f;
             gyro[i] = to_i16(d[8 + i * 2], d[9 + i * 2]) / 131.0f;
@@ -321,9 +325,10 @@ int main() {
     absolute_time_t next = get_absolute_time();
     for (int n = 0; n < HZ * 3; n++) {             // 3秒分
         float ax, ay, az;
-        mpu.read_accel(ax, ay, az);
+        bool ok = mpu.read_accel(ax, ay, az);      // 読めたら true
         if (n % 10 == 0) {
-            printf("%u %.3f %.3f %.3f\n", static_cast<unsigned>(to_ms_since_boot(get_absolute_time())), ax, ay, az);
+            if (ok) printf("%u %.3f %.3f %.3f\n", static_cast<unsigned>(to_ms_since_boot(get_absolute_time())), ax, ay, az);
+            else printf("読み取りに失敗しました\n");
         }
         next = delayed_by_ms(next, INTERVAL_MS);   // 次に測る時刻
         sleep_until(next);                         // その時刻まで待つ

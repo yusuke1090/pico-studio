@@ -30,7 +30,7 @@ public:
         sm_ = static_cast<uint>(sm);
 
         pio_gpio_init(pio_, pin_);
-        pio_sm_set_consistent_pindirs(pio_, sm_, pin_, 1, true);
+        pio_sm_set_consecutive_pindirs(pio_, sm_, pin_, 1, true);   // ピンを出力にする
         pio_sm_config c = pio_get_default_sm_config();
         sm_config_set_wrap(&c, offset, offset + 3);
         sm_config_set_sideset(&c, 1, false, false);

@@ -31,7 +31,10 @@ public:
     // 加速度 [g] だけを読む（6バイト）
     bool read_accel(float& ax, float& ay, float& az) {
         uint8_t d[6];
-        if (!read_regs(0x3B, d, 6)) return false;
+        if (!read_regs(0x3B, d, 6)) {          // 読めなければ 0 にして false を返す
+            ax = ay = az = 0;
+            return false;
+        }
         ax = to_i16(d[0], d[1]) / 16384.0f;
         ay = to_i16(d[2], d[3]) / 16384.0f;
         az = to_i16(d[4], d[5]) / 16384.0f;
@@ -41,7 +44,11 @@ public:
     // 加速度 [g]・角速度 [°/s]・温度 [℃] をまとめて読む（14バイト）
     bool read_all(float acc[3], float gyro[3], float& temp) {
         uint8_t d[14];
-        if (!read_regs(0x3B, d, 14)) return false;
+        if (!read_regs(0x3B, d, 14)) {         // 読めなければ 0 にして false を返す
+            for (int i = 0; i < 3; i++) acc[i] = gyro[i] = 0;
+            temp = 0;
+            return false;
+        }
         for (int i = 0; i < 3; i++) {
             acc[i] = to_i16(d[i * 2], d[i * 2 + 1]) / 16384.0f;
             gyro[i] = to_i16(d[8 + i * 2], d[9 + i * 2]) / 131.0f;

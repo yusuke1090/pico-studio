@@ -7,6 +7,7 @@
 - ライブラリの足し方と、ファイルの分け方
 - Debug Probe で、行で止めて調べる方法
 - git でのバージョン管理
+- おすすめの拡張機能
 - Pico Studio との使い分け
 
 3章で、プロジェクトを作って Lチカを動かせている前提です。
@@ -162,20 +163,61 @@ Quick Access の **Switch Build Type** で、ビルドの種類を切り替え�
 
 ## git でバージョンを管理する
 
-プロジェクトのフォルダを git で管理しておくと、前の状態に戻したり、どのバージョンを出荷したかを残したりできます。
+プロジェクトを GitHub に置く手順は、3章の「GitHub に置く」にあります。置いたあとは、VS Code の左の **ソース管理**（枝分かれのアイコン）で、ふだんの記録をします。
+
+| やること | ソース管理での操作 | コマンド |
+| --- | --- | --- |
+| 変えたところを見る | 一覧のファイルをクリック（前との違いが左右に並ぶ） | `git diff` |
+| 記録する（コミット） | 上の欄に「何を変えたか」を書いて **Commit** | `git add . && git commit -m "…"` |
+| GitHub に上げる（プッシュ） | **Sync Changes**（または … → Push） | `git push` |
+| GitHub の変更を取り込む | **Sync Changes**（または … → Pull） | `git pull` |
+| 前の状態に戻す | ファイルを右クリック → Discard Changes（コミット前の変更を捨てる） | `git restore ファイル名` |
+
+- **動くところまでできたら、こまめにコミット**します。動かなくなったときに、どこで壊したかがわかります
+- コミットの説明は「I2C の読み取りを足した」「ウォッチドッグを入れた」のように、何をしたかを短く書きます
+- 出荷するバージョンには、`git tag v1.0.0` → `git push --tags` で印を付けます（17章）
+- `build/` は `.gitignore` で除かれているので、上がりません
+
+## おすすめの拡張機能
+
+### 拡張機能「Raspberry Pi Pico」と一緒に入るもの
+
+自分で入れなくても、すでに入っています。
+
+| 拡張機能（作者） | 役割 |
+| --- | --- |
+| Cortex-Debug（marus25） | Debug Probe でのデバッグ。行で止める、変数を見る。mcu-debug の4つ（メモリやレジスタを見る道具）も一緒に入る |
+| MicroPico（paulober） | VS Code で MicroPython を開発するためのもの。このガイドでは使わない（MicroPython のプロジェクトを開いたときだけ動き、MicroPython のピコに自動でつなぐ。そのときは Pico Studio とポートを取り合うので、片方だけ使う） |
+| Python（Microsoft） | Python のプログラムを書く。14章の `train.py` などにも使える |
+
+### プロジェクトを開くとおすすめされるもの（入れる）
+
+拡張機能が作ったプロジェクトを開くと、右下に「このワークスペースには推奨される拡張機能があります」と出ます。**「すべてインストール」**を押すと、次のものが入ります。
+
+| 拡張機能（作者） | 役割 |
+| --- | --- |
+| **C/C++**（Microsoft） | 補完、書いている途中のエラーの赤線、F12 での移動 |
+| **C/C++ Extension Pack**（Microsoft） | C/C++ と CMake Tools などのまとめ |
+| **Serial Monitor**（Microsoft） | `printf` の出力を VS Code の中で見る（3章の⑥） |
+
+ターミナルから入れることもできます。
 
 ```bash
-cd ~/apps/collar
-git init
-printf 'build/\n' > .gitignore
-git add .
-git commit -m "最初のバージョン"
+code --install-extension ms-vscode.cpptools-extension-pack
+code --install-extension ms-vscode.vscode-serial-monitor
 ```
 
-- `build/` はビルドするたびに作り直されるので、git に入れません（`.gitignore`）
-- `.vscode/` と `CMakeLists.txt`、`pico_sdk_import.cmake` は入れます。別の PC でも同じ設定で開けます
-- VS Code の左の **ソース管理**（枝分かれのアイコン）で、変えたところを見たり、コミットしたりできます
-- 出荷するバージョンには、`git tag v1.0.0` で印を付けます（17章）
+### あると便利なもの
+
+| 拡張機能（作者） | 役割 | 入れ方 |
+| --- | --- | --- |
+| Error Lens（Alexander） | エラーや警告を、その行の右に文字で出す。問題の欄を開かなくても気付ける | `code --install-extension usernamehw.errorlens` |
+| Git Graph（mhutchie） | コミットの歴史を、枝分かれの図で見る | `code --install-extension mhutchie.git-graph` |
+| Rainbow CSV（mechatroner） | CSV を列ごとに色分けして見る。13・14章の記録や `features.csv` に便利 | `code --install-extension mechatroner.rainbow-csv` |
+| GitHub Actions（GitHub） | GitHub での自動ビルドの結果を VS Code で見る（製品のリポジトリで自動ビルドを入れたとき） | `code --install-extension github.vscode-github-actions` |
+| Japanese Language Pack（Microsoft） | VS Code のメニューを日本語にする（好みで） | `code --install-extension ms-ceintl.vscode-language-pack-ja` |
+
+入っている拡張機能は、左の **拡張機能**（四角が4つのアイコン）で見られます。使わない拡張機能は「無効にする」で止められます。
 
 ## Pico Studio との使い分け
 
@@ -211,5 +253,6 @@ git commit -m "最初のバージョン"
 - F12 で SDK のソースに飛べる。Ctrl + Shift + M で問題の一覧
 - 機能を使うときは `target_link_libraries` にライブラリを足す。`.cpp` を足したら `add_executable` に書く
 - Debug Probe があれば、F5・F10・F11 で行ごとに調べられる
-- プロジェクトは git で管理する。`build/` は入れない
+- プロジェクトは GitHub に置き、動いたらこまめにコミット・プッシュする（ソース管理）
+- 拡張機能は、プロジェクトを開いたときのおすすめ（C/C++・Serial Monitor など）を「すべてインストール」。Error Lens もあると便利
 - 書くのは VS Code、つながりの確認は Pico Studio

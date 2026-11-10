@@ -35,8 +35,9 @@ constexpr uint BTN_PIN = 24;
 volatile uint32_t press_count = 0;     // 割り込みで書き換える変数には volatile を付ける
 volatile uint32_t last_press_ms = 0;
 
-// ボタンが押されると呼ばれる（割り込みハンドラ）
+// ボタンが押されると呼ばれる（割り込みハンドラ）。gpio はピンの番号、events は何が起きたか
 void on_button(uint gpio, uint32_t events) {
+    if (gpio != BTN_PIN || !(events & GPIO_IRQ_EDGE_FALL)) return;   // ほかのピンや、押したとき以外は無視
     uint32_t now = to_ms_since_boot(get_absolute_time());
     if (now - last_press_ms < 50) return;          // 50ms 以内の2回目は、接点の震え（チャタリング）として無視
     last_press_ms = now;
@@ -204,8 +205,7 @@ void core1_main() {
     float sum = 0;
     for (int n = 1;; n++) {
         float ax, ay, az;
-        mpu.read_accel(ax, ay, az);
-        sum += (ax * ax + ay * ay + az * az);
+        if (mpu.read_accel(ax, ay, az)) sum += (ax * ax + ay * ay + az * az);   // 読めたときだけ足す
         if (n % 50 == 0) {
             float mean = sum / 50;
             uint32_t bits;

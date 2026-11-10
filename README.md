@@ -100,7 +100,7 @@ python3 server.py --port 9000
 ### ガイドの書き方
 
 - 章は `guide/*.md`（Markdown）。順番・タイトル・部（目次のまとまり）は `guide/chapters.json` で決める
-- ` ```cpp run ` は、そのままビルドできる1つの C++ のプログラム（最初に `stdio_init_all()` を呼ぶ）。「コピー」ボタンが付く。` ```cpp ` はプログラムの一部
+- ` ```cpp run ` は、そのままビルドできる1つの C++ のプログラム（最初に `stdio_init_all()` を呼ぶ）。「コピー」ボタンが付く。` ```cpp ` はプログラムの一部。書き足したら `tests/build_guide_cpp.py` でビルドを確かめる
 - ` ```python run ` は Pico Studio で試せる MicroPython。「エディタに入れる」ボタンが付く
 - ` ```python ` は PC で動かすコード、` ```cmake ` は CMakeLists.txt、` ```bash ` はコマンド、` ```text ` は説明用
 - 表の中で縦線を書くときは `\|` と書く
@@ -152,13 +152,17 @@ start.sh                起動してブラウザを開くスクリプト
 70-pico-studio.rules    ピコを sudo なしで使えるようにする udev ルール
 tests/fake_pico.py      テスト用の「偽のピコ」
 tests/test_devenv.py    開発環境の確認とプロジェクトの用意、接続の自動判定のテスト
+tests/build_guide_cpp.py  ガイドの C++ のプログラムを、本物の Pico SDK で全部ビルドして確かめる
 ```
 
 ## テスト・ピコなしで試す（開発用）
 
 ```sh
 python3 tests/test_devenv.py
+python3 tests/build_guide_cpp.py pico pico2   # ガイドの C++（```cpp run）を Pico と Pico 2 でビルド。Pico SDK が必要
 ```
+
+`build_guide_cpp.py` は、エラーや警告をガイドのファイルと行（例: `guide/09-sensors.md:325`）で表示する。17章の PC 用テストも g++ で動かす。
 
 `tests/fake_pico.py` は、MicroPython の REPL のやり取りをまねる偽のピコ。
 疑似端末（`/dev/pts/N`）を作るので、実機がなくても画面や API の動作を確かめられる。

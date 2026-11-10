@@ -3,6 +3,7 @@
 ## この章でわかること
 
 - VS Code の拡張機能で開発するときのしくみ
+- 開発するフォルダの場所と、GitHub への置き方
 - 新しいプロジェクトの作り方と、できるファイルの意味
 - 書く → ビルド → 書き込む → 出力を見る、の流れ
 - 最初のプログラム（Lチカ）を動かすまで
@@ -24,6 +25,18 @@
 ![VS Code での開発の流れ](images/vscode-flow.svg)
 
 ①（2章）と②は最初だけです。ふだんは「③書く → ④ビルド → ⑤書き込む → ⑥出力を見る」をくり返します。
+
+## 開発するフォルダ
+
+![開発するフォルダと GitHub](images/vscode-github.svg)
+
+- **1つの製品（プログラム）が、1つのプロジェクト**です。プロジェクトは1つのフォルダで、GitHub では1つのリポジトリにします
+- 場所は **`~/apps/名前`**（例: `~/apps/collar`）にそろえます。New C/C++ Project の Location で `~/apps` を選ぶと、その中に名前のフォルダができます
+- **順番は「VS Code で作る → GitHub に置く」** です。拡張機能がフォルダとファイル（`.gitignore` も）を作るので、先に作ってから GitHub に置くほうが簡単です
+- このガイドの6〜15章を試す**練習用**は、`~/apps/pico-practice` のようなプロジェクトを1つ作り、章ごとに `.cpp` の中身を置き換えて試すのが手軽です（GitHub に置かなくてもかまいません）
+- 製品のプログラムは、練習用とは別にプロジェクトを作って、GitHub に置きます
+
+ターミナルで作業するときも、このフォルダにいます。VS Code の中のターミナル（表示 → ターミナル）は、最初からプロジェクトのフォルダで開きます。
 
 ## ② 新しいプロジェクトを作る
 
@@ -55,6 +68,7 @@
 ├── CMakeLists.txt          ビルドの設定（下で説明）
 ├── blink.cpp               自分のプログラム。ここに書く
 ├── pico_sdk_import.cmake   SDK を読み込む
+├── .gitignore              git に上げないもの（build フォルダ）
 ├── .vscode/                拡張機能の設定（ふつうは触らない）
 │   ├── settings.json
 │   ├── tasks.json          Compile や Run の中身
@@ -85,6 +99,43 @@ target_link_libraries(blink
 | `add_executable(blink blink.cpp)` | `blink.cpp` から `blink` というプログラムを作る |
 | `pico_enable_stdio_usb(blink 1)` | `printf` を USB で PC に送る |
 | `target_link_libraries(blink pico_stdlib)` | 使うライブラリ。I2C を使うなら `hardware_i2c` を足す（4章の表） |
+
+## GitHub に置く
+
+製品のプロジェクトは、作ったらすぐ GitHub に置いておきます。PC が壊れてもコードが残り、これまでの記録から前の状態に戻すこともできます。
+
+### VS Code のボタンで置く
+
+1. 左の **ソース管理**（枝分かれのアイコン）を開く
+2. **Publish to GitHub** を押す。初めてのときは、GitHub へのサインインを聞かれる
+3. **Publish to GitHub private repository**（非公開）を選ぶ
+4. 上げるファイルを聞かれたら、そのまま OK を押す
+
+### コマンドで置く
+
+GitHub CLI（`gh`）を使っているなら、ターミナルで次を打っても同じです。
+
+```bash
+cd ~/apps/collar
+git init
+git add .
+git commit -m "最初のバージョン"
+gh repo create collar --private --source=. --push
+```
+
+- 拡張機能が作った `.gitignore` で、`build` フォルダ（ビルドしてできたもの）は上がりません
+- `.vscode/` と `CMakeLists.txt` は上げます。別の PC でも同じ設定で開けます
+- ふだんのコミットとプッシュは4章の「git でバージョンを管理する」
+
+### 別の PC で続きを開発する
+
+```bash
+cd ~/apps
+git clone https://github.com/ユーザー名/collar.git
+code collar
+```
+
+VS Code でフォルダを開き、Compile と Run を押せば、続きから開発できます（その PC に拡張機能がまだなければ、2章の手順で入れます。必要な SDK などは、拡張機能がダウンロードします）。
 
 ## ③ 書く（Lチカ）
 
@@ -167,7 +218,7 @@ picotool がピコを書き込みモードにして書き込み、ピコが再�
 
 ### 6章から先のコードを試すとき
 
-- 新しくプロジェクトを作るか、今のプロジェクトの `.cpp` の中身を置き換えて試します
+- 練習用のプロジェクト（`~/apps/pico-practice` など）の `.cpp` の中身を置き換えて試します
 - I2C などを使うコードは、`target_link_libraries` にライブラリを足します（4章の表）
 - 9章の `mpu6050.h` など、Pico Studio に入っているヘッダーを使うときは、プロジェクトのフォルダにコピーします
 
@@ -177,6 +228,7 @@ cp ~/apps/pico-studio/cpp/include/*.h ~/apps/blink/
 
 ## まとめ
 
+- 1つの製品が1つのプロジェクト。`~/apps/名前` に作り、製品のものは GitHub に置く（VS Code で作る → Publish to GitHub の順）
 - **New C/C++ Project** で、場所を `~/apps`、Console over USB と Generate C++ code に ☑ して作る
 - ふだんは「書く → Compile → Run (USB) → Serial Monitor」のくり返し
 - MicroPython が動いているピコや、USB を使わないプログラムのときは、BOOT を押しながらつないでから Run
