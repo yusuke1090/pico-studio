@@ -1,35 +1,28 @@
-# 12. ラズパイとピコの実装の比較
+# 付録C. ラズパイとピコの比較
 
-## この章でわかること
+## この付録でわかること
 
 - Linux が動くラズパイと、マイコンのピコの違い
 - ssh、scp、systemd などの作業が、ピコでは何にあたるか
-- 同じプログラムを、それぞれに実装する手順
+- ラズパイの C++ と、ピコの C++ の違い
+- Linux の感覚でつまずきやすいところ
 - どちらを使えばよいかの判断
 
 ここでの「ラズパイ」は、Raspberry Pi 4 や 5 のような Linux が動くボードのことです。Jetson も同じように考えられます。
 
-<!-- cpp -->
-
-この章の表やコードは MicroPython で書いてありますが、C++ でも考え方は同じです。C++ での違いは、章の最後の「C++ で実装するとき」にまとめてあります。
-
-<!-- /cpp -->
-コマンドの操作は2章にまとめてあります。
-
 ## 一番の違い
 
 **ピコには Linux がありません。** ログインする先も、サービスを管理するしくみもありません。
-電源を入れると MicroPython が起動して、自分のプログラムが1つだけ動きます。
-1つのプログラムの中で複数の処理を動かすことはできます（「複数の処理を動かす」の節）。
+電源を入れると、書き込んだ自分のプログラムが1つだけ動きます。1つのプログラムの中で、いくつもの処理を進めることはできます（11・12章）。
 
 | 項目 | ラズパイ | ピコ |
 | --- | --- | --- |
-| OS | Linux | なし（MicroPython が直接動く） |
-| 動くプログラム | 同時にいくつも | 基本的に1つ |
-| メモリ | 数GB | 264KB |
-| 保存領域 | SD カードなど数十GB | 2MB |
-| 消費電力 | 数W | 0.1W 前後 |
-| 起動の時間 | 数十秒 | 1秒前後 |
+| OS | Linux | なし（自分のプログラムが直接動く） |
+| 動くプログラム | 同時にいくつも | 1つ |
+| メモリ | 数GB | 264KB（Pico 2 は 520KB） |
+| 保存領域 | SD カードなど数十GB | 2MB（プログラムも記録もここ） |
+| 消費電力 | 数W | 0.1W 前後（眠らせればもっと小さい） |
+| 起動の時間 | 数十秒 | 一瞬 |
 | 電源を急に切る | ファイルが壊れることがある | 基本的に問題ない。書き込み中のデータは失うことがある |
 | アナログ入力（ADC） | なし（外付けの部品が必要） | あり |
 | ネットワーク | 有線・無線 | なし（Pico W は無線あり） |
@@ -38,236 +31,85 @@
 
 ## 作業の対応表
 
-| やること | ラズパイ | ピコ |
+| やること | ラズパイ | ピコ（C++） |
 | --- | --- | --- |
 | つなぐ | `ssh pi@raspberrypi.local` | USB でつなぐ |
-| 対話で試す | `python3` | `mpremote repl` |
-| ファイルを送る | `scp logger.py pi@raspberrypi.local:` | `mpremote cp logger.py :logger.py` |
-| 実行する | `python3 logger.py` | `mpremote run logger.py` |
-| 止める | Ctrl + C | Ctrl + C のあと `mpremote soft-reset` |
-| ファイルを見る | `ls` | `mpremote ls` |
-| ライブラリを入れる | `pip install` や `apt install` | `mpremote mip install` |
-| 起動時に自動で動かす | systemd のサービス | `main.py` を置く |
-| 再起動する | `sudo systemctl restart logger` | `mpremote reset` |
-| ログを見る | `journalctl -u logger` | ファイルに書いて `mpremote cat` で読む |
-| 落ちたら自動で再起動 | サービスの `Restart=always` | `machine.WDT`（ウォッチドッグ）など |
-| OS を更新する | `sudo apt upgrade` | `.uf2` を書き込み直す |
-| シェルスクリプト | ラズパイの中に置く | PC に置く |
+| ビルドする | ラズパイの中で `g++` や CMake | **PC で**ビルドする（VS Code の Compile。クロスコンパイル） |
+| プログラムを送る | `scp` で実行ファイルを送る | `.uf2` を書き込む（VS Code の Run） |
+| 起動時に自動で動かす | systemd のサービス | 書き込んだプログラムが必ず動く |
+| 止める | Ctrl + C、`systemctl stop` | 止める操作はない。別のプログラムを書き込む |
+| 再起動する | `sudo systemctl restart` | RST ボタン、USB の抜き差し |
+| ログを見る | `journalctl -u logger` | `printf` を Serial Monitor で見る。残すならフラッシュに書く（13章） |
+| 落ちたら自動で再起動 | サービスの `Restart=always` | ウォッチドッグ（`watchdog_enable`、15章） |
+| ライブラリを入れる | `apt install`、`pip install` | Pico SDK の部品を `CMakeLists.txt` に足す（4章）。ほかのライブラリはソースをプロジェクトに入れる |
+| デバッグ | `gdb` | Debug Probe（SWD）と gdb（4章・17章） |
+| OS を更新する | `sudo apt upgrade` | なし（SDK のバージョンを上げてビルドし直す） |
+| シェルスクリプト | ラズパイの中に置く | PC に置く（付録A） |
 
-## 同じプログラムを実装する
+## ラズパイの C++ との違い
 
-センサーを記録する `logger.py` を、電源を入れたら自動で動くようにします。
+ラズパイで C++ を書いたことがあれば、次の違いに気をつけます。
 
-### ラズパイの場合
-
-PC からファイルを送って、ログインします。
-
-```bash
-scp logger.py pi@raspberrypi.local:/home/pi/
-ssh pi@raspberrypi.local
-```
-
-サービスのファイルを作ります。
-
-```bash
-sudo nano /etc/systemd/system/logger.service
-```
-
-```text
-[Unit]
-Description=Sensor logger
-
-[Service]
-ExecStart=/usr/bin/python3 /home/pi/logger.py
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-サービスを有効にして、動かし始めます。
-
-```bash
-sudo systemctl enable --now logger.service
-```
-
-### ピコの場合
-
-ファイルを `main.py` という名前で保存して、再起動するだけです。
-
-```bash
-mpremote cp logger.py :main.py
-mpremote reset
-```
-
-サービスのファイルは要りません。`main.py` という名前が、「起動時に動かす」という設定を兼ねています。
-
-## コードの違い
-
-どちらも Python で書けますが、ピンを動かすライブラリが違います。LED の点滅で比べます。
-
-ラズパイのコードです（GPIO17 に LED をつないだ場合）。
-
-```text
-from gpiozero import LED
-import time
-
-led = LED(17)
-while True:
-    led.toggle()
-    time.sleep(0.5)
-```
-
-ピコのコードです。
-
-```python run
-from machine import Pin
-import time
-
-led = Pin(25, Pin.OUT)
-while True:
-    led.toggle()
-    time.sleep(0.5)
-```
-
-| 機能 | ラズパイ | ピコ |
+| 項目 | ラズパイ（Linux の C++） | ピコ（Pico SDK） |
 | --- | --- | --- |
-| GPIO | gpiozero | `machine.Pin` |
-| I2C | smbus2 | `machine.I2C` |
-| アナログ入力 | 外付けの部品とそのライブラリ | `machine.ADC` |
-| 使える Python | 通常の Python。numpy なども使える | MicroPython。機能が少ない |
+| 使えるもの | 標準ライブラリ全部、例外、`std::thread`、ファイル | 標準ライブラリの一部。例外・`std::thread`・ファイルはない（11章） |
+| メモリ | `new` や `std::vector` を気にせず使える | 大きさを決めて、関数の外に置く（11・13章） |
+| 複数の処理 | スレッド、プロセス | 時刻を見て順に進める（11章）、割り込み、2つのコア（12章） |
+| ピンを動かす | `libgpiod` などで、ファイルのように操作 | `gpio_put` などで、ハードウェアを直接動かす（6章） |
+| I2C | `/dev/i2c-1` を開いて `ioctl` | `i2c_write_blocking` / `i2c_read_blocking`（9章） |
+| 時間 | `std::chrono`、`sleep` | `sleep_ms`、`get_absolute_time`（9章） |
+| エラーで止まったとき | OS が知らせ、サービスが再起動 | 何も出ずに止まる。ウォッチドッグで再起動（15章） |
 
-## 複数の処理を動かす
+LED の点滅で比べると、次のようになります。
 
-ラズパイでは、処理ごとに別のサービスを動かせます。ピコでは、**1つのプログラムの中にまとめます**。ピコを処理の数だけ用意する必要はありません。
-
-| ラズパイ | ピコ |
-| --- | --- |
-| 処理ごとに別のサービスを動かす | 1つの `main.py` の中で動かす |
-| ファイルを分ける | ファイルを分けて `import` する |
-| プロセスが同時に動く | `asyncio` で交代に動く |
-
-### 順番に行う
-
-測って、判定して、保存する、のように順番に行うなら、`main.py` に順に書きます。
-次のコードは例です。`a.py`、`b.py`、`c.py` をピコに保存してある前提です。
+ラズパイ（libgpiod を使う例。GPIO17 に LED）:
 
 ```text
-import a, b, c
-
-while True:
-    data = a.read()            # センサーを読む
-    result = b.judge(data)     # 判定する
-    c.save(result)             # 保存する
+gpiod::chip chip("gpiochip0");
+auto line = chip.get_line(17);
+line.request({"blink", gpiod::line_request::DIRECTION_OUTPUT, 0});
+while (true) {
+    line.set_value(1); std::this_thread::sleep_for(500ms);
+    line.set_value(0); std::this_thread::sleep_for(500ms);
+}
 ```
 
-### 同時に動かす
+ピコ（6章と同じ）:
 
-`asyncio` を使うと、複数の処理を交代で動かせます。
-次のコードは、1秒ごとに測る処理と、0.5秒ごとに LED を点滅させる処理を、並べて動かします。
-
-```python run
-import asyncio
-from machine import Pin
-
-led = Pin(25, Pin.OUT)
-
-async def measure():
-    while True:
-        print("測る")
-        await asyncio.sleep(1)
-
-async def blink():
-    while True:
-        led.toggle()
-        await asyncio.sleep(0.5)
-
-async def main():
-    asyncio.create_task(measure())
-    await blink()
-
-asyncio.run(main())
+```cpp
+gpio_init(25);
+gpio_set_dir(25, GPIO_OUT);
+while (true) {
+    gpio_put(25, 1); sleep_ms(500);
+    gpio_put(25, 0); sleep_ms(500);
+}
 ```
-
-### 注意すること
-
-- `asyncio` の中で `time.sleep()` を使うと、その間はほかの処理も止まります。`await asyncio.sleep()` を使います
-- 1か所でエラーが起きると、プログラム全体が止まります。ラズパイのように、1つのサービスだけが落ちて、ほかは動き続けるとはなりません
-- ピコのチップにはコアが2つあり、`_thread` で2つ目のコアも使えます。ただし MicroPython では実験的な機能なので、まず `asyncio` を使います
-
-### ピコを複数使うとき
-
-次のような場合は、ピコを複数使います。
-
-- 測る場所が離れている（首輪ごとに1台など）
-- ピンやメモリが足りない
 
 ## Linux の感覚でつまずきやすいところ
 
-- **`pip install` は使えません。** ピコのライブラリは `mpremote mip install` で入れます。PC 用のライブラリは、そのままでは動きません
-- **`print` の出力は残りません。** USB でつないでいるときに見えるだけです。残したいときはファイルに書きます（9章）
-- **`main.py` がエラーで止まると、そのまま止まります。** 自動では再起動しません。長く動かすなら、エラーの処理やウォッチドッグを入れます
-- **ファイルの書き込みは控えめにします。** 保存領域が小さく、書き込みの回数にも寿命があります（9章）
+- **`main` が終わると、何もしなくなります。** `while (true)` でくり返します（6章）
+- **`printf` の出力は残りません。** USB でつないで見ているときだけ見えます。残したいときはフラッシュに書きます（13章）
+- **エラーで止まっても、何も出ません。** ウォッチドッグと、エラーの記録を入れます（15・17章）
+- **フラッシュへの書き込みは控えめにします。** 書き込みの回数に寿命があります（13章）
 - **ポートは1つのソフトでしか使えません。** ssh のように、同時に複数の接続はできません
-- **シェルスクリプトはピコで動きません。** 手順をまとめたいときは PC に置きます
-
-## 手順をスクリプトにする
-
-ラズパイへの配置をスクリプトにするのと同じように、ピコへの配置も PC 側のスクリプトにできます。
-次の内容を `deploy.sh` という名前で保存します。
-
-```bash
-#!/bin/sh
-mpremote cp main.py :main.py
-mpremote reset
-```
-
-コードを直したら、次のコマンドでピコに反映します。
-
-```bash
-sh deploy.sh
-```
+- **関数の中に大きな配列を作ると、こわれます。** スタックが数KB しかないためです（11章）
 
 ## どちらを使うか
 
 | 目的 | 向いているもの |
 | --- | --- |
 | 電池で長く動かす | ピコ |
-| センサーを決まった間隔で読む | ピコ |
+| センサーを決まった間隔で正確に読む | ピコ |
 | 電源を急に切られる場所で使う | ピコ |
 | カメラの画像を扱う | ラズパイ |
 | 大きな機械学習モデルを動かす | ラズパイ、Jetson |
 | Web サーバーやデータベースを動かす | ラズパイ |
 
-両方を組み合わせることもできます。ピコが現場でセンサーを読み、ラズパイが受け取って保存や分析をする形です。USB での受け渡しは9章に書いてあります。
-
-<!-- cpp -->
-
-## C++ で実装するとき
-
-ラズパイで C++ を書いたことがあれば、ピコの C++ は次のように対応します。
-
-| やること | ラズパイ（Linux の C++） | ピコ（Pico SDK） |
-| --- | --- | --- |
-| ビルド | `g++` や CMake。ラズパイの中でビルドする | PC で `arm-none-eabi-gcc` と CMake。**ビルドは PC、動かすのはピコ**（クロスコンパイル） |
-| 配置 | `scp` で実行ファイルを送る | `.uf2` を書き込む |
-| 起動時に動かす | systemd のサービス | 書き込んだプログラムが必ず動く |
-| 落ちたら再起動 | `Restart=always` | ウォッチドッグ（`watchdog_enable`、17章） |
-| ログ | `journalctl` | `printf` で USB に出す。残すならフラッシュ（9章） |
-| デバッグ | `gdb` | Debug Probe（SWD）と `gdb`（18章） |
-| 複数の処理 | スレッド、プロセス | 1つのプログラムの中で順番に。または2つのコア、割り込み（16章） |
-| 使えるもの | C++ の標準ライブラリ全部、例外、`std::thread` | 標準ライブラリの一部。例外は使わない（15章） |
-| メモリ | 数GB。`new` を気にせず使える | 264KB。大きさを決めて置く（9章・15章） |
-
-C++ の「複数の処理を動かす」は、16章に書き方があります。
-
-<!-- /cpp -->
+両方を組み合わせることもできます。ピコが現場でセンサーを読み、ラズパイが受け取って保存や分析をする形です（16章）。USB での受け渡しは13章にあります。
 
 ## まとめ
 
-- ピコに Linux はない。ssh も systemd もなく、USB と mpremote で操作する
-- `scp` は `mpremote cp`、systemd のサービスは `main.py` にあたる
-- コードは同じ Python でも、ピンを動かすライブラリが違う
-- 複数の処理は1つのプログラムにまとめる。同時に動かすなら `asyncio`
-- 手順をまとめるスクリプトは PC に置く
+- ピコに Linux はない。ビルドは PC で行い、`.uf2` を書き込む
+- systemd のサービスにあたるのは、書き込んだプログラムそのもの。落ちたときの再起動はウォッチドッグ
+- C++ でも、例外・スレッド・ファイル・大きなヒープは使わない
 - 省電力とセンサーの読み取りはピコ、重い処理はラズパイが向いている

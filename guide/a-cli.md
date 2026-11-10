@@ -1,337 +1,201 @@
-# 2. コマンドで操作する
+# 付録A. コマンドで操作する
 
-<!-- python -->
+## この付録でわかること
 
-## この章でわかること
+- VS Code を使わず、ターミナルのコマンドだけで C++ のプログラムをビルドして書き込む方法
+- コマンド用の道具の入れ方（`setup-sdk.sh` がすること）
+- 1つのフォルダに、いくつものプログラムを置いてビルドする方法
+- 書き込みモードへの切り替え・書き込み・出力を見る・ピコの中を調べるコマンド
+- 手順をスクリプトにまとめる方法
 
-- Pico Studio を使わず、ターミナルのコマンドだけでピコを操作する方法
-- 接続の確認から実行・保存まで、どの順番で何を打てばよいか
-- Pico Studio のボタンと、コマンドの対応
+ふだんの開発は VS Code で行います（3章）。この付録は、次のようなときに使います。
 
-コマンドの操作には **mpremote** を使います。MicroPython の公式ツールです。
+- 手順をスクリプトにまとめたい（量産の書き込みなど。17章）
+- VS Code の中で何が起きているかを知りたい
+- 小さなプログラムを、いくつも1つのフォルダでまとめて試したい
 
-コマンドの中の単語（`sudo` や `apt` など）をクリックすると、その意味が吹き出しで出ます。
+コマンドの中の単語（`cmake` や `make` など）をクリックすると、その意味が吹き出しで出ます。
 
-ラズパイや Jetson に ssh で実装した経験があるなら、12章の対応表も役に立ちます。
+## コマンド用の道具を入れる
 
-## 全体の流れ
-
-上から順に進めます。2回目からは手順2から始めて、MicroPython が入っていれば手順3は飛ばします。
-
-| 順番 | やること | コマンド |
-| --- | --- | --- |
-| 1 | mpremote を入れる（最初の1回だけ） | `pipx install mpremote` |
-| 2 | USB で認識しているか確かめる | `lsusb -d 2e8a:` |
-| 3 | MicroPython を書き込む（BOOTSEL モードのときだけ） | `cp RPI_PICO-*.uf2 /run/media/$USER/RPI-RP2/` |
-| 4 | シリアルポートを確かめる | `ls -l /dev/ttyACM0` |
-| 5 | MicroPython の応答を確かめる | `mpremote exec "import os; print(os.uname())"` |
-| 6 | コードを実行する | `mpremote run hello.py` |
-| 7 | 実行を止める | Ctrl + C のあと `mpremote soft-reset` |
-| 8 | ピコに保存する | `mpremote cp hello.py :hello.py` |
-| 9 | 保存したファイルを確認する | `mpremote ls` |
-| 10 | REPL で1行ずつ試す（必要なとき） | `mpremote repl` |
-| 11 | ピコを再起動する（必要なとき） | `mpremote reset` |
-
-> **Pico Studio と同時には使えません。** 1つのポートを2つのソフトで使うと、やり取りが混ざって動かなくなります。
-> コマンドを使う前に、Pico Studio で「切断」を押してください。
-
-## 手順1: mpremote を入れる
-
-最初の1回だけです。パスワードを聞かれたら打って Enter を押します。
-
-```bash
-sudo apt install pipx
-pipx install mpremote
-pipx ensurepath
-```
-
-打ち終わったらターミナルを開き直して、次のコマンドでバージョンが出れば成功です。
-
-```bash
-mpremote version
-```
-
-## 手順2: USB で認識しているか確かめる
-
-「接続の確認」の **USB で認識** にあたります。ピコをつないで、次を打ちます。
-
-```bash
-lsusb -d 2e8a:
-```
-
-| 結果 | 状態 | 次にやること |
-| --- | --- | --- |
-| `2e8a:0005 MicroPython Board in FS mode` | MicroPython で動いている | 手順4へ |
-| `2e8a:0003 Raspberry Pi RP2 Boot`（Pico 2 は `2e8a:000f`） | 書き込みモード（BOOTSEL） | 手順3へ |
-| 何も出ない | 認識されていない | ケーブルと USB ポートを確かめる（11章） |
-
-## 手順3: MicroPython を書き込む
-
-手順2で BOOTSEL モードだったときだけ行います。「最新の MicroPython を書き込む」ボタンにあたります。
-
-1. [MicroPython のダウンロードページ](https://micropython.org/download/RPI_PICO/) から `.uf2` ファイルをダウンロードする（Pico 2 は [こちら](https://micropython.org/download/RPI_PICO2/)）
-2. ピコのドライブにコピーする
-
-```bash
-cp ~/ダウンロード/RPI_PICO-*.uf2 /run/media/$USER/RPI-RP2/
-```
-
-コピーが終わると、ピコは自動で再起動します。
-
-> ドライブの場所は PC によって違います。`/run/media/$USER/` に見つからないときは、`/media/$USER/` を見てください。
-> Pico 2 のドライブ名は `RP2350` です。
-
-## 手順4: シリアルポートを確かめる
-
-「接続の確認」の **シリアル接続** にあたります。mpremote は、コマンドを打つたびに自動でつないで、終わると切ります。「接続」ボタンにあたる操作はありません。
-
-```bash
-ls -l /dev/ttyACM0
-```
-
-```text
-crw-rw----+ 1 root dialout 166, 0 Nov  6 12:34 /dev/ttyACM0
-```
-
-- `crw-rw----+` のように最後に **`+`** が付いていれば、権限の設定もできています
-- `+` がないときは、下の「`+` がないとき」の設定をします
-- ファイルが見つからないときは、手順2に戻ります
-
-### `+` がないとき
-
-ログイン中のユーザーがピコのポートを使えるように、設定ファイルを作ります。最初の1回だけです。
-
-```bash
-echo 'SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", TAG+="uaccess"' | sudo tee /etc/udev/rules.d/70-pico-studio.rules
-sudo rm -f /etc/udev/rules.d/99-pico-studio.rules
-sudo udevadm control --reload-rules
-```
-
-| 行 | やっていること |
-| --- | --- |
-| 1行目 | 設定ファイルを作る。メーカー番号 `2e8a` のシリアルポートを、ログイン中のユーザーが使えるようにする |
-| 2行目 | 古い設定ファイルがあれば消す（番号が大きすぎて効かないため） |
-| 3行目 | 設定を読み直す |
-
-打ち終わったら、**ピコを一度抜いて、つなぎ直します**。もう一度 `ls -l /dev/ttyACM0` を打って、`+` が付いていれば成功です。
-
-### ポートの名前を調べる
-
-ポートの名前は、次のコマンドで調べられます。
-
-```bash
-mpremote connect list | grep 2e8a
-```
-
-```text
-/dev/ttyACM0 334e39323614da8b 2e8a:0005 MicroPython Board in FS mode
-```
-
-> ポートを指定しなければ、mpremote はピコを自動で探します。
-> ピコを2台以上つないでいるときは、`mpremote connect /dev/ttyACM1 ls` のように先頭で指定します。
-
-## 手順5: MicroPython の応答を確かめる
-
-「接続の確認」の **MicroPython の応答** にあたります。ピコに1行のコードを送って、返事を見ます。
-
-```bash
-mpremote exec "import os; print(os.uname())"
-```
-
-```text
-(sysname='rp2', nodename='rp2', release='1.29.0', version='v1.29.0 on 2026-08-24 (GNU 16.1.0 MinSizeRel)', machine='Raspberry Pi Pico with RP2040')
-```
-
-`release` が MicroPython のバージョン、`machine` がボードの名前です。
-
-ストレージの空きは次のコマンドでわかります。
-
-```bash
-mpremote df
-```
-
-```text
-filesystem     size     used    avail use% mounted on
-<VfsLfs2>   1441792     8192  1433600    0 /
-```
-
-## 手順6: コードを実行する
-
-「▶ 実行」にあたります。PC のテキストエディタでコードを書いて、`hello.py` のように保存しておきます。
-保存する場所はどこでも大丈夫です。ここでは `~/apps/pico-code` というフォルダを使います。
-
-```bash
-mkdir -p ~/apps/pico-code
-cd ~/apps/pico-code
-mpremote run hello.py
-```
-
-PC にあるファイルをピコへ送って実行します。結果はターミナルに出ます。ピコにファイルは残りません。
-
-> `mpremote run` が読むのは **PC のファイル** で、**ターミナルで今いるフォルダ** が基準です。今いるフォルダは `pwd` でわかります。
-> ほかのフォルダにいるときは、`mpremote run ~/apps/pico-code/hello.py` のように場所ごと指定します。
-
-1行だけ試すなら、ファイルを作らずに `exec` が使えます。
-
-```bash
-mpremote exec "print(1 + 2)"
-```
-
-## 手順7: 実行を止める
-
-「■ 停止」にあたります。ここは Pico Studio と動きが違うので注意してください。
-
-1. ターミナルで **Ctrl + C** を押す
-2. 続けて次のコマンドを打つ
-
-```bash
-mpremote soft-reset
-```
-
-> **Ctrl + C だけでは、ピコのプログラムは止まりません。** 止まるのは、ターミナルへの表示だけです。
-> ずっとくり返すプログラムは、ピコの中で動き続けています。`mpremote soft-reset` まで打つと止まります。
-
-## 手順8: ピコに保存する
-
-「ピコに保存」にあたります。
-
-```bash
-mpremote cp hello.py :hello.py
-```
-
-名前の前の **`:`（コロン）がピコの中** という意味です。`:` がないほうは PC のファイルです。
-
-電源を入れたら自動で動かしたいときは、名前を `main.py` にして保存します。
-
-```bash
-mpremote cp hello.py :main.py
-```
-
-ピコに保存したファイルは、`run` では動かせません（`run` は PC のファイルを読むため）。動かすときは `exec` で読み込みます。
-
-```bash
-mpremote exec "import hello"
-```
-
-### おすすめの流れ
-
-プログラムは、次の順番で作ると進めやすくなります。
-
-1. PC のテキストエディタでコードを書く
-2. `mpremote run hello.py` で試す（ピコには保存されません）
-3. 止めるときは Ctrl + C のあと `mpremote soft-reset`
-4. 直して、もう一度試す
-5. 完成したら、main.py として保存する
-6. ピコを再起動して、自動で動くか確かめる
-
-手順5と6のコマンドは次のとおりです。
-
-```bash
-mpremote cp hello.py :main.py
-mpremote reset
-```
-
-## 手順9: 保存したファイルを確認する
-
-「ピコのファイル」にあたります。
-
-| やること | コマンド |
-| --- | --- |
-| 一覧を見る | `mpremote ls` |
-| 中身を見る | `mpremote cat hello.py` |
-| PC に持ち出す | `mpremote cp :log.csv log.csv` |
-| 削除する | `mpremote rm hello.py` |
-
-`mpremote ls` は、ファイルの大きさ（バイト）と名前を出します。
-
-```text
-ls :
-          73 hello.py
-```
-
-## 手順10: REPL で1行ずつ試す
-
-出力欄の下の送信欄にあたります。
-
-```bash
-mpremote repl
-```
-
-```text
-Connected to MicroPython at /dev/ttyACM0
-Use Ctrl-] or Ctrl-x to exit this shell
-
->>> 1 + 2
-3
-```
-
-終わるときは **Ctrl + ]** か **Ctrl + X** を押します。
-
-## 手順11: ピコを再起動する
-
-出力欄の「リセット」にあたります。
-
-```bash
-mpremote reset
-```
-
-ピコが再起動します。main.py を保存してあれば、そのあと自動で動き始めます。
-
-## 通しでやってみる
-
-ピコをつないでから、コードを実行して保存し、確かめて消すまでの流れです。
-
-```bash
-lsusb -d 2e8a:
-ls -l /dev/ttyACM0
-mpremote exec "import os; print(os.uname())"
-mpremote run hello.py
-mpremote cp hello.py :hello.py
-mpremote ls
-mpremote cat hello.py
-mpremote rm hello.py
-```
-
-## まとめ
-
-- コマンドの操作には mpremote を使う。先に Pico Studio で「切断」を押す
-- 確認の順番は、`lsusb`（USB）→ `ls -l /dev/ttyACM0`（シリアル）→ `mpremote exec`（MicroPython）
-- 実行は `run`、保存は `cp`。`:` が付いた名前はピコの中のファイル
-- Ctrl + C だけではピコのプログラムは止まらない。`mpremote soft-reset` で止める
-
-<!-- /python -->
-<!-- cpp -->
-
-## この章でわかること
-
-- Pico Studio を使わず、ターミナルのコマンドだけで C++ のプログラムをビルドして書き込む方法
-- どの順番で何を打てばよいか
-- Pico Studio のボタンと、コマンドの対応
-
-最初に1回だけ、開発環境（Pico SDK とコンパイラ）と、プロジェクトのフォルダ（`~/apps/pico-cpp`）を用意します。次のコマンドで、まとめて用意できます（くわしくは14章）。
+VS Code の拡張機能が入れる道具（`~/.pico-sdk`）は、VS Code の中から使うためのものです。ターミナルで直接ビルドしたいときは、次のスクリプトで、コマンド用の道具をまとめて入れます。途中でパスワードを聞かれます。
 
 ```bash
 sh ~/apps/pico-studio/cpp/setup-sdk.sh
 ```
 
-最後に `OK: C++ でビルドできます` と出たら、ターミナルを開き直してから、下の手順に進みます。
-コマンドの中の単語（`cmake` や `make` など）をクリックすると、その意味が吹き出しで出ます。
+最後に `OK: C++ を開発できます` と出れば完了です。ターミナルを開き直してから使います。何回打っても大丈夫です（あるものはそのまま使い、足りないものだけを足します）。
+
+### このスクリプトがすること
+
+スクリプトは、上から順に次の5つを行います。中身は `~/apps/pico-studio/cpp/setup-sdk.sh` で読めます。
+
+| 順番 | すること | 入る場所 | 中身 |
+| --- | --- | --- | --- |
+| 1/5 | コンパイラなどを入れる（`sudo apt install`） | `/usr/bin` など（PC 全体） | 下の「1. コンパイラなどを入れる」の表のパッケージ |
+| 2/5 | Pico SDK 2.1.1 をダウンロードする（`git clone` と `git submodule update --init`） | `~/pico/pico-sdk` | SDK 本体と、SDK が使うライブラリ（下の表） |
+| 3/5 | SDK の場所を登録する | `~/.bashrc` の最後に1行 | `export PICO_SDK_PATH=/home/ユーザー名/pico/pico-sdk` |
+| 4/5 | プロジェクトのフォルダを用意して、そろったか確かめる | `~/apps/pico-cpp` | `CMakeLists.txt`、`pico_sdk_import.cmake`、`.gitignore`、`blink.cpp`、`mpu6050.h`、`ws2812.h` |
+| 5/5 | picotool を作って入れる（`git clone` してビルド）。sudo なしで使えるように udev ルールも入れる | `~/pico/picotool`（ソース）、`~/.local/bin/picotool`、`/etc/udev/rules.d/60-picotool.rules` | USB でピコを書き込みモードにする・書き込む・中を調べるツール（この付録・17章）。なくてもビルドはできる |
+
+SDK と一緒にダウンロードされるライブラリ（サブモジュール）は次のとおりです。
+
+| ライブラリ | 使い道 |
+| --- | --- |
+| TinyUSB | USB のしくみ。`printf` を USB で PC に送るのに使う（**必須**） |
+| cyw43-driver | Pico W の無線のチップを動かす |
+| lwIP | Pico W で WiFi の通信（TCP/IP）をする |
+| BTstack | Pico W で Bluetooth を使う |
+| mbedtls | 暗号（HTTPS など） |
+
+- ダウンロードとインストールで、合わせて **1GB 前後**のディスクを使います（目安です）。インターネットにつながっている必要があります
+- `~/.bashrc` に書いた1行は、**新しく開いたターミナル**から効きます。開いたままのターミナルでは `source ~/.bashrc` を打つか、開き直します
+- 3/5 は、`~/.bashrc` にすでに `PICO_SDK_PATH` があれば何もしません。SDK を別の場所に置きたいときは、`PICO_SDK_PATH=/置きたい場所 sh ~/apps/pico-studio/cpp/setup-sdk.sh` のように打ちます
+- 4/5 は、すでにあるファイルを上書きしません
+- 5/5 は、USB の機能がある picotool がすでにあれば何もしません
+
+### あとからできるもの
+
+スクリプトのあと、初めてビルドしたときに、次のものが自動でできます。
+
+| もの | 場所 | 中身 |
+| --- | --- | --- |
+| コマンドでビルドしたもの | `~/apps/pico-cpp/build` | `.uf2` など。消しても `cmake` からやり直せる |
+| picotool（`.uf2` を作る用） | それぞれの `build/_deps` の中 | ビルドのときに SDK が自動でダウンロードして作る（インターネットが必要）。USB の機能はないので、ピコの操作には 5/5 で入れた picotool を使う |
+
+### 元に戻すとき
+
+C++ の開発環境を消したいときは、次のようにします。
+
+```bash
+rm -rf ~/pico/pico-sdk ~/pico/picotool ~/.local/bin/picotool ~/.cache/pico-studio
+sudo rm /etc/udev/rules.d/60-picotool.rules
+sudo apt remove gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+```
+
+`~/.bashrc` の `export PICO_SDK_PATH=...` の行は、テキストエディタで開いて消します（`nano ~/.bashrc`）。
+`~/apps/pico-cpp` には自分で書いたプログラムが入っているので、消すときは中身を確かめてからにします。
+
+### 1つずつ入れる
+
+スクリプトを使わずに、自分で1つずつ入れるときの手順です。スクリプトの 1/5〜3/5 と同じことをします（picotool の作り方は [picotool の README](https://github.com/raspberrypi/picotool) を見てください）。
+
+#### 1. コンパイラなどを入れる
+
+```bash
+sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib build-essential git python3 libusb-1.0-0-dev pkg-config
+```
+
+| パッケージ | 役割 |
+| --- | --- |
+| `cmake` | ビルドの手順を作るソフト |
+| `gcc-arm-none-eabi` | ピコ（ARM）用のコンパイラ。PC の `g++` ではピコのプログラムは作れない |
+| `libnewlib-arm-none-eabi`、`libstdc++-arm-none-eabi-newlib` | ピコ用の C / C++ の標準ライブラリ |
+| `build-essential` | `make` など、ビルドに使う基本の道具 |
+| `git` | SDK のダウンロードに使う |
+| `python3` | SDK のビルドの途中で使う |
+| `libusb-1.0-0-dev`、`pkg-config` | ビルドのときに picotool（ピコを操作するツール）を自動で作るのに使う |
+
+#### 2. Pico SDK をダウンロードする
+
+```bash
+mkdir -p ~/pico
+cd ~/pico
+git clone --branch 2.1.1 https://github.com/raspberrypi/pico-sdk.git
+cd pico-sdk
+git submodule update --init
+```
+
+- `--branch 2.1.1` はバージョンの指定です。新しいバージョンは [リリースのページ](https://github.com/raspberrypi/pico-sdk/releases) で確かめられます
+- `git submodule update --init` は、SDK が使う USB のライブラリ（TinyUSB）などをダウンロードします。**これを忘れると、USB で `printf` が出ません**
+
+#### 3. SDK の場所を登録する
+
+ビルドのときに SDK の場所がわかるように、`~/.bashrc` に書いておきます。
+
+```bash
+echo 'export PICO_SDK_PATH=~/pico/pico-sdk' >> ~/.bashrc
+source ~/.bashrc
+```
+
+> VS Code を使っているなら、拡張機能の **Raspberry Pi Pico** で、準備・ビルド・書き込み・デバッグをボタンでできます（3章）。
+> この付録では、何が起きているかわかるように、コマンドで進めます。
+
+## プロジェクトのフォルダ
+
+### フォルダを作る
+
+```bash
+python3 ~/apps/pico-studio/devenv.py init
+```
+
+`~/apps/pico-cpp` に、ビルドに必要なファイルができます（「まとめて入れる」のスクリプトを使った人は、もうできています）。
+すでにあるファイルは上書きしないので、何回打っても大丈夫です。別のフォルダに作るときは `init ~/apps/collar` のようにフォルダを書きます。
+
+```text
+~/apps/pico-cpp/
+├── CMakeLists.txt          ビルドの設定（下で説明）
+├── pico_sdk_import.cmake   SDK を読み込む（SDK からコピーしたもの）
+├── .gitignore              git で build フォルダを管理しないための設定
+├── blink.cpp               Lチカ（最初のプログラム）
+├── mpu6050.h               MPU-6050 を読むクラス（9章）
+├── ws2812.h                RGB LED を光らせるクラス（6章）
+└── build/                  ビルドしてできたファイル（.uf2 など）。cmake を打つとできる
+```
+
+`setup-sdk.sh` を使った人は、もうできています。
+
+### CMakeLists.txt
+
+ビルドの設定です。**このフォルダの `.cpp` が、1つずつプログラムになります**（`blink.cpp` → `build/blink.uf2`）。
+6〜15章の C++ のコードは、`.cpp` として保存すれば、どれもそのままビルドできます。中心の部分は次のとおりです。
+
+```cmake
+cmake_minimum_required(VERSION 3.13)
+include(pico_sdk_import.cmake)        # pico_sdk_init より前に読む
+project(pico_cpp C CXX ASM)
+set(CMAKE_CXX_STANDARD 17)
+pico_sdk_init()
+
+set(PICO_LIBS pico_stdlib hardware_adc hardware_i2c ...)   # 使うライブラリ（4章の表のもの）
+
+file(GLOB APP_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
+foreach(src IN LISTS APP_SOURCES)
+    get_filename_component(name "${src}" NAME_WE)   # blink.cpp → blink
+    add_executable(${name} "${src}")
+    target_link_libraries(${name} ${PICO_LIBS})
+    pico_enable_stdio_usb(${name} 1)                # printf を USB に出す
+    pico_add_extra_outputs(${name})                 # .uf2 も作る
+endforeach()
+```
+
+| 行 | 意味 |
+| --- | --- |
+| `project(pico_cpp C CXX ASM)` | プロジェクトの名前と、使う言語（C、C++、アセンブリ） |
+| `pico_sdk_init()` | SDK の準備 |
+| `set(PICO_LIBS ...)` | 使うライブラリ。`pico_stdlib` は GPIO・時間・`printf` などの基本、`hardware_i2c` は I2C など |
+| `file(GLOB ... *.cpp)` | フォルダの `.cpp` を全部探す |
+| `add_executable(blink blink.cpp)` | `blink.cpp` から `blink` というプログラムを作る |
+| `pico_enable_stdio_usb(... 1)` | `printf` の出力を USB シリアルに出す。**これがないと出力が見えない** |
+| `pico_add_extra_outputs` | 書き込み用の `.uf2` ファイルも作る |
+
+- `test_` で始まる `.cpp` は、PC 用のテスト（17章）なので、ピコ用にはビルドしません
+- 1つのプログラムを複数の `.cpp` に分けたいとき（11章）は、`add_executable(collar collar.cpp sensor.cpp)` のように、自分で行を書き足します
 
 ## 全体の流れ
 
-| 順番 | やること | コマンド | Pico Studio では |
+| 順番 | やること | コマンド | VS Code では |
 | --- | --- | --- | --- |
-| 0 | 開発環境とプロジェクトを用意する（最初の1回だけ） | `sh ~/apps/pico-studio/cpp/setup-sdk.sh` | 接続の確認の「C++ の開発環境」 |
-| 1 | USB で認識しているか確かめる | `lsusb -d 2e8a:` | 接続の確認の「USB で認識」 |
+| 0 | 道具とプロジェクトを用意する（最初の1回だけ） | `sh ~/apps/pico-studio/cpp/setup-sdk.sh` | 拡張機能が自動で入れる |
+| 1 | USB で認識しているか確かめる | `lsusb -d 2e8a:` | （Pico Studio の「USB で認識」） |
 | 2 | ビルドの準備（最初と、CMakeLists.txt を変えたとき） | `cmake -S . -B build` | （自動） |
-| 3 | ビルドする | `make -C build -j4 blink` | 「▶ ビルドして書き込む」の前半 |
+| 3 | ビルドする | `make -C build -j4 blink` | Compile Project |
 | 4 | 書き込みモードにする | MicroPython なら `mpremote bootloader`、C++ なら `picotool reboot -f -u` | （自動） |
-| 5 | 書き込む | `cp build/blink.uf2 /run/media/$USER/RPI-RP2/` | 「▶ ビルドして書き込む」の後半 |
-| 6 | 出力を見る | `python3 -m serial.tools.miniterm /dev/ttyACM0 115200` | 出力欄 |
+| 5 | 書き込む | `cp build/blink.uf2 /run/media/$USER/RPI-RP2/` | Run Project (USB) |
+| 6 | 出力を見る | `python3 -m serial.tools.miniterm /dev/ttyACM0 115200` | Serial Monitor |
 | 7 | ピコの中のプログラムを調べる（必要なとき） | `picotool info -a` | （なし） |
 
-> **Pico Studio と同時には使えません。** 1つのポートを2つのソフトで使うと、やり取りが混ざって動かなくなります。
-> コマンドを使う前に、Pico Studio で「切断」を押してください。
+> **ポートは1つのソフトでしか使えません。** コマンドを使う前に、Pico Studio の「切断」や、VS Code の Serial Monitor の Stop Monitoring を押してください。
 
 ## 手順1: USB で認識しているか確かめる
 
@@ -349,7 +213,7 @@ lsusb -d 2e8a:
 ## 手順2〜3: ビルドする
 
 プロジェクトのフォルダ（`~/apps/pico-cpp`）で行います。このフォルダの `.cpp` が、1つずつプログラムになります（`blink.cpp` → `build/blink.uf2`）。
-`cd` で「そのようなファイルやディレクトリはありません」と出たら、フォルダがまだありません。`python3 ~/apps/pico-studio/cpp_build.py init` で作ります。
+`cd` で「そのようなファイルやディレクトリはありません」と出たら、フォルダがまだありません。`python3 ~/apps/pico-studio/devenv.py init` で作ります。
 
 ```bash
 cd ~/apps/pico-cpp
@@ -384,7 +248,7 @@ C++ のプログラムが動いているときは、picotool を使います。
 picotool reboot -f -u
 ```
 
-picotool がないときは、ポートを 1200 bps で開いて閉じます。Pico SDK のプログラムは、これを「書き込みモードにして」という合図として受け取ります（Pico Studio もこの方法を使っています）。
+picotool がないときは、ポートを 1200 bps で開いて閉じます。Pico SDK のプログラムは、これを「書き込みモードにして」という合図として受け取ります。
 
 ```bash
 python3 -c "import serial; serial.Serial('/dev/ttyACM0', 1200).close()"
@@ -392,7 +256,7 @@ python3 -c "import serial; serial.Serial('/dev/ttyACM0', 1200).close()"
 
 `RPI-RP2` のドライブが出てくれば成功です。うまくいかないときは、BOOT を押しながら USB をつなぎ直します。
 
-> `picotool` が「見つかりません」と出るときは、`sh ~/apps/pico-studio/cpp/setup-sdk.sh` を打ち直すと入ります（14章）。ビルドの途中で `build/_deps` にできる picotool は、USB の機能なしで作られているので、ピコの操作には使えません。
+> `picotool` が「見つかりません」と出るときは、`sh ~/apps/pico-studio/cpp/setup-sdk.sh` を打ち直すと入ります（この付録の最初）。VS Code の拡張機能が入れた `~/.pico-sdk/picotool/…/picotool` も使えます。ビルドの途中で `build/_deps` にできる picotool は、USB の機能なしで作られているので、ピコの操作には使えません。
 
 ## 手順5: 書き込む
 
@@ -429,7 +293,7 @@ picotool で、書き込まれているプログラムの名前・ビルドし�
 picotool info -a
 ```
 
-プログラムに名前やバージョンを入れる方法は18章にあります。
+プログラムに名前やバージョンを入れる方法は17章にあります。
 
 ## 手順をスクリプトにする
 
@@ -454,11 +318,26 @@ python3 -m serial.tools.miniterm /dev/ttyACM0 115200
 sh run.sh blink
 ```
 
+## VS Code のプロジェクトをコマンドでビルドする
+
+VS Code で作ったプロジェクト（3章）も、同じコマンドでビルドできます。`CMakeLists.txt` の `DO NOT EDIT` の部分が、`~/.pico-sdk` の SDK とコンパイラを選ぶためです。
+
+```bash
+cd ~/apps/blink
+cmake -S . -B build
+make -C build -j4
+```
+
+うまくいかないときは、VS Code の Compile Project を使います。
+
+## 困ったとき（コマンド）
+
+
+
 ## まとめ
 
-- ビルドは `cmake -S . -B build`（最初だけ）と `make -C build blink`
-- 書き込みは、書き込みモードのピコに `.uf2` をコピーする。`picotool load -x -f` なら1行
-- 書き込みモードには、`picotool reboot -f -u` か、ポートを 1200 bps で開いて閉じる
+- コマンド用の道具は `setup-sdk.sh` でまとめて入れる。中身はこの付録の表のとおり
+- `~/apps/pico-cpp` は、フォルダの `.cpp` が1つずつプログラムになる。`.cpp` を足したら `cmake -S . -B build` を打ち直す
+- ビルドは `make -C build -j4 名前`、書き込みは `.uf2` を `RPI-RP2` にコピーするか `picotool load -x -f`
+- 書き込みモードには、MicroPython なら `mpremote bootloader`、C++ なら `picotool reboot -f -u`
 - 出力は miniterm で見る。止めるのは Ctrl + ]
-
-<!-- /cpp -->

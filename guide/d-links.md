@@ -1,6 +1,6 @@
-# 3. マイコンでできること・おすすめリンク
+# 付録D. マイコンでできること・おすすめリンク
 
-## この章でわかること
+## この付録でわかること
 
 - マイコンがどんなところで使われているか
 - 自分のプロジェクトにマイコンが向いているかの判断のしかた
@@ -20,16 +20,16 @@
 
 ### 例: 牛の行動監視 IoT
 
-首輪にピコと加速度センサーを付けて、牛の動きを測るとします。このガイドの6〜10章は、この流れにそって進みます。
+首輪にピコと加速度センサーを付けて、牛の動きを測るとします。このガイドの6〜14章は、この流れにそって進みます。
 
 ![牛の行動監視 IoT の流れ](images/iot-system.svg)
 
-1. **測る**: 加速度センサーで首の動き、気圧センサーで頭の高さの変化を測る（6・7章）
-2. **記録・判定する**: 一定時間ごとにデータをまとめて保存し（9章）、「歩行」「採食」「反芻」「休息」などを機械学習で判定する（10章）
+1. **測る**: 加速度センサーで首の動き、気圧センサーで頭の高さの変化を測る（8・9章）
+2. **記録・判定する**: 一定時間ごとにデータをまとめて保存し（13章）、「歩行」「採食」「反芻」「休息」などを機械学習で判定する（14章）
 3. **送る**: WiFi 付きのボード（Pico W など）や LoRa で、判定結果を送る
 4. **集めて見る**: クラウドや PC で集めて、グラフにしたり、異常を知らせたりする
 
-実際に作るときの順番は、13章にまとめてあります。
+実際に作るときの順番は、16章にまとめてあります。
 
 マイコンの上で判定まで済ませると、送るデータが「生の加速度」から「行動の種類」になり、通信量と電池を大きく節約できます。
 
@@ -58,15 +58,16 @@
 | 部品 | 使う章 | メモ |
 | --- | --- | --- |
 | ラズパイピコ（または互換ボード） | 全部 | ピンヘッダ付き（Pico H など）だと、はんだ付けが不要 |
+| Debug Probe | 4・17章 | あると、行で止めて調べられる。なくても開発はできる |
 | データ通信対応の USB ケーブル | 全部 | ボードの端子（micro-B か Type-C）に合わせる |
-| ブレッドボード | 4〜7章 | 400穴か 830穴くらいのもの |
-| ジャンパーワイヤー（オス-オス） | 4〜7章 | 色がいろいろあるセット |
-| LED と抵抗（220Ω〜1kΩ） | 4・5章 | 電子工作の入門セットに入っていることが多い |
-| タクトスイッチ（押しボタン） | 4・5章 | ボードに USR ボタンがあればなくてもよい |
-| ボリューム（可変抵抗 10kΩ） | 5章 | アナログ入力の練習用 |
-| MPU-6050 モジュール（GY-521） | 6〜10章 | 加速度・ジャイロセンサー |
-| BMP280 モジュール | 6・7章 | 気圧・温度センサー |
-| はんだごて一式 | 6章 | ピンヘッダが付いていない場合だけ |
+| ブレッドボード | 6〜9章 | 400穴か 830穴くらいのもの |
+| ジャンパーワイヤー（オス-オス） | 6〜9章 | 色がいろいろあるセット |
+| LED と抵抗（220Ω〜1kΩ） | 6・7章 | 電子工作の入門セットに入っていることが多い |
+| タクトスイッチ（押しボタン） | 6・7章 | ボードに USR ボタンがあればなくてもよい |
+| ボリューム（可変抵抗 10kΩ） | 7章 | アナログ入力の練習用 |
+| MPU-6050 モジュール（GY-521） | 8・9・13・14章 | 加速度・ジャイロセンサー |
+| BMP280 モジュール | 8・9章 | 気圧・温度センサー |
+| はんだごて一式 | 8章 | ピンヘッダが付いていない場合だけ |
 
 > 部品がなくても、[Wokwi](https://wokwi.com/) というサイトで、ブラウザ上でピコとセンサーを試せます。
 
@@ -74,75 +75,44 @@
 
 ### どれから読めばいい？
 
-<!-- python -->
-
 1. まずはこのガイドを順番に進める
-2. 書き方で迷ったら **MicroPython RP2 クイックリファレンス** を見る（一番よく使う）
-3. センサーの使い方は **Random Nerd Tutorials** で、型番を探す
-4. もっと詳しく知りたくなったら、公式の PDF（Python SDK・データシート）を見る
-
-<!-- /python -->
-<!-- cpp -->
-
-1. まずはこのガイドを順番に進める（C++ を選んで読む）
-2. 関数の使い方で迷ったら **Pico SDK の API ドキュメント** で関数名を探す
-3. 書き方の例は **pico-examples** で探す（GPIO・I2C・ADC・PWM・割り込み・省電力など、公式のサンプルが機能ごとにそろっている）
-4. センサーの使い方は **Random Nerd Tutorials**（Python・Arduino の例が多い）で型番を探し、データシートと見比べて C++ に書き直す
+2. 関数の使い方で迷ったら、**Pico SDK の API ドキュメント** で関数名を探す（VS Code の Quick Access の Documentation からも開ける）
+3. 書き方の例は **pico-examples** で探す。GPIO・I2C・ADC・PWM・割り込み・省電力など、公式のサンプルが機能ごとにそろっている（VS Code の New Project From Example でそのまま試せる）
+4. センサーの使い方は、データシートと **Random Nerd Tutorials**（Python・Arduino の例が多い）で型番を探し、C++ に書き直す
 5. もっと詳しく知りたくなったら、公式の PDF（C/C++ SDK・RP2040 データシート）を見る
 
-<!-- /cpp -->
-
-### 公式ドキュメント（まず見るところ）
-
-- [MicroPython RP2 クイックリファレンス](https://docs.micropython.org/en/latest/rp2/quickref.html)
-  — ピン・I2C・タイマーなどの書き方が1ページにまとまっている。一番よく使う
-- [MicroPython の I2C の説明](https://docs.micropython.org/en/latest/library/machine.I2C.html)
-  — センサーとの通信で使う
-- [Raspberry Pi Pico Python SDK（PDF）](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-python-sdk.pdf)
-  — 公式の MicroPython 入門書。例がたくさんある
-- [Raspberry Pi Pico データシート（PDF）](https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf)
-  — ピン配置図や電源の仕様
-- [RP2040 データシート（PDF）](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
-  — チップの詳しい仕様。細かいことを調べるとき用
-- [MicroPython のダウンロード](https://micropython.org/download/RPI_PICO/)
-  — ファームウェア（.uf2）。Pico Studio のボタンからも書き込める
-
-### チュートリアル・作例
-
-- [Getting started with Raspberry Pi Pico（公式プロジェクト）](https://projects.raspberrypi.org/en/projects/getting-started-with-the-pico)
-  — LED・ボタン・センサーを順番に試せる公式チュートリアル
-- [Random Nerd Tutorials: Raspberry Pi Pico](https://randomnerdtutorials.com/projects-raspberry-pi-pico/)
-  — センサーごとの配線とコードの作例がとても多い
-- [Wokwi](https://wokwi.com/)
-  — ブラウザ上でピコとセンサーをシミュレーションできる。部品がなくても試せる
-
-### ライブラリ
-
-- [micropython-lib](https://github.com/micropython/micropython-lib)
-  — 公式のライブラリ集
-- [umqtt.simple](https://github.com/micropython/micropython-lib/tree/master/micropython/umqtt.simple)
-  — IoT でよく使う MQTT でデータを送るためのライブラリ
-- [ulab](https://github.com/v923z/micropython-ulab)
-  — MicroPython 用の numpy のようなもの（ファームウェアに組み込んで使う）
-
-### C/C++ で書くとき
-
-書き方は14〜18章にまとめてあります。
+### C/C++ と VS Code（まず見るところ）
 
 - [Pico SDK の API ドキュメント](https://www.raspberrypi.com/documentation/pico-sdk/)
   — 関数の一覧と説明。`gpio_put` などの関数名で探す。一番よく使う
+- [pico-examples](https://github.com/raspberrypi/pico-examples) — Pico SDK の公式サンプル集
 - [Getting started with Raspberry Pi Pico-series（PDF）](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)
-  — 公式の C/C++ 入門書。開発環境の作り方、デバッグのしかた
+  — 公式の入門書。VS Code の拡張機能、デバッグのしかた
+- [VS Code の拡張機能 Raspberry Pi Pico](https://marketplace.visualstudio.com/items?itemName=raspberry-pi.raspberry-pi-pico)
+  — 拡張機能のページ（3・4章）
 - [Raspberry Pi Pico-series C/C++ SDK（PDF）](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf)
   — SDK の考え方と全体の説明
-- [Pico SDK](https://github.com/raspberrypi/pico-sdk) — 公式の C/C++ 開発キット
-- [pico-examples](https://github.com/raspberrypi/pico-examples) — Pico SDK の公式サンプル集
-- [arduino-pico](https://github.com/earlephilhower/arduino-pico) — Arduino の書き方でピコを使えるようにするもの
+- [Pico SDK](https://github.com/raspberrypi/pico-sdk) — SDK のソース
+- [arduino-pico](https://github.com/earlephilhower/arduino-pico) — Arduino の書き方でピコを使えるようにするもの（このガイドでは使わない）
 
-### 機械学習（10章で使う）
+### ハードウェアの資料
 
-- [emlearn](https://github.com/emlearn/emlearn) / [emlearn-micropython](https://github.com/emlearn/emlearn-micropython)
-  — scikit-learn のモデルをマイコン用に変換する
+- [Raspberry Pi Pico データシート（PDF）](https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf)
+  — ピン配置図や電源の仕様（7章）
+- [RP2040 データシート（PDF）](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
+  — チップの詳しい仕様。ADC・PWM・PIO・低消費電力など、細かいことを調べるとき用
+- [Debug Probe](https://www.raspberrypi.com/documentation/microcontrollers/debug-probe.html) — 公式のデバッグの道具（4章）
+
+### チュートリアル・作例
+
+- [Random Nerd Tutorials（Raspberry Pi Pico）](https://randomnerdtutorials.com/projects-raspberry-pi-pico/)
+  — センサーごとの配線と使い方。型番で探す
+- [Wokwi](https://wokwi.com/) — ブラウザ上でピコとセンサーを試せるシミュレーター
+
+### 機械学習（14章で使う）
+
+- [emlearn](https://github.com/emlearn/emlearn)
+  — scikit-learn のモデルを C のコードに変換する
 - [LiteRT for Microcontrollers（旧 TensorFlow Lite Micro）](https://ai.google.dev/edge/litert/microcontrollers/overview)
   — ニューラルネットをマイコンで動かす
 - [pico-tflmicro](https://github.com/raspberrypi/pico-tflmicro) — 上をピコ用に移植したもの（C++）
@@ -155,8 +125,15 @@
 - [MPU-6050（加速度・ジャイロセンサー）](https://invensense.tdk.com/products/motion-tracking/6-axis/mpu-6050/)
   — 製品ページ。レジスタの資料もここから
 
+### MicroPython（付録E）
+
+- [MicroPython RP2 クイックリファレンス](https://docs.micropython.org/en/latest/rp2/quickref.html)
+  — ピン・I2C・タイマーなどの書き方が1ページにまとまっている
+- [MicroPython のダウンロード](https://micropython.org/download/RPI_PICO/)
+  — ファームウェア（.uf2）。Pico Studio のボタンからも書き込める
+
 ## まとめ
 
 - マイコンは「測る・動かす・つなぐ」が得意。重い処理は PC やクラウドに任せる
 - 牛の行動監視なら「測る → 判定する → 送る → 集める」の流れになる
-- 迷ったら RP2 クイックリファレンスと Random Nerd Tutorials を見る
+- 迷ったら Pico SDK の API ドキュメントと pico-examples を見る
