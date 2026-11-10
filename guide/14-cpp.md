@@ -62,15 +62,68 @@ sh ~/apps/pico-studio/cpp/setup-sdk.sh
 ```
 
 最後に `OK: C++ でビルドできます` と出れば完了です。ターミナルを開き直してから使います。
-何回打っても大丈夫です（あるものはそのまま使います）。足りないものだけを確かめたいときは、次のコマンドを打ちます。
+何回打っても大丈夫です（あるものはそのまま使い、足りないものだけを足します）。
+終わったら Pico Studio を起動し直す（Ctrl + C → `./start.sh`）と、「接続の確認」の「C++ の開発環境」が緑になります。
+
+足りないものだけを確かめたいときは、次のコマンドを打ちます。
 
 ```bash
 python3 ~/apps/pico-studio/cpp_build.py check
 ```
 
-1つずつ入れたいときや、何をしているか知りたいときは、次の 1〜3 を見てください。
+### このスクリプトがすること
 
-### 1. コンパイラなどを入れる
+スクリプトは、上から順に次の4つを行います。中身は `~/apps/pico-studio/cpp/setup-sdk.sh` で読めます。
+
+| 順番 | すること | 入る場所 | 中身 |
+| --- | --- | --- | --- |
+| 1/4 | コンパイラなどを入れる（`sudo apt install`） | `/usr/bin` など（PC 全体） | 下の「1. コンパイラなどを入れる」の表のパッケージ |
+| 2/4 | Pico SDK 2.1.1 をダウンロードする（`git clone` と `git submodule update --init`） | `~/pico/pico-sdk` | SDK 本体と、SDK が使うライブラリ（下の表） |
+| 3/4 | SDK の場所を登録する | `~/.bashrc` の最後に1行 | `export PICO_SDK_PATH=/home/ユーザー名/pico/pico-sdk` |
+| 4/4 | プロジェクトのフォルダを用意して、そろったか確かめる | `~/apps/pico-cpp` | `CMakeLists.txt`、`pico_sdk_import.cmake`、`.gitignore`、`blink.cpp`、`mpu6050.h`、`ws2812.h` |
+
+SDK と一緒にダウンロードされるライブラリ（サブモジュール）は次のとおりです。
+
+| ライブラリ | 使い道 |
+| --- | --- |
+| TinyUSB | USB のしくみ。`printf` を USB で PC に送るのに使う（**必須**） |
+| cyw43-driver | Pico W の無線のチップを動かす |
+| lwIP | Pico W で WiFi の通信（TCP/IP）をする |
+| BTstack | Pico W で Bluetooth を使う |
+| mbedtls | 暗号（HTTPS など） |
+
+- ダウンロードとインストールで、合わせて **1GB 前後**のディスクを使います（目安です）。インターネットにつながっている必要があります
+- `~/.bashrc` に書いた1行は、**新しく開いたターミナル**から効きます。開いたままのターミナルでは `source ~/.bashrc` を打つか、開き直します
+- 3/4 は、`~/.bashrc` にすでに `PICO_SDK_PATH` があれば何もしません。SDK を別の場所に置きたいときは、`PICO_SDK_PATH=/置きたい場所 sh ~/apps/pico-studio/cpp/setup-sdk.sh` のように打ちます
+- 4/4 は、すでにあるファイルを上書きしません
+
+### あとからできるもの
+
+スクリプトのあと、初めてビルドしたときに、次のものが自動でできます。
+
+| もの | 場所 | 中身 |
+| --- | --- | --- |
+| Pico Studio のビルド用のフォルダ | `~/.cache/pico-studio/cpp` | 「▶ ビルドして書き込む」で使う。消しても、次のビルドで作り直す |
+| コマンドでビルドしたもの | `~/apps/pico-cpp/build` | `.uf2` など。消しても `cmake` からやり直せる |
+| picotool | それぞれの `build` フォルダの中 | `.uf2` を作るのに使うツール。ビルドのときに SDK が自動でダウンロードしてビルドする（インターネットが必要） |
+
+### 元に戻すとき
+
+C++ の開発環境を消したいときは、次のようにします。
+
+```bash
+rm -rf ~/pico/pico-sdk ~/.cache/pico-studio
+sudo apt remove gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+```
+
+`~/.bashrc` の `export PICO_SDK_PATH=...` の行は、テキストエディタで開いて消します（`nano ~/.bashrc`）。
+`~/apps/pico-cpp` には自分で書いたプログラムが入っているので、消すときは中身を確かめてからにします。
+
+### 1つずつ入れる
+
+スクリプトを使わずに、自分で1つずつ入れるときの手順です。スクリプトの 1/4〜3/4 と同じことをします。
+
+#### 1. コンパイラなどを入れる
 
 ```bash
 sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib build-essential git python3 libusb-1.0-0-dev pkg-config
@@ -81,10 +134,12 @@ sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-n
 | `cmake` | ビルドの手順を作るソフト |
 | `gcc-arm-none-eabi` | ピコ（ARM）用のコンパイラ。PC の `g++` ではピコのプログラムは作れない |
 | `libnewlib-arm-none-eabi`、`libstdc++-arm-none-eabi-newlib` | ピコ用の C / C++ の標準ライブラリ |
-| `build-essential` | `make` など |
+| `build-essential` | `make` など、ビルドに使う基本の道具 |
+| `git` | SDK のダウンロードに使う |
+| `python3` | SDK のビルドの途中で使う。Pico Studio にも必要 |
 | `libusb-1.0-0-dev`、`pkg-config` | ビルドのときに picotool（ピコを操作するツール）を自動で作るのに使う |
 
-### 2. Pico SDK をダウンロードする
+#### 2. Pico SDK をダウンロードする
 
 ```bash
 mkdir -p ~/pico
@@ -97,7 +152,7 @@ git submodule update --init
 - `--branch 2.1.1` はバージョンの指定です。新しいバージョンは [リリースのページ](https://github.com/raspberrypi/pico-sdk/releases) で確かめられます
 - `git submodule update --init` は、SDK が使う USB のライブラリ（TinyUSB）などをダウンロードします。**これを忘れると、USB で `printf` が出ません**
 
-### 3. SDK の場所を登録する
+#### 3. SDK の場所を登録する
 
 ビルドのときに SDK の場所がわかるように、`~/.bashrc` に書いておきます。
 
@@ -493,6 +548,7 @@ C++ のプログラムを書き込んだあとで、また MicroPython と Pico 
 | 症状 | 原因と直し方 |
 | --- | --- |
 | `cd: /home/…/pico-cpp: そのようなファイルやディレクトリはありません` | プロジェクトのフォルダがまだない。`python3 ~/apps/pico-studio/cpp_build.py init` |
+| `SDK location was not specified. Please set PICO_SDK_PATH` | `PICO_SDK_PATH` が設定されていない。スクリプトの前から開いていたターミナルでは効いていないので、`source ~/.bashrc` を打つか開き直す。`cpp_build.py init` で作った `CMakeLists.txt` は `~/pico/pico-sdk` を自分で探すので、`python3 ~/apps/pico-studio/cpp_build.py init` で新しい形にしてもよい |
 | `does not appear to contain CMakeLists.txt` | `CMakeLists.txt` がないフォルダで `cmake` を打った。`cd ~/apps/pico-cpp` してから打つ |
 | `cmake` で `PICO_SDK_PATH` が見つからないと出る | 「SDK の場所を登録する」をしていない。ターミナルを開き直したか確かめる。`python3 ~/apps/pico-studio/cpp_build.py check` で足りないものがわかる |
 | `arm-none-eabi-gcc` が見つからないと出る | `gcc-arm-none-eabi` を入れていない |

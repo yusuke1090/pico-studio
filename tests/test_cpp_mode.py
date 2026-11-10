@@ -155,6 +155,10 @@ class CppModeTest(unittest.TestCase):
         cm = (folder / "CMakeLists.txt").read_text()
         self.assertIn("file(GLOB APP_SOURCES", cm)
         self.assertIn("hardware_i2c", cm)
+        self.assertIn("pico/pico-sdk", cm)                                    # PICO_SDK_PATH がなくても SDK を探す
+        (folder / "CMakeLists.txt").write_text(cpp_build.project_cmake(fallback=False))
+        self.assertTrue(cpp_build.init_project(folder, quiet=True)[0].startswith("CMakeLists.txt"))
+        self.assertEqual((folder / "CMakeLists.txt").read_text(), cpp_build.project_cmake())
         (folder / "blink.cpp").write_text("// 自分で直した\n")
         self.assertEqual(cpp_build.init_project(folder, quiet=True), [])      # 2回目は何も上書きしない
         self.assertEqual((folder / "blink.cpp").read_text(), "// 自分で直した\n")

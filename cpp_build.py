@@ -63,7 +63,7 @@ PROJECT_CMAKE = """\
 # test_ で始まるファイルは PC 用のテスト（18章）なので、ピコ用にはビルドしない。
 # .cpp を足したり消したりしたら、もう一度 cmake -S . -B build を打つ。
 cmake_minimum_required(VERSION 3.13)
-include(pico_sdk_import.cmake)        # pico_sdk_init より前に読む
+{sdk_fallback}include(pico_sdk_import.cmake)        # pico_sdk_init より前に読む
 project(pico_cpp C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -89,6 +89,18 @@ foreach(src IN LISTS APP_SOURCES)
     pico_add_extra_outputs(${{name}})      # .uf2 も作る
 endforeach()
 """
+
+
+# PICO_SDK_PATH が設定されていないターミナルでも、~/pico/pico-sdk にあれば使う
+SDK_FALLBACK = """\
+if(NOT PICO_SDK_PATH AND NOT DEFINED ENV{{PICO_SDK_PATH}} AND EXISTS "$ENV{{HOME}}/pico/pico-sdk")
+    set(PICO_SDK_PATH "$ENV{{HOME}}/pico/pico-sdk")
+endif()
+"""
+
+
+def project_cmake(fallback=True):
+    return PROJECT_CMAKE.format(libs=LIBRARIES, sdk_fallback=SDK_FALLBACK.format() if fallback else "")
 
 
 class BuildError(Exception):
@@ -177,7 +189,11 @@ def init_project(folder=None, quiet=False):
             p.write_text(text, encoding="utf-8")
             made.append(name)
 
-    put("CMakeLists.txt", PROJECT_CMAKE.format(libs=LIBRARIES))
+    cm = folder / "CMakeLists.txt"
+    if cm.exists() and cm.read_text(encoding="utf-8") == project_cmake(fallback=False):
+        cm.write_text(project_cmake(), encoding="utf-8")   # 手を加えていない古い雛形は、新しいものにする
+        made.append("CMakeLists.txt（新しい形にしました）")
+    put("CMakeLists.txt", project_cmake())
     put(".gitignore", "build/\nbuild-*/\n")
     for h in sorted(BUNDLED_INCLUDE.glob("*.h")):
         put(h.name, h.read_text(encoding="utf-8"))

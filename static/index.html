@@ -67,6 +67,8 @@ header .spacer { flex: 1; }
 .hint { margin: 0 12px 12px; padding: 8px 10px; border-radius: 6px; background: var(--bg);
   color: var(--muted); font-size: 12px; }
 .hint:empty { display: none; }
+.hint code { display: block; margin: 6px 0; padding: 4px 6px; border-radius: 4px; background: var(--console-bg);
+  color: var(--console-text); font: 12px ui-monospace, "DejaVu Sans Mono", monospace; overflow-wrap: anywhere; }
 .hint button { margin-top: 6px; }
 .files { list-style: none; margin: 0; padding: 4px 0; overflow: auto; flex: 1; }
 .files li { display: flex; align-items: center; gap: 6px; padding: 3px 12px; }
@@ -201,6 +203,7 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
         <li><span class="dot" id="chkConn"></span><div>シリアル接続<small id="chkConnText">-</small></div></li>
         <li><span class="dot" id="chkMp"></span><div><span id="chkMpLabel">MicroPython の応答</span><small id="chkMpText">-</small></div></li>
       </ul>
+      <div class="hint" id="cppHint"></div>
       <div class="hint" id="hint"></div>
     </section>
     <section class="panel" style="flex:1">
@@ -458,8 +461,22 @@ async function checkCppEnv() {
     $("chkMpText").style.whiteSpace = "pre-line";
     $("chkMpText").textContent = e.ok
       ? `Pico SDK ${e.sdk_version}\n${tilde(e.sdk)}\n保存先 ${tilde(e.project)}`
-      : e.problems.join("\n") + "\nガイド14章の「開発環境を用意する」を見てください";
+      : e.problems.join("\n");
+    showCppHint(!e.ok);
   } catch (err) { setDot("chkMp", "err"); $("chkMpText").textContent = isOldServer(err) ? OLD_SERVER : err.message; }
+}
+
+// C++ の開発環境がないときに、入れるコマンドと説明への入口を出す
+const SETUP_CMD = "sh ~/apps/pico-studio/cpp/setup-sdk.sh";
+function showCppHint(show) {
+  const el = $("cppHint");
+  if (!show || !isCpp()) { el.innerHTML = ""; return; }
+  el.innerHTML = `C++ を使うには、ターミナルで次のコマンドを1回打ちます。コンパイラ・Pico SDK・プロジェクトのフォルダをまとめて用意します（途中でパスワードを聞かれます）。
+    <code>${esc(SETUP_CMD)}</code>
+    終わったら、Pico Studio を起動し直してください（Ctrl + C → ./start.sh）。<br>
+    <button id="setupCopy">コピー</button> <button id="setupDoc">説明を見る（14章）</button>`;
+  $("setupCopy").onclick = () => copyText(SETUP_CMD);
+  $("setupDoc").onclick = () => openGuideAt("14-cpp.md", "開発環境を用意する");
 }
 
 // ---------- 状態のポーリング ----------
@@ -648,10 +665,18 @@ function fillSamples() {
     o.textContent = state.oldServer ? "（サーバーを起動し直すと出ます）" : "（読み込み中…）"; sel.appendChild(o);
   }
 }
+// コード欄を置き換える。確認は出さず、Ctrl + Z で前のコードに戻せるようにする
+function replaceCode(text) {
+  code.focus();
+  code.select();
+  if (!document.execCommand("insertText", false, text)) code.value = text;   // 使えないブラウザでは、そのまま入れる
+  code.setSelectionRange(0, 0);
+  code.scrollTop = 0;
+  onCodeChange();
+}
 $("sampleSel").onchange = (e) => {
   const k = e.target.value; if (!k) return;
-  if (code.value.trim() && !confirm("今のコードをサンプルに置き換えますか？")) { e.target.value = ""; return; }
-  code.value = samplesFor()[k]; e.target.value = ""; onCodeChange();
+  replaceCode(samplesFor()[k]); e.target.value = "";
 };
 async function loadCppSamples() {
   try {
@@ -694,6 +719,7 @@ function setLang(lang, { keepCode = false } = {}) {
   onCodeChange();
   fillSamples();
   setDot("chkMp", ""); $("chkMpText").textContent = "-";
+  showCppHint(false);
   if (lang === "cpp") { checkCppEnv(); loadFiles(); }
   else if (state.connected && state.mode === "python") checkMicroPython();
   else { renderFiles(null); if (state.connected) $("chkMpText").textContent = "C++ のプログラムの出力を表示中です（MicroPython は入っていません）"; }
@@ -943,13 +969,10 @@ async function showChapter(idx, opts = {}) {
 
 function insertCode(snippet, lang = "python") {
   if (lang !== state.lang) setLang(lang);
-  if (code.value.trim() && code.value !== snippet &&
-      !confirm("今のコードを、ガイドのコードに置き換えますか？")) return;
-  code.value = snippet;
-  onCodeChange();
-  code.focus();
-  toast(isCpp() ? "エディタに入れました。「▶ ビルドして書き込む」で動かせます"
-    : state.connected ? "エディタに入れました。「▶ 実行」で動かせます" : "エディタに入れました。ピコに接続すると実行できます", true);
+  replaceCode(snippet);
+  toast((isCpp() ? "エディタに入れました。「▶ ビルドして書き込む」で動かせます"
+    : state.connected ? "エディタに入れました。「▶ 実行」で動かせます" : "エディタに入れました。ピコに接続すると実行できます")
+    + "\n前のコードには Ctrl + Z で戻せます", true);
 }
 
 async function setGuideOpen(open) {
@@ -965,8 +988,18 @@ async function setGuideOpen(open) {
       return;
     }
     const fromHash = location.hash.match(/chapter=(\d+)/);   // 例: http://localhost:8765/#chapter=5（章番号 = 並び順。0章から始まる）
-    showChapter(fromHash ? +fromHash[1] : parseInt(store.get("pico-studio-chapter", "0"), 10) || 0);
+    await showChapter(fromHash ? +fromHash[1] : parseInt(store.get("pico-studio-chapter", "0"), 10) || 0);
   }
+}
+
+// ガイドの章を開いて、見出しの場所まで動かす（例: openGuideAt("14-cpp.md", "開発環境を用意する")）
+async function openGuideAt(file, heading) {
+  if (!$("main").classList.contains("with-guide") || !guide.loaded) await setGuideOpen(true);
+  const idx = guide.chapters.findIndex((c) => c.file === file);
+  if (idx < 0) return;
+  if (idx !== guide.index || !$("guideBody").querySelector("h2")) await showChapter(idx);
+  const h = [...$("guideBody").querySelectorAll("h2, h3")].find((x) => x.textContent.includes(heading));
+  if (h) h.scrollIntoView({ block: "start" });
 }
 
 // 目次（章の中の見出しは ▶ で開く）
