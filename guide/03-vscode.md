@@ -52,12 +52,13 @@
 | ④ | Pico SDK version | SDK のバージョン。いちばん新しいものでよい |
 | ⑤ | Features | 使う機能（SPI、I2C、UART、PIO、DMA、HW watchdog、HW timer、HW clocks など）。選ぶと `CMakeLists.txt` にライブラリが足され、使い方の例のコードも入る。あとから足すこともできる |
 | ⑥ | Stdio support | **Console over USB に ☑**。`printf` が USB で PC に届く。Console over UART の ☑ は外してよい |
-| ⑦ | Code generation options | **Generate C++ code に ☑**（`.cpp` ができる）。Enable C++ exceptions と RTTI は ☐ のまま（11章） |
+| ⑦ | Code generation options | **Generate C++ code に ☑**（`.cpp` ができる）。**Use project name as entry point file name も ☑ のまま**（`blink.cpp` ができる。☐ だと `main.cpp` になる）。Run the program from RAM rather than flash、Enable C++ exceptions と RTTI は ☐ のまま（11章） |
 | ⑧ | Debugger | Debug Probe を使うなら **DebugProbe (CMSIS-DAP)**（そのままでよい） |
 
 最後に **Create** を押します。VS Code が、できたプロジェクトのフォルダを開き直します。
 
 - **初めてのときは、`~/.pico-sdk` に SDK やコンパイラをダウンロードするので、数分かかります**（右下に進み具合が出ます）
+- 右下の **CMake Tools**（Enable CMake-Tools extension integration）は ☐ のままでかまいません。ビルドと書き込みはピコの拡張機能の Compile と Run で行います
 - **⑥の Console over USB はとても大事です。** USB の出力がないプログラムを書き込むと、次の書き込みのときに、BOOT ボタンを押す必要があります
 - 項目の名前や並びは、拡張機能のバージョンで少し違うことがあります（この図は 0.23.0 のもの）
 
