@@ -9,7 +9,7 @@ C++ の開発は VS Code の拡張機能「Raspberry Pi Pico」で行い、Pico 
 - `printf` の出力を見て、ピコに1行送る
 - `.uf2` を書き込む（MicroPython や、VS Code でビルドしたもの）
 - MicroPython のコードをすぐ試す（配線やセンサーの下調べ）
-- 教科書のような**ガイド**を横に表示する
+- 教科書のような**ガイド**を横に表示する。付箋・線・メモを付けて、どこまで読んだかを残せる
 
 サーバーは自分のPC（`127.0.0.1`）だけで動き、外部には公開しない。
 
@@ -97,6 +97,10 @@ python3 server.py --port 9000
 
 `http://localhost:8765/#chapter=5` のように開くと、その章を直接表示する（番号は目次の並び順）。
 
+本文の文字を選ぶと、線（黄・ピンク・緑・青）・メモ・付箋を付けられる。🔖 で一覧を開き、押すとその場所へ飛ぶ（ガイドの [0章](guide/00-guide.md)）。
+保存先は `~/.local/share/pico-studio/notes.json`（`XDG_DATA_HOME` があればその下。1つ前の状態は `notes.json.bak`）。Git には入れない。
+場所は「選んだ文字・前後の文字・だいたいの位置」で覚えるので、ガイドの文章を直しても、その文字が残っていれば同じ場所に付く。
+
 ### ガイドの書き方
 
 - 章は `guide/*.md`（Markdown）。順番・タイトル・部（目次のまとまり）は `guide/chapters.json` で決める
@@ -152,6 +156,7 @@ start.sh                起動してブラウザを開くスクリプト
 70-pico-studio.rules    ピコを sudo なしで使えるようにする udev ルール
 tests/fake_pico.py      テスト用の「偽のピコ」
 tests/test_devenv.py    開発環境の確認とプロジェクトの用意、接続の自動判定のテスト
+tests/test_notes.py     ガイドの付箋・線・メモを保存する API のテスト
 tests/build_guide_cpp.py  ガイドの C++ のプログラムを、本物の Pico SDK で全部ビルドして確かめる
 ```
 
@@ -159,6 +164,7 @@ tests/build_guide_cpp.py  ガイドの C++ のプログラムを、本物の Pic
 
 ```sh
 python3 tests/test_devenv.py
+python3 tests/test_notes.py
 python3 tests/build_guide_cpp.py pico pico2   # ガイドの C++（```cpp run）を Pico と Pico 2 でビルド。Pico SDK が必要
 ```
 
@@ -184,6 +190,7 @@ curl -X POST -H 'Content-Type: application/json' \
 | GET | `/api/state?since=N` | 接続状態（`mode`: `python` か `cpp`）と、N 番より後の出力 |
 | GET | `/api/env` | C++ の開発環境（VS Code の拡張機能・SDK・コンパイラ・picotool） |
 | GET | `/api/info` | MicroPython のバージョン・空き容量 |
+| GET | `/api/notes` | ガイドの付箋・線・メモ（`items`）と保存先（`path`） |
 | GET | `/api/files` | ピコのファイル一覧（MicroPython） |
 | GET | `/api/file?name=...` | ファイルの中身（MicroPython） |
 | POST | `/api/connect` `{"port"}` | 接続。動いているものから、REPL か出力の表示だけかを自動で決める |
@@ -197,3 +204,4 @@ curl -X POST -H 'Content-Type: application/json' \
 | POST | `/api/flash` | 送った .uf2 を書き込む |
 | POST | `/api/flash-latest` | 最新の MicroPython をダウンロードして書き込む |
 | POST | `/api/clear` | 出力の記録を消す |
+| POST | `/api/notes` `{"items"}` | ガイドの付箋・線・メモを丸ごと保存する |

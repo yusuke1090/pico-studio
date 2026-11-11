@@ -161,6 +161,59 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
 .guide-nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--border); }
 .guide-nav button { max-width: 48%; overflow: hidden; text-overflow: ellipsis; }
 
+/* ---------- 付箋・線（マーカー）・メモ ---------- */
+:root { --hl-yellow: rgba(255, 214, 0, .55); --hl-pink: rgba(255, 105, 180, .38); --hl-green: rgba(60, 200, 100, .36);
+  --hl-blue: rgba(80, 150, 255, .34); --st-yellow: #f7d84a; --st-pink: #f6a5c8; --st-green: #8fd4a4; --st-blue: #9cc0fa; }
+@media (prefers-color-scheme: dark) {
+  :root { --hl-yellow: rgba(255, 214, 0, .38); --hl-pink: rgba(255, 92, 170, .45); --hl-green: rgba(70, 210, 110, .38);
+    --hl-blue: rgba(90, 150, 255, .48); }
+}
+.c-yellow { --hl: var(--hl-yellow); --st: var(--st-yellow); } .c-pink { --hl: var(--hl-pink); --st: var(--st-pink); }
+.c-green { --hl: var(--hl-green); --st: var(--st-green); } .c-blue { --hl: var(--hl-blue); --st: var(--st-blue); }
+/* 蛍光ペンで引いたように、文字の下の方だけ塗る。コードの中は全体を塗る */
+mark.hl { color: inherit; background: linear-gradient(transparent 40%, var(--hl) 40%); padding: 0; border-radius: 2px;
+  cursor: pointer; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.guide-body code mark.hl { background: var(--hl); }
+mark.hl.note-end::after { content: "📝"; font-size: 11px; margin-left: 2px; vertical-align: super; line-height: 0; }
+.sticky-bar { display: flex; align-items: center; gap: 8px; width: fit-content; max-width: 100%; margin: 12px 0 4px;
+  padding: 2px 12px 2px 10px; background: var(--st); color: #1d2330; border-radius: 3px 12px 12px 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .3); font-size: 13px; font-weight: 600; line-height: 1.6; cursor: pointer; user-select: none; }
+.sticky-bar .st-date { font-size: 11px; font-weight: 400; opacity: .7; }
+li > .sticky-bar { margin-top: 4px; }
+.anno-flash { animation: annoFlash 1.8s ease-out; }
+@keyframes annoFlash { 0%, 45% { outline: 3px solid var(--accent); outline-offset: 2px; } 100% { outline: 3px solid transparent; outline-offset: 2px; } }
+#annoBtn.on { border-color: var(--accent); }
+#annoPop { position: fixed; z-index: 11; display: flex; flex-direction: column; gap: 8px; padding: 8px 10px;
+  background: var(--panel); color: var(--text); border: 1px solid var(--accent); border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .3); font-size: 13px; max-width: min(360px, calc(100vw - 16px)); }
+#annoPop[hidden] { display: none; }
+#annoPop .ap-row { display: flex; align-items: center; gap: 6px; }
+#annoPop .grow { flex: 1; }
+#annoPop button { padding: 3px 9px; font-size: 13px; }
+#annoPop .sep { width: 1px; align-self: stretch; background: var(--border); margin: 0 2px; }
+#annoPop textarea, #annoPop input[type=text] { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 8px; width: min(320px, calc(100vw - 40px)); }
+#annoPop textarea { resize: vertical; min-height: 64px; }
+#annoPop .kbd { font-size: 11px; }
+button.sw { width: 22px; height: 22px; padding: 0 !important; border-radius: 50%; background: var(--st); border: 2px solid transparent; }
+button.sw.on { border-color: var(--text); }
+#annoPanel { position: absolute; top: 50px; left: 12px; right: 12px; max-height: calc(100% - 62px); overflow: auto; z-index: 5;
+  padding: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 20px rgba(0, 0, 0, .25); }
+#annoPanel[hidden] { display: none; }
+#annoPanel .ap-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#annoPanel .ap-count { color: var(--muted); font-size: 12px; }
+#annoPanel .ap-hint { margin: 6px 2px 4px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+#annoPanel .ap-ch { margin: 12px 4px 2px; font-size: 12px; font-weight: 700; color: var(--muted); }
+#annoPanel .ap-item { display: flex; align-items: stretch; gap: 2px; border-left: 4px solid var(--st); border-radius: 4px; margin: 2px 0; }
+#annoPanel .ap-item:hover { background: var(--bg); }
+#annoPanel .ap-go { flex: 1; min-width: 0; display: flex; gap: 6px; border: 0; background: none; text-align: left; white-space: normal; padding: 4px 6px; }
+#annoPanel .ap-txt { min-width: 0; overflow-wrap: anywhere; }
+#annoPanel .ap-txt small { display: block; color: var(--muted); font-size: 11.5px; }
+#annoPanel .ap-txt small.lost { color: var(--warn); }
+#annoPanel .ap-del { border: 0; background: none; color: var(--muted); padding: 2px 8px; }
+#annoPanel .ap-del:hover { color: var(--err); }
+.toc-pin { flex: none; font-size: 12px; margin-right: 4px; }
+
 @media (max-width: 1000px) {
   main, main.with-guide { grid-template-columns: 1fr; grid-template-rows: none; height: auto;
     grid-template-areas: "guide" "side" "code" "console"; }
@@ -188,9 +241,11 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
       <button id="guidePrev" title="前の章">◀</button>
       <button id="guideToc" title="章を選ぶ" aria-expanded="false" aria-controls="tocPanel"><span class="title">読み込み中…</span><span aria-hidden="true">▾</span></button>
       <button id="guideNext" title="次の章">▶</button>
+      <button id="annoBtn" title="付箋・線・メモの一覧" aria-expanded="false" aria-controls="annoPanel">🔖</button>
       <button id="guideClose" title="ガイドを閉じる">✕</button>
     </div>
     <div id="tocPanel" hidden></div>
+    <div id="annoPanel" hidden></div>
     <div class="guide-body" id="guideBody"><p class="empty">読み込み中…</p></div>
   </section>
   <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" tabindex="0"
@@ -249,6 +304,7 @@ textarea#code { flex: 1; border: 0; outline: 0; resize: none; padding: 10px; bac
 </main>
 <div id="toast"></div>
 <div id="tip" role="tooltip"></div>
+<div id="annoPop" hidden></div>
 
 <script>
 const $ = (id) => document.getElementById(id);
@@ -815,8 +871,12 @@ async function showChapter(idx, opts = {}) {
       });
     });
     body.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => showChapter(+b.dataset.go)));
+    await annoLoading;
+    applyAnno();
+    if (!$("annoPanel").hidden) renderAnnoPanel();
     if (opts.keepScroll) body.scrollTop = Math.min(scrollRatio * body.scrollHeight, body.scrollHeight);
     else body.scrollTop = 0;
+    if (opts.restore) restoreReadPos();
   } catch (e) {
     body.innerHTML = `<p class="empty">章を読み込めませんでした（${esc(String(e.message || e))}）</p>`;
   }
@@ -841,7 +901,7 @@ async function setGuideOpen(open) {
       return;
     }
     const fromHash = location.hash.match(/chapter=(\d+)/);   // 例: http://localhost:8765/#chapter=5（章番号 = 並び順。0章から始まる）
-    await showChapter(fromHash ? +fromHash[1] : parseInt(store.get("pico-studio-chapter", "0"), 10) || 0);
+    await showChapter(fromHash ? +fromHash[1] : parseInt(store.get("pico-studio-chapter", "0"), 10) || 0, { restore: true });
   }
 }
 
@@ -876,7 +936,7 @@ function renderToc() {
     const part = c.part && c.part !== (guide.chapters[i - 1] || {}).part ? `<div class="toc-part">${esc(c.part)}</div>` : "";
     return part + `<div class="toc-row${i === guide.index ? " current" : ""}">
         <button class="toc-fold" data-fold="${i}" aria-expanded="${open}" aria-label="${esc(c.title)} の見出しを開く"${subs.length ? "" : " disabled"}>▶</button>
-        <button class="toc-go" data-ch="${i}">${esc(c.title)}</button></div>
+        <button class="toc-go" data-ch="${i}">${esc(c.title)}</button>${pinBadge(c.file)}</div>
       <ul class="toc-sub"${open ? "" : " hidden"}>${subs.map((t, n) =>
         `<li><button data-ch="${i}" data-sec="${n}">${esc(t)}</button></li>`).join("")}</ul>`;
   }).join("");
@@ -889,6 +949,7 @@ function closeToc() {
 
 $("guideToc").onclick = async () => {
   if (!$("tocPanel").hidden) return closeToc();
+  closeAnnoPanel();
   await loadSections();
   toc.open = new Set([guide.index]);
   renderToc();
@@ -915,6 +976,478 @@ document.addEventListener("mousedown", (e) => {
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !$("tocPanel").hidden) { closeToc(); $("guideToc").focus(); }
+});
+
+// =====================================================================
+// 付箋・線（マーカー）・メモ
+// サーバーの ~/.local/share/pico-studio/notes.json に保存する。
+// 場所は「選んだ文字・その前後の文字・だいたいの位置」で覚えるので、ガイドの文章を直しても、
+// 同じ文字が残っていれば同じ場所に付く。
+// =====================================================================
+const COLORS = { yellow: "黄", pink: "ピンク", green: "緑", blue: "青" };
+const anno = { items: [], ready: false, error: "", saveTimer: 0, lost: new Set(), pending: null };
+const pop = $("annoPop");
+
+async function loadAnno() {
+  try {
+    anno.items = (await api("/api/notes")).items;
+    anno.ready = true;
+  } catch (e) {
+    anno.error = isOldServer(e) ? OLD_SERVER : "付箋・メモを読み込めませんでした: " + e.message;
+  }
+}
+const annoLoading = loadAnno();
+
+function saveAnno() {
+  clearTimeout(anno.saveTimer);
+  anno.saveTimer = setTimeout(async () => {
+    anno.saveTimer = 0;
+    try { await api("/api/notes", { items: anno.items }); }
+    catch (e) { toast(isOldServer(e) ? OLD_SERVER : "付箋・メモを保存できませんでした: " + e.message); }
+  }, 300);
+}
+// 保存する前にタブを閉じたときも、残す
+addEventListener("pagehide", () => {
+  if (!anno.saveTimer) return;
+  clearTimeout(anno.saveTimer);
+  navigator.sendBeacon("/api/notes", JSON.stringify({ items: anno.items }));
+});
+
+// ガイドの本文の文字を1本の文字列にして、どの文字がどのテキストノードにあるかを持つ
+// （付箋や、コードのラベル・ボタン、章の終わりの「次の章」は数えない）
+function textIndex(root) {
+  const nodes = [], starts = [];
+  let text = "";
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: (n) => n.parentElement.closest("[data-anno-ui], .cb-head, .guide-nav")
+      ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+  });
+  for (let n; (n = w.nextNode());) { nodes.push(n); starts.push(text.length); text += n.data; }
+  return { nodes, starts, text };
+}
+function nodeAt(idx, off) {
+  for (let k = 0; k < idx.nodes.length; k++) {
+    if (off < idx.starts[k] + idx.nodes[k].data.length) return k;
+  }
+  return -1;
+}
+// 選んだ範囲の端（ノードと位置）を、文字列の何文字目かにする
+function pointToOffset(idx, container, offset) {
+  if (container.nodeType === Node.TEXT_NODE) {
+    const k = idx.nodes.indexOf(container);
+    if (k >= 0) return idx.starts[k] + offset;
+  }
+  const probe = document.createRange();
+  probe.setStart(container, offset);
+  for (let k = 0; k < idx.nodes.length; k++) {
+    if (probe.comparePoint(idx.nodes[k], 0) >= 0) return idx.starts[k];
+  }
+  return idx.text.length;
+}
+function makeAnchor(text, s, e) {
+  return { exact: text.slice(s, e), prefix: text.slice(Math.max(0, s - 32), s), suffix: text.slice(e, e + 32), pos: s };
+}
+function rangeToAnchor(range) {
+  const idx = textIndex($("guideBody"));
+  let s = pointToOffset(idx, range.startContainer, range.startOffset);
+  let e = pointToOffset(idx, range.endContainer, range.endOffset);
+  while (s < e && /\s/.test(idx.text[s])) s++;
+  while (e > s && /\s/.test(idx.text[e - 1])) e--;
+  return e > s ? makeAnchor(idx.text, s, e) : null;
+}
+// 覚えた文字を本文から探す。同じ文字が何か所もあれば、前後の文字がいちばん合う所にする
+function locate(idx, a) {
+  const t = idx.text;
+  let best = -1, bestScore = -Infinity;
+  for (let p = a.exact ? t.indexOf(a.exact) : -1; p >= 0; p = t.indexOf(a.exact, p + 1)) {
+    let sc = 0;
+    const pre = a.prefix || "", suf = a.suffix || "", after = p + a.exact.length;
+    while (sc < pre.length && p - sc - 1 >= 0 && t[p - sc - 1] === pre[pre.length - sc - 1]) sc++;
+    let k = 0;
+    while (k < suf.length && t[after + k] === suf[k]) k++;
+    const score = sc + k - Math.abs(p - (a.pos || 0)) / 1e7;
+    if (score > bestScore) { bestScore = score; best = p; }
+  }
+  return best < 0 ? null : { start: best, end: best + a.exact.length };
+}
+// start〜end の文字を <mark> で包む（テキストノードをまたいでもよい）
+function wrapRange(root, start, end, make) {
+  const idx = textIndex(root), marks = [];
+  idx.nodes.forEach((n, k) => {
+    const ns = idx.starts[k], len = n.data.length;
+    if (ns + len <= start || ns >= end) return;
+    const a = Math.max(0, start - ns), b = Math.min(len, end - ns);
+    if (!n.data.slice(a, b).trim()) return;
+    let target = n;
+    if (a > 0) target = target.splitText(a);
+    if (b - a < target.data.length) target.splitText(b - a);
+    const m = make();
+    target.before(m);
+    m.appendChild(target);
+    marks.push(m);
+  });
+  return marks;
+}
+// 付箋は、その文字がある段落・見出し・表・コードなどの上に貼る（箇条書きは、その項目の中）
+function placeSticky(root, node, it) {
+  const bar = document.createElement("div");
+  bar.className = "sticky-bar c-" + it.color;
+  bar.dataset.annoUi = "";
+  bar.dataset.id = it.id;
+  bar.title = "押すと、文字や色を変えたり、はがしたりできます";
+  bar.innerHTML = `<span>📌 ${esc(it.note || "付箋")}</span><span class="st-date">${fmtDate(it.created)}</span>`;
+  const el = node.parentElement, big = el.closest(".codeblock, table, blockquote, li");
+  if (el === root || !root.contains(el)) return root.prepend(bar);
+  if (big && big.tagName === "LI") return big.prepend(bar);
+  let b = big || el;
+  while (b.parentElement && b.parentElement !== root) b = b.parentElement;
+  b.before(bar);
+}
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return isNaN(d) ? "" : `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+function currentFile() { return (guide.chapters[guide.index] || {}).file; }
+
+function applyAnno() {
+  const body = $("guideBody"), file = currentFile();
+  anno.lost = new Set();
+  if (!anno.ready || !file) return;
+  const mine = anno.items.filter((x) => x.file === file);
+  for (const it of mine.filter((x) => x.type === "mark")) {
+    const r = locate(textIndex(body), it);
+    if (!r) { anno.lost.add(it.id); continue; }
+    const marks = wrapRange(body, r.start, r.end, () => {
+      const m = document.createElement("mark");
+      m.className = "hl c-" + it.color;
+      m.dataset.id = it.id;
+      if (it.note) m.title = it.note;
+      return m;
+    });
+    if (it.note && marks.length) marks[marks.length - 1].classList.add("note-end");
+  }
+  for (const it of mine.filter((x) => x.type === "sticky")) {
+    const idx = textIndex(body), r = locate(idx, it);
+    if (!r) { anno.lost.add(it.id); continue; }
+    placeSticky(body, idx.nodes[nodeAt(idx, r.start)], it);
+  }
+}
+function clearAnno() {
+  const body = $("guideBody");
+  body.querySelectorAll(".sticky-bar").forEach((b) => b.remove());
+  body.querySelectorAll("mark.hl").forEach((m) => m.replaceWith(...m.childNodes));
+  body.normalize();
+}
+function refreshAnno() {
+  const body = $("guideBody"), top = body.scrollTop;   // 包み直しても、見ている場所が動かないように
+  clearAnno();
+  applyAnno();
+  body.scrollTop = top;
+  if (!$("annoPanel").hidden) renderAnnoPanel();
+}
+
+function addItem(type, anchor, extra = {}) {
+  if (!anno.ready) { toast(anno.error || "付箋・メモを読み込み中です。少し待ってからもう一度"); return null; }
+  const it = { id: type[0] + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), type,
+    file: currentFile(), color: "yellow", note: "", created: new Date().toISOString(), ...anchor, ...extra };
+  anno.items.push(it);
+  saveAnno();
+  return it;
+}
+function removeItem(id) {
+  anno.items = anno.items.filter((x) => x.id !== id);
+  saveAnno();
+}
+const findItem = (id) => anno.items.find((x) => x.id === id);
+
+// ---------- 吹き出し（選んだときのボタン・線やメモの編集・付箋の編集） ----------
+function placePop(rect) {
+  pop.hidden = false;
+  const r = pop.getBoundingClientRect();
+  const left = Math.max(8, Math.min(rect.left, innerWidth - r.width - 8));
+  const top = rect.top - r.height - 8 >= 8 ? rect.top - r.height - 8 : Math.min(rect.bottom + 8, innerHeight - r.height - 8);
+  pop.style.left = left + "px";
+  pop.style.top = Math.max(8, top) + "px";
+}
+function closePop() {
+  if (pop.hidden) return;
+  const done = pop._onclose;
+  pop._onclose = null;
+  pop.hidden = true;
+  pop.dataset.kind = "";
+  if (done) done();
+}
+const swatches = (cur) => Object.entries(COLORS).map(([c, name]) =>
+  `<button class="sw c-${c}${c === cur ? " on" : ""}" data-color="${c}" title="${name}" aria-label="${name}"></button>`).join("");
+
+// 文字を選んだら、線・メモ・付箋のボタンを出す
+function showSelBar(rect) {
+  closePop();
+  pop.dataset.kind = "sel";
+  pop.setAttribute("role", "toolbar");
+  pop.innerHTML = `<div class="ap-row">${swatches("")}<span class="sep"></span>
+    <button data-act="memo" title="線を引いて、メモを書く">📝 メモ</button>
+    <button data-act="sticky" title="ここに付箋を貼る（どこまで読んだかの目印）">📌 付箋</button></div>`;
+  pop.onclick = (e) => {
+    const b = e.target.closest("button");
+    if (!b || !anno.pending) return;
+    const a = anno.pending;
+    anno.pending = null;
+    getSelection().removeAllRanges();
+    closePop();
+    if (b.dataset.color) {
+      if (addItem("mark", a, { color: b.dataset.color })) refreshAnno();
+    } else if (b.dataset.act === "memo") {
+      const it = addItem("mark", a);
+      if (it) { refreshAnno(); editMark(it.id, true); }
+    } else if (b.dataset.act === "sticky") {
+      const it = addItem("sticky", { ...a, exact: a.exact.slice(0, 40), suffix: (a.exact.slice(40) + a.suffix).slice(0, 32) });
+      if (it) { refreshAnno(); editSticky(it.id, true); }
+    }
+  };
+  placePop(rect);
+}
+
+// 線とメモを直す
+function editMark(id, fresh = false) {
+  const it = findItem(id), el = $("guideBody").querySelector(`mark.hl[data-id="${id}"]`);
+  if (!it || !el) return;
+  closePop();
+  pop.dataset.kind = "mark";
+  pop.setAttribute("role", "dialog");
+  pop.innerHTML = `<div class="ap-row">${swatches(it.color)}<span class="grow"></span>
+      <button data-act="del" title="この線とメモを消す">🗑 消す</button></div>
+    <textarea id="annoNote" rows="3" placeholder="メモ（なくてもよい）">${esc(it.note || "")}</textarea>
+    <div class="ap-row"><span class="kbd">自動で保存されます</span><span class="grow"></span><button data-act="close">閉じる</button></div>`;
+  const note = $("annoNote");
+  let t = 0;
+  note.oninput = () => {
+    it.note = note.value.trim();
+    saveAnno();
+    clearTimeout(t);
+    t = setTimeout(refreshAnno, 500);
+  };
+  pop.onclick = (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.color) {
+      it.color = b.dataset.color;
+      saveAnno();
+      refreshAnno();
+      pop.querySelectorAll(".sw").forEach((x) => x.classList.toggle("on", x === b));
+    } else if (b.dataset.act === "del") {
+      pop._onclose = null;
+      closePop();
+      removeItem(id);
+      refreshAnno();
+    } else if (b.dataset.act === "close") closePop();
+  };
+  // メモのボタンで作って、何も書かずに閉じたときは、線も付けない
+  pop._onclose = () => {
+    clearTimeout(t);
+    if (fresh && !it.note) removeItem(id);
+    refreshAnno();
+  };
+  placePop(el.getBoundingClientRect());
+  if (fresh || !it.note) note.focus();
+}
+
+// 付箋を直す
+function editSticky(id, fresh = false) {
+  const it = findItem(id), el = $("guideBody").querySelector(`.sticky-bar[data-id="${id}"]`);
+  if (!it || !el) return;
+  closePop();
+  pop.dataset.kind = "sticky";
+  pop.setAttribute("role", "dialog");
+  pop.innerHTML = `<div class="ap-row"><strong>📌 付箋</strong><span class="grow"></span>
+      <button data-act="del" title="この付箋をはがす">🗑 はがす</button></div>
+    <input type="text" id="annoLabel" maxlength="60" placeholder="例: ここまで読んだ、ここから試す" value="${esc(it.note || "")}">
+    <div class="ap-row">${swatches(it.color)}<span class="grow"></span><button data-act="close" class="primary">OK</button></div>`;
+  const label = $("annoLabel");
+  label.oninput = () => {
+    it.note = label.value.trim();
+    saveAnno();
+    el.firstElementChild.textContent = "📌 " + (it.note || "付箋");
+  };
+  label.onkeydown = (e) => { if (e.key === "Enter") closePop(); };
+  pop.onclick = (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.color) {
+      it.color = b.dataset.color;
+      saveAnno();
+      el.className = "sticky-bar c-" + it.color;
+      pop.querySelectorAll(".sw").forEach((x) => x.classList.toggle("on", x === b));
+    } else if (b.dataset.act === "del") {
+      pop._onclose = null;
+      closePop();
+      removeItem(id);
+      refreshAnno();
+    } else if (b.dataset.act === "close") closePop();
+  };
+  pop._onclose = () => { if (!$("annoPanel").hidden) renderAnnoPanel(); renderTocIfOpen(); };
+  placePop(el.getBoundingClientRect());
+  if (fresh) label.focus();
+}
+
+// ---------- 今見ている所・前に読んでいた所 ----------
+// ガイドの欄の上の端に見えている、最初の文字
+function topAnchor() {
+  const body = $("guideBody"), top = body.getBoundingClientRect().top, idx = textIndex(body);
+  for (let k = 0; k < idx.nodes.length; k++) {
+    const n = idx.nodes[k];
+    if (!n.data.trim()) continue;
+    const r = document.createRange();
+    r.selectNodeContents(n);
+    const rect = r.getBoundingClientRect();
+    if (rect.height > 0 && rect.bottom > top + 4) {
+      const s = idx.starts[k] + (n.data.length - n.data.trimStart().length);
+      return makeAnchor(idx.text, s, Math.min(idx.text.length, s + 40));
+    }
+  }
+  return null;
+}
+function scrollToEl(el, where = "start") {
+  const body = $("guideBody"), br = body.getBoundingClientRect(), r = el.getBoundingClientRect();
+  body.scrollTop += r.top - br.top - (where === "center" ? br.height / 3 : 8);
+}
+function flash(els) {
+  els.forEach((el) => { el.classList.remove("anno-flash"); void el.offsetWidth; el.classList.add("anno-flash"); });
+}
+let posTimer = 0;
+$("guideBody").addEventListener("scroll", () => {
+  if (pop.dataset.kind === "sel") closePop();
+  clearTimeout(posTimer);
+  posTimer = setTimeout(() => {
+    const a = topAnchor();
+    if (a && currentFile()) store.set("pico-studio-pos", JSON.stringify({ file: currentFile(), ...a }));
+  }, 600);
+});
+function restoreReadPos() {
+  let pos;
+  try { pos = JSON.parse(store.get("pico-studio-pos", "null")); } catch (e) { return; }
+  if (!pos || pos.file !== currentFile()) return;
+  const body = $("guideBody"), idx = textIndex(body), r = locate(idx, pos);
+  if (!r) return;
+  const k = nodeAt(idx, r.start);
+  if (k < 0) return;
+  const n = idx.nodes[k], o = r.start - idx.starts[k];
+  const range = document.createRange();
+  range.setStart(n, o);
+  range.setEnd(n, Math.min(n.data.length, o + 1));
+  body.scrollTop += range.getBoundingClientRect().top - body.getBoundingClientRect().top - 8;
+}
+
+// ---------- 本文での操作 ----------
+// 選び終わりは、押したあと少し待ってから見る（選んだ所の中を押すと、離したあとで選択が消えるため）。
+// その間に次のクリックが始まったら（ダブルクリックの1回目など）、何もしない
+let downSeq = 0;
+$("guideBody").addEventListener("mousedown", () => downSeq++);
+$("guideBody").addEventListener("mouseup", (e) => { const seq = downSeq; setTimeout(() => {
+  if (seq !== downSeq) return;
+  const sel = getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) return;
+  const range = sel.getRangeAt(0);
+  if (!$("guideBody").contains(range.commonAncestorContainer)) return;
+  if (e.detail >= 2 && tipEl.style.display === "block") return;   // ダブルクリックで言葉の説明を出したとき
+  const a = rangeToAnchor(range);
+  if (!a) return;
+  if (a.exact.length > 3000) return toast("選んだ範囲が長すぎます（3000文字まで）");
+  anno.pending = a;
+  showSelBar(range.getBoundingClientRect());
+}, 0); });
+$("guideBody").addEventListener("click", (e) => {
+  const bar = e.target.closest(".sticky-bar");
+  if (bar) return editSticky(bar.dataset.id);
+  const m = e.target.closest("mark.hl");
+  if (m && getSelection().isCollapsed && !e.target.closest("a")) editMark(m.dataset.id);
+});
+document.addEventListener("mousedown", (e) => {
+  if (!pop.hidden && !pop.contains(e.target)) closePop();
+  if (!$("annoPanel").hidden && !$("annoPanel").contains(e.target) && !$("annoBtn").contains(e.target)) closeAnnoPanel();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (!pop.hidden) closePop();
+  else if (!$("annoPanel").hidden) { closeAnnoPanel(); $("annoBtn").focus(); }
+});
+
+// ---------- 一覧（🔖） ----------
+function pinBadge(file) {
+  const n = anno.items.filter((x) => x.file === file && x.type === "sticky").length;
+  return n ? `<span class="toc-pin" title="付箋 ${n}枚">📌${n > 1 ? n : ""}</span>` : "";
+}
+function renderTocIfOpen() { if (!$("tocPanel").hidden) renderToc(); }
+function closeAnnoPanel() {
+  $("annoPanel").hidden = true;
+  $("annoBtn").classList.remove("on");
+  $("annoBtn").setAttribute("aria-expanded", "false");
+}
+function renderAnnoPanel() {
+  const panel = $("annoPanel");
+  if (!anno.ready) { panel.innerHTML = `<p class="empty">${esc(anno.error || "読み込み中…")}</p>`; return; }
+  const order = new Map(guide.chapters.map((c, i) => [c.file, i]));
+  const items = [...anno.items].sort((a, b) =>
+    (order.get(a.file) ?? 1e9) - (order.get(b.file) ?? 1e9) || a.file.localeCompare(b.file) || (a.pos || 0) - (b.pos || 0));
+  const n = (f) => anno.items.filter(f).length;
+  const cut = (t, len) => (t.length > len ? t.slice(0, len) + "…" : t).replace(/\s+/g, " ");
+  let html = `<div class="ap-top"><button id="annoAddBtn" class="primary">📌 今見ている所に付箋を貼る</button>
+      <span class="ap-count">付箋 ${n((x) => x.type === "sticky")}・線 ${n((x) => x.type === "mark")}・メモ ${n((x) => x.type === "mark" && x.note)}</span></div>
+    <p class="ap-hint">本文の文字をドラッグして選ぶと、線（4色）・📝 メモ・📌 付箋のボタンが出ます。付けた線や付箋を押すと、色を変えたり消したりできます。</p>`;
+  let lastFile = null;
+  for (const it of items) {
+    if (it.file !== lastFile) {
+      lastFile = it.file;
+      const ch = guide.chapters[order.get(it.file)];
+      html += `<div class="ap-ch">${esc(ch ? ch.title : it.file + "（今はない章）")}</div>`;
+    }
+    const lost = anno.lost.has(it.id) ? '<small class="lost">本文が変わって、場所が見つかりません</small>' : "";
+    const quote = `<small>「${esc(cut(it.exact, 50))}」${fmtDate(it.created)}</small>`;
+    const main = it.type === "sticky" ? `📌 ${esc(it.note || "付箋")}`
+      : it.note ? `📝 ${esc(cut(it.note, 80))}` : `「${esc(cut(it.exact, 60))}」`;
+    html += `<div class="ap-item c-${esc(it.color)}"><button class="ap-go" data-go="${esc(it.id)}"><span class="ap-txt">${main}
+      ${it.type === "sticky" || it.note ? quote : `<small>${fmtDate(it.created)}</small>`}${lost}</span></button>
+      <button class="ap-del" data-del="${esc(it.id)}" title="消す" aria-label="消す">✕</button></div>`;
+  }
+  if (!items.length) html += '<p class="empty">まだありません</p>';
+  panel.innerHTML = html;
+}
+$("annoBtn").onclick = () => {
+  if (!$("annoPanel").hidden) return closeAnnoPanel();
+  closeToc();
+  renderAnnoPanel();
+  $("annoPanel").hidden = false;
+  $("annoBtn").classList.add("on");
+  $("annoBtn").setAttribute("aria-expanded", "true");
+};
+$("annoPanel").addEventListener("click", async (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.id === "annoAddBtn") {
+    const a = topAnchor();
+    if (!a) return toast("付箋を貼る場所が見つかりません");
+    closeAnnoPanel();
+    const it = addItem("sticky", a);
+    if (it) { refreshAnno(); editSticky(it.id, true); }
+    return;
+  }
+  if (b.dataset.del) {
+    removeItem(b.dataset.del);
+    refreshAnno();
+    renderAnnoPanel();
+    return;
+  }
+  const it = findItem(b.dataset.go);
+  if (!it) return;
+  closeAnnoPanel();
+  const idx = guide.chapters.findIndex((c) => c.file === it.file);
+  if (idx < 0) return toast("この章は今のガイドにありません。一覧の ✕ で消せます");
+  if (idx !== guide.index) await showChapter(idx);
+  const els = [...$("guideBody").querySelectorAll(`[data-id="${it.id}"]`)];
+  if (!els.length) return toast("ガイドの文章が変わったため、場所が見つかりませんでした。一覧の ✕ で消せます");
+  scrollToEl(els[0], it.type === "mark" ? "center" : "start");
+  flash(els);
 });
 
 $("guideBtn").onclick = () => setGuideOpen(!$("main").classList.contains("with-guide"));

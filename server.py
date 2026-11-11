@@ -47,6 +47,13 @@ BOOTSEL_PIDS = {0x0003, 0x000F}  # RP2040 / RP2350 の BOOTSEL モード
 RAW_BANNER = b"raw REPL; CTRL-B to exit\r\n>"
 FIRMWARE_PAGE = "https://micropython.org/download/RPI_PICO/"
 
+# ガイドの付箋・マーカー・メモ。Git には入れず、PC の中に置く（ポート番号やブラウザを変えても残る）
+DATA_DIR = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share") / "pico-studio"
+NOTES_FILE = DATA_DIR / "notes.json"
+NOTES_MAX_BYTES = 2_000_000
+NOTES_MAX_ITEMS = 5000
+NOTES_LOCK = threading.Lock()
+
 
 class DeviceError(Exception):
     pass
@@ -466,6 +473,36 @@ console = Console()
 pico = Pico(console)
 
 
+def load_notes():
+    """保存した付箋・マーカー・メモを読む。ファイルがなければ空"""
+    try:
+        data = json.loads(NOTES_FILE.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return []
+    items = data.get("items") if isinstance(data, dict) else None
+    return items if isinstance(items, list) else []
+
+
+def save_notes(items):
+    """付箋・マーカー・メモを丸ごと保存する。前の版は notes.json.bak に残す"""
+    if not isinstance(items, list) or len(items) > NOTES_MAX_ITEMS:
+        raise ValueError("items は 5000 件までのリストにしてください")
+    for it in items:
+        if not isinstance(it, dict) or not isinstance(it.get("id"), str) \
+                or it.get("type") not in ("mark", "sticky") or not isinstance(it.get("file"), str):
+            raise ValueError("付箋・マーカーの形が正しくありません")
+    body = json.dumps({"version": 1, "items": items}, ensure_ascii=False, indent=1)
+    if len(body.encode("utf-8")) > NOTES_MAX_BYTES:
+        raise ValueError("メモが大きすぎます")
+    with NOTES_LOCK:
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        if NOTES_FILE.exists():   # コピーで残す（保存中に読みに来ても、notes.json が消えないように）
+            NOTES_FILE.with_suffix(".json.bak").write_bytes(NOTES_FILE.read_bytes())
+        tmp = NOTES_FILE.with_suffix(".json.tmp")
+        tmp.write_text(body, encoding="utf-8")
+        tmp.replace(NOTES_FILE)
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "PicoStudio/1.0"
 
@@ -534,6 +571,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"content": pico.read_file(q["name"][0])})
             elif url.path == "/api/env":
                 self._json(devenv.check())
+            elif url.path == "/api/notes":
+                self._json({"items": load_notes(), "path": str(NOTES_FILE)})
             else:
                 self._json({"error": "not found"}, 404)
         except DeviceError as e:
@@ -559,6 +598,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"ok": True, "dest": dest, "url": fw_url})
 
             body = json.loads(self._body() or b"{}")
+            if url.path == "/api/notes":
+                save_notes(body.get("items"))
+                return self._json({"ok": True})
             if url.path == "/api/connect":
                 pico.connect(body["port"], body.get("mode") or port_kind_mode(body["port"]))
             elif url.path == "/api/disconnect":
@@ -585,6 +627,8 @@ class Handler(BaseHTTPRequestHandler):
             self._json({"error": str(e)}, 409)
         except FileNotFoundError as e:
             self._json({"error": f"ファイルがありません: {e.filename}"}, 404)
+        except ValueError as e:
+            self._json({"error": str(e)}, 400)
         except Exception as e:  # noqa: BLE001
             self._json({"error": f"{type(e).__name__}: {e}"}, 500)
 

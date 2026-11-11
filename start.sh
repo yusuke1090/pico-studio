@@ -7,7 +7,7 @@ URL="http://localhost:$PORT"
 # すでに起動していれば、ブラウザで開くだけにする
 if curl -s -o /dev/null --max-time 1 "$URL/api/state"; then
     # 古いサーバーが動いたままなら（新しい API がない）、起動し直してもらう
-    if curl -s --max-time 1 "$URL/api/env" | grep -q '"error": "not found"'; then
+    if curl -s --max-time 1 "$URL/api/notes" | grep -q '"error": "not found"'; then
         echo "古い Pico Studio が動いています。"
         echo "起動したターミナルで Ctrl + C を押して止めてから、もう一度 ./start.sh を打ってください。"
         echo "ターミナルがわからないときは: pkill -f 'pico-studio/server.py'"
