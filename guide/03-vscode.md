@@ -64,21 +64,39 @@
 
 ### できるファイル
 
+下の **`名前`** のところは、①の **Name** で付けた名前になります。Name を `blink` にすると `~/apps/blink/` と `blink.cpp`、`collar` にすると `~/apps/collar/` と `collar.cpp` ができます。
+
+**必ずできるもの**
+
 ```text
-~/apps/blink/
-├── CMakeLists.txt          ビルドの設定（下で説明）
-├── blink.cpp               自分のプログラム。ここに書く
-├── pico_sdk_import.cmake   SDK を読み込む
-├── .gitignore              git に上げないもの（build フォルダ）
-├── .vscode/                拡張機能の設定（ふつうは触らない）
-│   ├── settings.json
-│   ├── tasks.json          Compile や Run の中身
-│   ├── launch.json         デバッグの設定
-│   └── c_cpp_properties.json   補完の設定
-└── build/                  ビルドしてできたもの（blink.uf2 など）
+~/apps/名前/                     プロジェクトのフォルダ
+├── 名前.cpp                     自分のプログラム。ここに書く
+├── CMakeLists.txt              ビルドの設定（下で説明）
+├── pico_sdk_import.cmake       SDK を読み込む
+├── .gitignore                  git に上げないもの（build フォルダ）
+├── .vscode/                    拡張機能の設定（ふつうは触らない）
+│   ├── settings.json           VS Code の設定
+│   ├── tasks.json              Compile や Run の中身
+│   ├── launch.json             デバッグの設定
+│   ├── c_cpp_properties.json   補完の設定
+│   ├── cmake-kits.json         CMake Tools で使うコンパイラ
+│   └── extensions.json         おすすめの拡張機能の一覧
+└── build/                      ビルドしてできたもの（Compile のあと 名前.uf2 など）
 ```
 
-`CMakeLists.txt` の中心は、次の部分です。
+- `名前.cpp` は、⑦の **Use project name as entry point file name** を ☐ にすると `main.cpp` に、**Generate C++ code** を ☐ にすると `.c` になります
+- `CMakeLists.txt` の中のプログラムの名前と、できる `.uf2` の名前も、①の Name になります
+- `build/` はプロジェクトを作ったときにでき、`.uf2` は Compile したあとにできます
+
+**選んだときだけできるもの**
+
+| ファイル | できるとき |
+| --- | --- |
+| `blink.pio` | ⑤で **PIO interface** を選んだとき。PIO のプログラムの例。Name に関係なく、いつもこの名前 |
+| `lwipopts.h` | Board type が Pico W で、**Pico wireless options** の **Polled lwIP** か **Background lwIP** を選んだとき。ネットワークの設定 |
+| `raspberrypi-swd.cfg` | ⑧で **SWD (Pi host)** を選んだとき。ラズパイの GPIO から SWD で書き込むための設定 |
+
+`CMakeLists.txt` の中心は、次の部分です（Name を `blink` にしたときの例。`blink` のところが自分の名前になります）。
 
 ```cmake
 # == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
@@ -143,7 +161,7 @@ VS Code でフォルダを開き、Compile と Run を押せば、続きから�
 
 ## ③ 書く（Lチカ）
 
-`blink.cpp` を開いて、中身を全部消し、次のプログラムを貼り付けます。ボードの LED（GP25）を点滅させ、そのたびに `printf` で知らせます。
+`名前.cpp`（Name が `blink` なら `blink.cpp`）を開いて、中身を全部消し、次のプログラムを貼り付けます。ボードの LED（GP25）を点滅させ、そのたびに `printf` で知らせます。
 
 ```cpp run
 #include <cstdio>
@@ -176,7 +194,7 @@ int main() {
 ## ④ ビルドする
 
 Quick Access の **Compile Project** を押します（下のバーの **Compile** でも同じ）。
-下の「ターミナル」に進み具合が出て、最後に `build/blink.uf2` ができます。
+下の「ターミナル」に進み具合が出て、最後に `build/名前.uf2`（例: `build/blink.uf2`）ができます。
 
 - 1回目は SDK 全体をビルドするので、1〜2分かかります。2回目からは変えたところだけなので、数秒です
 - エラーは「問題」の欄（Ctrl + Shift + M）にも一覧で出て、クリックするとその行に飛びます。エラーの読み方は付録B
@@ -227,6 +245,7 @@ picotool がピコを書き込みモードにして書き込み、ピコが再�
 - 9章の `mpu6050.h` など、Pico Studio に入っているヘッダーを使うときは、プロジェクトのフォルダにコピーします
 
 ```bash
+# blink のところは、自分のプロジェクトの名前にする
 cp ~/apps/pico-studio/cpp/include/*.h ~/apps/blink/
 ```
 
