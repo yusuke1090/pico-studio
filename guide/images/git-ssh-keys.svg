@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 400" font-family="system-ui, 'Noto Sans JP', sans-serif" font-size="13">
+<defs><marker id="ah-6b3fa0" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6b3fa0"/></marker><marker id="ah-1f7a3d" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#1f7a3d"/></marker></defs>
+<rect width="820" height="400" rx="10" fill="#ffffff"/>
+<text x="410.0" y="28" font-size="16" text-anchor="middle" font-weight="700" fill="#2b2f36">SSH キーで GitHub とつなぐ</text>
+<rect x="20" y="55" width="260" height="150" rx="8" fill="#e8f0fd" stroke="#2f6fde" stroke-width="2"/>
+<text x="150.0" y="78" font-size="14" text-anchor="middle" font-weight="700" fill="#2f6fde">自分の PC</text>
+<rect x="36" y="92" width="228" height="46" rx="6" fill="#ffffff" stroke="#c0392b" stroke-width="1.5"/>
+<text x="150.0" y="111" font-size="12" text-anchor="middle" font-weight="700" fill="#c0392b">秘密鍵（誰にも渡さない）</text>
+<text x="150.0" y="129" font-size="12" text-anchor="middle" fill="#555c66">~/.ssh/id_ed25519</text>
+<rect x="36" y="146" width="228" height="46" rx="6" fill="#ffffff" stroke="#1f7a3d" stroke-width="1.5"/>
+<text x="150.0" y="165" font-size="12" text-anchor="middle" font-weight="700" fill="#1f7a3d">公開鍵（渡してよい）</text>
+<text x="150.0" y="183" font-size="12" text-anchor="middle" fill="#555c66">~/.ssh/id_ed25519.pub</text>
+<rect x="540" y="55" width="260" height="150" rx="8" fill="#f1ebf8" stroke="#6b3fa0" stroke-width="2"/>
+<text x="670.0" y="78" font-size="14" text-anchor="middle" font-weight="700" fill="#6b3fa0">GitHub（自分のアカウント）</text>
+<text x="670.0" y="100" font-size="12" text-anchor="middle" fill="#555c66">Settings → SSH and GPG keys</text>
+<rect x="556" y="112" width="228" height="80" rx="6" fill="#ffffff" stroke="#1f7a3d" stroke-width="1.5"/>
+<text x="670.0" y="132" font-size="12" text-anchor="middle" font-weight="700" fill="#1f7a3d">登録した公開鍵</text>
+<text x="670.0" y="154" font-size="12" text-anchor="middle" fill="#555c66">main-pc（この PC）</text>
+<text x="670.0" y="174" font-size="12" text-anchor="middle" fill="#555c66">laptop（別の PC）</text>
+<path d="M284 110 L536 110" fill="none" stroke="#6b3fa0" stroke-width="2" marker-start="url(#ah-6b3fa0)" marker-end="url(#ah-6b3fa0)"/>
+<text x="410" y="102" font-size="12" text-anchor="middle" font-weight="700" fill="#6b3fa0">② git clone・push（SSH）</text>
+<text x="410" y="127" font-size="11" text-anchor="middle" fill="#555c66">秘密鍵で「本人」だと示す</text>
+<path d="M266 169 L552 169" fill="none" stroke="#1f7a3d" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#ah-1f7a3d)"/>
+<text x="410" y="161" font-size="12" text-anchor="middle" font-weight="700" fill="#1f7a3d">① 公開鍵だけを登録する（1回だけ）</text>
+<rect x="20" y="235" width="260" height="110" rx="8" fill="#e7f4ec" stroke="#1f7a3d" stroke-width="2"/>
+<text x="150.0" y="258" font-size="14" text-anchor="middle" font-weight="700" fill="#1f7a3d">ラズパイ・Jetson・別の PC</text>
+<text x="150.0" y="282" font-size="12" text-anchor="middle" fill="#555c66">その機械で、別の鍵を1組作る</text>
+<text x="150.0" y="302" font-size="12" text-anchor="middle" fill="#555c66">秘密鍵は、その機械から出さない</text>
+<text x="150.0" y="322" font-size="12" text-anchor="middle" fill="#555c66">例: ~/.ssh/collar_deploy</text>
+<rect x="540" y="235" width="260" height="110" rx="8" fill="#f1ebf8" stroke="#6b3fa0" stroke-width="2"/>
+<text x="670.0" y="258" font-size="14" text-anchor="middle" font-weight="700" fill="#6b3fa0">GitHub（リポジトリ collar）</text>
+<text x="670.0" y="282" font-size="12" text-anchor="middle" fill="#555c66">Settings → Deploy keys</text>
+<text x="670.0" y="302" font-size="12" text-anchor="middle" fill="#555c66">このリポジトリだけ・読むだけ</text>
+<text x="670.0" y="322" font-size="12" text-anchor="middle" fill="#555c66">（開発する PC ならアカウントに登録）</text>
+<path d="M282 275 L536 275" fill="none" stroke="#1f7a3d" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#ah-1f7a3d)"/>
+<text x="410" y="267" font-size="12" text-anchor="middle" font-weight="700" fill="#1f7a3d">① 公開鍵を登録</text>
+<path d="M538 312 L284 312" fill="none" stroke="#6b3fa0" stroke-width="2" marker-end="url(#ah-6b3fa0)"/>
+<text x="410" y="330" font-size="12" text-anchor="middle" font-weight="700" fill="#6b3fa0">② git clone・pull</text>
+<text x="410" y="378" font-size="12" text-anchor="middle" fill="#555c66">鍵は機械ごとに1組。なくした機械があれば、GitHub の一覧からその鍵だけを消す</text>
+</svg>

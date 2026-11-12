@@ -21,5 +21,6 @@
   {"part": "付録", "file": "b-trouble.md", "title": "付録B. 困ったとき"},
   {"part": "付録", "file": "c-compare.md", "title": "付録C. ラズパイとピコの比較"},
   {"part": "付録", "file": "d-links.md", "title": "付録D. マイコンでできること・おすすめリンク"},
-  {"part": "付録", "file": "e-micropython.md", "title": "付録E. MicroPython で手早く試す"}
+  {"part": "付録", "file": "e-micropython.md", "title": "付録E. MicroPython で手早く試す"},
+  {"part": "付録", "file": "f-git.md", "title": "付録F. git と GitHub の使い方"}
 ]

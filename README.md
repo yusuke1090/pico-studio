@@ -94,6 +94,7 @@ python3 server.py --port 9000
 | [付録C. ラズパイとピコの比較](guide/c-compare.md) | ラズパイ（Linux）とピコの違い、ラズパイの C++ との違い、使い分け |
 | [付録D. マイコンでできること・おすすめリンク](guide/d-links.md) | マイコンの使い道、そろえる部品、リンク集と読む順番 |
 | [付録E. MicroPython で手早く試す](guide/e-micropython.md) | MicroPython の書き込み、Pico Studio での実行・保存、よく使う書き方、C++ との対応表、mpremote |
+| [付録F. git と GitHub の使い方](guide/f-git.md) | 最初の設定、SSH キーの作成と登録、新しいリポジトリの作り方、ふだんの記録・戻し方・ブランチ、ラズパイ・Jetson・別の PC からのクローン（デプロイキー・LAN）、よくあるエラー |
 
 `http://localhost:8765/#chapter=5` のように開くと、その章を直接表示する（番号は目次の並び順）。
 
