@@ -26,7 +26,7 @@ import devenv
 
 HERE = Path(__file__).resolve().parent
 STATIC = HERE / "static"
-GUIDE = HERE / "guide"
+GUIDE = devenv.guide_dir()      # ~/apps/textbooks/books/pico（教科書のリポジトリ）
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
     ".md": "text/markdown; charset=utf-8",
@@ -529,7 +529,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _guide_file(self, rel):
-        """guide/ フォルダの中のファイルだけを返す（フォルダの外は読ませない）"""
+        """ガイド（教科書のリポジトリの books/pico）の中のファイルだけを返す（フォルダの外は読ませない）"""
         path = (GUIDE / rel).resolve()
         if GUIDE not in path.parents or path.suffix.lower() not in CONTENT_TYPES \
                 or not path.is_file():
@@ -648,6 +648,10 @@ def main():
                 f"別のポートで起動するには: python3 server.py --port 9000")
         raise
     print(f"Pico Studio: http://localhost:{args.port}")
+    if not (GUIDE / "chapters.json").is_file():
+        print(f"ガイドが見つかりません: {GUIDE}\n"
+              "  教科書のリポジトリを置くと、画面の「📘 ガイド」で読めます:\n"
+              "  git clone https://github.com/yusuke1090/textbooks.git ~/apps/textbooks")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

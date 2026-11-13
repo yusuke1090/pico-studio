@@ -13,13 +13,14 @@ C++ の開発は VS Code の拡張機能「Raspberry Pi Pico」で行い、Pico 
 
 サーバーは自分のPC（`127.0.0.1`）だけで動き、外部には公開しない。
 
-![画面のイメージ](guide/images/studio-screen.svg)
+![画面のイメージ](https://yusuke1090.github.io/textbooks/books/pico/images/studio-screen.svg)
 
 ## 必要なもの
 
 - Linux（Ubuntu で確認）
 - Python 3.10 以上と pyserial
 - C++ の開発には VS Code と拡張機能「Raspberry Pi Pico」（ガイド2章）
+- ガイドを画面の横に出すには、教科書のリポジトリを `~/apps/textbooks` に置く: `git clone https://github.com/yusuke1090/textbooks.git ~/apps/textbooks`
 
 ```sh
 sudo apt install python3-serial
@@ -51,7 +52,7 @@ python3 server.py --port 9000
 
 ## 使い方
 
-くわしくはガイドの [5. Pico Studio でつながりを確かめる](guide/05-studio.md) にまとめてある。
+くわしくはガイドの [5. Pico Studio でつながりを確かめる](https://yusuke1090.github.io/textbooks/?b=pico#ch=5) にまとめてある。
 
 1. ピコを USB ケーブルでつなぐ（充電専用ケーブルでは認識しない）
 2. ポート欄で「(ピコ・…)」と書かれたポートを選び、「接続」を押す
@@ -62,58 +63,61 @@ python3 server.py --port 9000
 
 ## ガイド
 
-画面右上の「📘 ガイド」で、ガイドを横に表示できる。GitHub 上でも [guide/](guide/) フォルダの Markdown をそのまま読める。
+画面右上の「📘 ガイド」で、ガイドを横に表示できる。
+
+ガイドの本文は、教科書のリポジトリ [textbooks](https://github.com/yusuke1090/textbooks) の `books/pico/` にある（いろいろな教科書をまとめたリポジトリ）。Pico Studio は `~/apps/textbooks/books/pico` を読む（別の場所なら環境変数 `PICO_GUIDE` で指定）。[Web の教科書](https://yusuke1090.github.io/textbooks/?b=pico) でも、スマホでも読める。
 
 | 章 | 内容 |
 | --- | --- |
 | **第1部 準備** | |
-| [0. このガイドの使い方](guide/00-guide.md) | ガイドの地図、VS Code・Pico Studio・ターミナルの役割、読む順番、コードのラベルの読み方 |
-| [1. ラズパイピコとは](guide/01-pico.md) | マイコンとは、ピコの種類、ボードの各部、BOOT・USR・RST、書き込みモード、C/C++ と MicroPython の使い分け、用語集 |
-| [2. 開発環境を用意する](guide/02-setup.md) | VS Code と拡張機能「Raspberry Pi Pico」、拡張機能が `~/.pico-sdk` に入れるもの、udev ルール、そろったかの確かめ方 |
-| [3. VS Code でプロジェクトを作って動かす](guide/03-vscode.md) | New C/C++ Project、できるファイル、書く → Compile → Run (USB) → Serial Monitor、BOOT が要るとき（図つき） |
-| [4. VS Code の便利な使い方](guide/04-vscode-more.md) | Quick Access の各メニュー、補完と F12、ライブラリの足し方、ファイルの分け方、Debug Probe でのデバッグ、git |
-| [5. Pico Studio でつながりを確かめる](guide/05-studio.md) | Pico Studio の画面、接続の確認の4項目、C++ の出力を見る、.uf2 の書き込み、つながらないとき |
+| [0. このガイドの使い方](https://yusuke1090.github.io/textbooks/?b=pico#ch=0) | ガイドの地図、VS Code・Pico Studio・ターミナルの役割、読む順番、コードのラベルの読み方 |
+| [1. ラズパイピコとは](https://yusuke1090.github.io/textbooks/?b=pico#ch=1) | マイコンとは、ピコの種類、ボードの各部、BOOT・USR・RST、書き込みモード、C/C++ と MicroPython の使い分け、用語集 |
+| [2. 開発環境を用意する](https://yusuke1090.github.io/textbooks/?b=pico#ch=2) | VS Code と拡張機能「Raspberry Pi Pico」、拡張機能が `~/.pico-sdk` に入れるもの、udev ルール、そろったかの確かめ方 |
+| [3. VS Code でプロジェクトを作って動かす](https://yusuke1090.github.io/textbooks/?b=pico#ch=3) | New C/C++ Project、できるファイル、書く → Compile → Run (USB) → Serial Monitor、BOOT が要るとき（図つき） |
+| [4. VS Code の便利な使い方](https://yusuke1090.github.io/textbooks/?b=pico#ch=4) | Quick Access の各メニュー、補完と F12、ライブラリの足し方、ファイルの分け方、Debug Probe でのデバッグ、git |
+| [5. Pico Studio でつながりを確かめる](https://yusuke1090.github.io/textbooks/?b=pico#ch=5) | Pico Studio の画面、接続の確認の4項目、C++ の出力を見る、.uf2 の書き込み、つながらないとき |
 | **第2部 基本** | |
-| [6. はじめてのプログラム](guide/06-first-program.md) | はじめてのプログラム、printf、Lチカ（ボード・外付け・RGB）、ボタン、止め方 |
-| [7. ピンと電源の基本](guide/07-pins.md) | ピン配置図、電源、GPIO とプルアップ、ADC、PWM、I2C/SPI/UART、注意点 |
-| [8. センサーのつなぎ方](guide/08-wiring.md) | ブレッドボード、ジャンパーワイヤー、ピンヘッダの付け方、I2C の配線と I2C スキャン |
-| [9. センサーを読む](guide/09-sensors.md) | レジスタ、バイトの変換、MPU-6050・BMP280 の読み取り、一定間隔のサンプリング |
-| [10. おすすめのセンサー](guide/10-sensor-picks.md) | 最初に使うセンサー、農業向けのセンサー、SHT31 と土壌水分センサー、商品の説明の読み方 |
+| [6. はじめてのプログラム](https://yusuke1090.github.io/textbooks/?b=pico#ch=6) | はじめてのプログラム、printf、Lチカ（ボード・外付け・RGB）、ボタン、止め方 |
+| [7. ピンと電源の基本](https://yusuke1090.github.io/textbooks/?b=pico#ch=7) | ピン配置図、電源、GPIO とプルアップ、ADC、PWM、I2C/SPI/UART、注意点 |
+| [8. センサーのつなぎ方](https://yusuke1090.github.io/textbooks/?b=pico#ch=8) | ブレッドボード、ジャンパーワイヤー、ピンヘッダの付け方、I2C の配線と I2C スキャン |
+| [9. センサーを読む](https://yusuke1090.github.io/textbooks/?b=pico#ch=9) | レジスタ、バイトの変換、MPU-6050・BMP280 の読み取り、一定間隔のサンプリング |
+| [10. おすすめのセンサー](https://yusuke1090.github.io/textbooks/?b=pico#ch=10) | 最初に使うセンサー、農業向けのセンサー、SHT31 と土壌水分センサー、商品の説明の読み方 |
 | **第3部 C++ を深く** | |
-| [11. マイコン向けの C++ の書き方](guide/11-cpp-style.md) | 型の選び方、float と整数、メモリの置き場所、使ってよい標準ライブラリ、エラーの扱い、クラスとファイルの分け方、状態機械 |
-| [12. 割り込み・タイマー・2つのコア](guide/12-interrupts.md) | GPIO の割り込み、くり返しタイマー、リングバッファ、2つのコアと FIFO、クリティカルセクション |
-| [13. データの記録と送信](guide/13-data.md) | フラッシュへの記録、CSV で PC に持ってくる、USB で PC に送って保存、メモリの置き場所 |
-| [14. 機械学習モデルの導入](guide/14-ml.md) | 特徴量、データ集め、PC で決定木を学習、`model.h` に書き出してピコで判定、大きなモデルの選択肢 |
-| [15. 省電力と長く動かすための工夫](guide/15-power.md) | 電力を減らす方法、電池の電圧、ウォッチドッグ、設定のフラッシュ保存 |
+| [11. マイコン向けの C++ の書き方](https://yusuke1090.github.io/textbooks/?b=pico#ch=11) | 型の選び方、float と整数、メモリの置き場所、使ってよい標準ライブラリ、エラーの扱い、クラスとファイルの分け方、状態機械 |
+| [12. 割り込み・タイマー・2つのコア](https://yusuke1090.github.io/textbooks/?b=pico#ch=12) | GPIO の割り込み、くり返しタイマー、リングバッファ、2つのコアと FIFO、クリティカルセクション |
+| [13. データの記録と送信](https://yusuke1090.github.io/textbooks/?b=pico#ch=13) | フラッシュへの記録、CSV で PC に持ってくる、USB で PC に送って保存、メモリの置き場所 |
+| [14. 機械学習モデルの導入](https://yusuke1090.github.io/textbooks/?b=pico#ch=14) | 特徴量、データ集め、PC で決定木を学習、`model.h` に書き出してピコで判定、大きなモデルの選択肢 |
+| [15. 省電力と長く動かすための工夫](https://yusuke1090.github.io/textbooks/?b=pico#ch=15) | 電力を減らす方法、電池の電圧、ウォッチドッグ、設定のフラッシュ保存 |
 | **第4部 製品にする** | |
-| [16. 実際の開発の流れ](guide/16-development.md) | 牛の行動判定システムを例にした開発の順番、役割分担、無線の選び方、電池の計算 |
-| [17. 製品にするための準備](guide/17-product.md) | PC でのテスト、バージョンの埋め込み、gdb、量産の書き込み、ユニーク ID、出荷前のチェックリスト |
+| [16. 実際の開発の流れ](https://yusuke1090.github.io/textbooks/?b=pico#ch=16) | 牛の行動判定システムを例にした開発の順番、役割分担、無線の選び方、電池の計算 |
+| [17. 製品にするための準備](https://yusuke1090.github.io/textbooks/?b=pico#ch=17) | PC でのテスト、バージョンの埋め込み、gdb、量産の書き込み、ユニーク ID、出荷前のチェックリスト |
 | **付録** | |
-| [付録A. コマンドで操作する](guide/a-cli.md) | コマンド用の道具（setup-sdk.sh）、`.cpp` ごとにプログラムができるプロジェクト、cmake・make・picotool・miniterm |
-| [付録B. 困ったとき](guide/b-trouble.md) | VS Code で書き込めないときの流れ図、ビルドのエラー、動きがおかしいとき、Pico Studio でつながらないとき |
-| [付録C. ラズパイとピコの比較](guide/c-compare.md) | ラズパイ（Linux）とピコの違い、ラズパイの C++ との違い、使い分け |
-| [付録D. マイコンでできること・おすすめリンク](guide/d-links.md) | マイコンの使い道、そろえる部品、リンク集と読む順番 |
-| [付録E. MicroPython で手早く試す](guide/e-micropython.md) | MicroPython の書き込み、Pico Studio での実行・保存、よく使う書き方、C++ との対応表、mpremote |
-| [付録F. git と GitHub の使い方](guide/f-git.md) | 最初の設定、SSH キーの作成と登録、新しいリポジトリの作り方、ふだんの記録・戻し方・ブランチ、ラズパイ・Jetson・別の PC からのクローン（デプロイキー・LAN）、よくあるエラー |
+| [付録A. コマンドで操作する](https://yusuke1090.github.io/textbooks/?b=pico#ch=18) | コマンド用の道具（setup-sdk.sh）、`.cpp` ごとにプログラムができるプロジェクト、cmake・make・picotool・miniterm |
+| [付録B. 困ったとき](https://yusuke1090.github.io/textbooks/?b=pico#ch=19) | VS Code で書き込めないときの流れ図、ビルドのエラー、動きがおかしいとき、Pico Studio でつながらないとき |
+| [付録C. ラズパイとピコの比較](https://yusuke1090.github.io/textbooks/?b=pico#ch=20) | ラズパイ（Linux）とピコの違い、ラズパイの C++ との違い、使い分け |
+| [付録D. マイコンでできること・おすすめリンク](https://yusuke1090.github.io/textbooks/?b=pico#ch=21) | マイコンの使い道、そろえる部品、リンク集と読む順番 |
+| [付録E. MicroPython で手早く試す](https://yusuke1090.github.io/textbooks/?b=pico#ch=22) | MicroPython の書き込み、Pico Studio での実行・保存、よく使う書き方、C++ との対応表、mpremote |
+| [付録F. git と GitHub の使い方](https://yusuke1090.github.io/textbooks/?b=pico#ch=23) | 最初の設定、SSH キーの作成と登録、新しいリポジトリの作り方、ふだんの記録・戻し方・ブランチ、ラズパイ・Jetson・別の PC からのクローン（デプロイキー・LAN）、よくあるエラー |
 
 `http://localhost:8765/#chapter=5` のように開くと、その章を直接表示する（番号は目次の並び順）。
 
-本文の文字を選ぶと、線（黄・ピンク・緑・青）・メモ・付箋を付けられる。🔖 で一覧を開き、押すとその場所へ飛ぶ（ガイドの [0章](guide/00-guide.md)）。
+本文の文字を選ぶと、線（黄・ピンク・緑・青）・メモ・付箋を付けられる。🔖 で一覧を開き、押すとその場所へ飛ぶ（ガイドの [0章](https://yusuke1090.github.io/textbooks/?b=pico#ch=0)）。
 保存先は `~/.local/share/pico-studio/notes.json`（`XDG_DATA_HOME` があればその下。1つ前の状態は `notes.json.bak`）。Git には入れない。
 場所は「選んだ文字・前後の文字・だいたいの位置」で覚えるので、ガイドの文章を直しても、その文字が残っていれば同じ場所に付く。
 
 ### ガイドの書き方
 
-- 章は `guide/*.md`（Markdown）。順番・タイトル・部（目次のまとまり）は `guide/chapters.json` で決める
+- ガイドは教科書のリポジトリ（`~/apps/textbooks`）の `books/pico/` で書く。直したら textbooks のほうでコミット・プッシュする（Pico Studio は起動し直すと新しい内容を読む）
+- 章は `books/pico/*.md`（Markdown）。順番・タイトル・部（目次のまとまり）は `books/pico/chapters.json` で決める
 - ` ```cpp run ` は、そのままビルドできる1つの C++ のプログラム（最初に `stdio_init_all()` を呼ぶ）。「コピー」ボタンが付く。` ```cpp ` はプログラムの一部。書き足したら `tests/build_guide_cpp.py` でビルドを確かめる
 - ` ```python run ` は Pico Studio で試せる MicroPython。「エディタに入れる」ボタンが付く
 - ` ```python ` は PC で動かすコード、` ```cmake ` は CMakeLists.txt、` ```bash ` はコマンド、` ```text ` は説明用
 - 表の中で縦線を書くときは `\|` と書く
-- 画像は `guide/images/` に置いて `![説明](images/ファイル名.svg)` と書く（png / jpg / gif / webp / svg）。図の多くは SVG で、文字を直接書いている
+- 画像は `books/pico/images/` に置いて `![説明](images/ファイル名.svg)` と書く（png / jpg / gif / webp / svg）。図の多くは SVG で、文字を直接書いている
 - 番号付きの手順の途中に画像やコードをはさんでも、続きの番号（例: `4.`）から書けばその番号から表示される
 - 手順の下に2文字以上字下げした `- ` を書くと、入れ子の箇条書きになる
 - 動画も同じ書き方で表示できる（mp4 / webm、YouTube の URL）
-- コードの関数・引数・コマンドをクリックしたときの説明は `guide/glossary.json` に書く
+- コードの関数・引数・コマンドをクリックしたときの説明は `books/pico/glossary.json` に書く
   - キーは `"関数名.引数名"`（例: `"train_test_split.stratify"`）か `"単語"`（例: `"gpio_put"`）
   - コマンドの説明は `"$ コマンド"` の形で書く（例: `"$ cmake"`、`"$ picotool load"`）
   - ヘッダーの説明は `"#include <名前>"` の形で書く（例: `"#include <cstdio>"`）。`#include "pico/stdlib.h"` のように `""` で書くものも、キーは `"#include <pico/stdlib.h>"` にする
@@ -128,7 +132,7 @@ python3 server.py --port 9000
 | 「MicroPython の応答がありません」 | C++ のプログラムが動いていないか。VS Code の Serial Monitor などが同じポートを使っていないか |
 | 「サーバーが古いままです」 | `Ctrl + C` で止めて `./start.sh` で起動し直す |
 
-ガイドの [付録B. 困ったとき](guide/b-trouble.md) にくわしくある。
+ガイドの [付録B. 困ったとき](https://yusuke1090.github.io/textbooks/?b=pico#ch=19) にくわしくある。
 
 ## 仕組み
 
@@ -151,7 +155,6 @@ server.py ── pyserial ──▶ /dev/ttyACM0 ──▶ ピコ（C++ のプ�
 server.py               ローカルサーバー（ピコとの通信と API）
 devenv.py               C++ の開発環境の確認（check）と、コマンド用のプロジェクトの用意（init）
 static/index.html       画面（HTML / CSS / JavaScript を1ファイルに）
-guide/                  ガイド（Markdown・図）。画面の横に表示される
 cpp/include/            ガイドで使うヘッダー（mpu6050.h、ws2812.h）。プロジェクトにコピーして使う
 cpp/setup-sdk.sh        コマンドでビルドするための道具をまとめて入れるスクリプト（付録A）
 start.sh                起動してブラウザを開くスクリプト
@@ -170,7 +173,7 @@ python3 tests/test_notes.py
 python3 tests/build_guide_cpp.py pico pico2   # ガイドの C++（```cpp run）を Pico と Pico 2 でビルド。Pico SDK が必要
 ```
 
-`build_guide_cpp.py` は、エラーや警告をガイドのファイルと行（例: `guide/09-sensors.md:325`）で表示する。17章の PC 用テストも g++ で動かす。
+`build_guide_cpp.py` は、エラーや警告をガイドのファイルと行（例: `textbooks/books/pico/09-sensors.md:325`）で表示する。17章の PC 用テストも g++ で動かす。
 
 `tests/fake_pico.py` は、MicroPython の REPL のやり取りをまねる偽のピコ。
 疑似端末（`/dev/pts/N`）を作るので、実機がなくても画面や API の動作を確かめられる。

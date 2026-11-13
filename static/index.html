@@ -897,7 +897,8 @@ async function setGuideOpen(open) {
     try {
       guide.chapters = await (await fetch("/guide/chapters.json", { cache: "no-cache" })).json();
     } catch (e) {
-      $("guideBody").innerHTML = '<p class="empty">ガイドを読み込めませんでした</p>';
+      $("guideBody").innerHTML = '<p class="empty">ガイドを読み込めませんでした。ガイドは教科書のリポジトリにあります。<br>'
+        + '<code>git clone https://github.com/yusuke1090/textbooks.git ~/apps/textbooks</code> を打ってから、Pico Studio を起動し直してください。</p>';
       return;
     }
     const fromHash = location.hash.match(/chapter=(\d+)/);   // 例: http://localhost:8765/#chapter=5（章番号 = 並び順。0章から始まる）

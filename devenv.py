@@ -14,6 +14,13 @@ import subprocess
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+
+
+def guide_dir():
+    """ガイド（ピコの教科書）の場所。教科書のリポジトリ ~/apps/textbooks の books/pico を読む。
+    別の場所にあるときは、環境変数 PICO_GUIDE で指定する"""
+    env = os.environ.get("PICO_GUIDE")
+    return Path(env).expanduser().resolve() if env else HERE.parent / "textbooks" / "books" / "pico"
 BUNDLED_INCLUDE = HERE / "cpp" / "include"
 PROJECT = Path(os.environ.get("PICO_CPP_DIR", Path.home() / "apps" / "pico-cpp"))
 PICO_HOME = Path.home() / ".pico-sdk"          # VS Code の拡張機能が使うフォルダ

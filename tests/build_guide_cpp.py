@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ガイドの C++ のプログラムを、本物の Pico SDK で全部ビルドして確かめる。
 
-guide/*.md の ```cpp run のブロック（そのままビルドできる1つのプログラム）を取り出し、
+ガイド（~/apps/textbooks/books/pico/*.md）の ```cpp run のブロック（そのままビルドできる1つのプログラム）を取り出し、
 1つのプロジェクトにまとめてビルドする。エラーと警告は、ガイドのファイルと行に直して表示する。
 17章の PC 用テスト（features.h と test_features.cpp）と、11章の filter.h も PC の g++ で確かめる。
 
@@ -23,6 +23,7 @@ sys.path.insert(0, str(ROOT))
 import devenv  # noqa: E402
 
 WORK = Path.home() / ".cache" / "pico-studio" / "guide-check"
+GUIDE = devenv.guide_dir()      # ~/apps/textbooks/books/pico
 DIAG = re.compile(r"(?P<file>[\w./-]+\.(?:cpp|h)):(?P<line>\d+):(?P<col>\d+): (?P<kind>error|warning): (?P<msg>.*)")
 
 
@@ -38,16 +39,16 @@ def prepare():
     for old in WORK.glob("ch*.cpp"):
         old.unlink()
     where = {}
-    for md in sorted((ROOT / "guide").glob("*.md")):
+    for md in sorted(GUIDE.glob("*.md")):
         ch = md.name.split("-")[0]
         for k, (line, code) in enumerate(blocks(md, "cpp run"), 1):
             name = f"ch{ch}_{k}.cpp"
             (WORK / name).write_text(code, encoding="utf-8")
-            where[name] = (md.relative_to(ROOT), line)
+            where[name] = (Path(os.path.relpath(md, ROOT.parent)), line)
     for h in (ROOT / "cpp" / "include").glob("*.h"):
         shutil.copy(h, WORK)
     # 14章の model.h の例（```text のブロック）
-    ml = (ROOT / "guide" / "14-ml.md").read_text(encoding="utf-8")
+    ml = (GUIDE / "14-ml.md").read_text(encoding="utf-8")
     m = re.search(r"^```text\n(// train.py で自動生成した決定木.*?)^```", ml, re.S | re.M)
     (WORK / "model.h").write_text(m.group(1), encoding="utf-8")
     cm = devenv.project_cmake().replace(
@@ -104,10 +105,10 @@ def pc_tests():
     t = WORK / "pc"
     t.mkdir(exist_ok=True)
     shutil.copy(WORK / "model.h", t)
-    prod = [c for _, c in blocks(ROOT / "guide" / "17-product.md", "cpp")]
+    prod = [c for _, c in blocks(GUIDE / "17-product.md", "cpp")]
     (t / "features.h").write_text(next(c for c in prod if "inline void features" in c), encoding="utf-8")
     (t / "test_features.cpp").write_text(next(c for c in prod if "assert(" in c), encoding="utf-8")
-    style = [c for _, c in blocks(ROOT / "guide" / "11-cpp-style.md", "cpp")]
+    style = [c for _, c in blocks(GUIDE / "11-cpp-style.md", "cpp")]
     (t / "filter.h").write_text(next(c for c in style if "MovingAverage" in c), encoding="utf-8")
     (t / "t_filter.cpp").write_text(
         '#include <cassert>\n#include <initializer_list>\n#include "filter.h"\n'
