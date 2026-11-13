@@ -234,7 +234,7 @@
   "int16_t": "符号付き16ビットの整数（−32768〜32767）（C / C++）。struct の \"h\" にあたる。",
   "uint8_t": "符号なし8ビットの整数（0〜255）。1バイトのこと（C / C++）。",
   "static_cast": "型を変える（C++）。static_cast<int16_t>(x) なら x を int16_t として扱う。",
-  "include": "ほかのファイル（ヘッダー）を読み込む（C / C++）。MicroPython の import にあたる。\n#include <cstdio> のように <> で囲むと、C++ の標準ライブラリなどから探す。#include \"pico/stdlib.h\" のように \"\" で囲むと、まず .cpp と同じフォルダから探し、なければ <> と同じ場所（Pico SDK など）から探す。\n<> や \"\" の中の名前をクリックすると、何のヘッダーかが出る。",
+  "include": "ほかのファイル（ヘッダー）を読み込む（C / C++）。MicroPython の import にあたる。\n\"\" で囲むと、先に .cpp と同じフォルダを探す（自分で作った .h など）。",
   "pragma": "#pragma once は、同じヘッダーを2回読み込まないようにする印（C / C++）。ヘッダーファイルの先頭に書く。",
 
   "#include <cstdio>": "語源: c + stdio。stdio は standard input/output（標準の入出力）の略。先頭の c は「C 言語から来たヘッダー」の印で、C 言語の stdio.h を C++ 用にしたもの。\nC++ の標準ライブラリの、文字の入出力。printf（表示する）・snprintf（文字列に書き込む）など。\nピコでは stdio_init_all() を呼んでおくと、printf の文字が USB シリアルに出る。",
