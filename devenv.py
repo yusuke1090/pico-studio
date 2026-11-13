@@ -17,8 +17,8 @@ HERE = Path(__file__).resolve().parent
 
 
 def guide_dir():
-    """ガイド（ピコの教科書）の場所。教科書のリポジトリ ~/apps/textbooks の books/pico を読む。
-    別の場所にあるときは、環境変数 PICO_GUIDE で指定する"""
+    """ピコの教科書（ガイド）の場所。教科書のリポジトリ ~/apps/textbooks の books/pico。
+    tests/build_guide_cpp.py が、ここの C++ をビルドして確かめる。別の場所なら環境変数 PICO_GUIDE で指定する"""
     env = os.environ.get("PICO_GUIDE")
     return Path(env).expanduser().resolve() if env else HERE.parent / "textbooks" / "books" / "pico"
 BUNDLED_INCLUDE = HERE / "cpp" / "include"
