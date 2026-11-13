@@ -1574,8 +1574,27 @@ function enclosingCall(text, pos) {
   return null;
 }
 
+// ヘッダーの説明。glossary のキーは "#include <cstdio>" の形（"pico/stdlib.h" のように "" で書くものも <> にそろえる）
+function headerTip(name, label) {
+  const v = glossary[`#include <${name.trim()}>`];
+  return typeof v === "string" ? { label, kind: "ヘッダー", text: v } : null;
+}
+
+// #include <cstdio> や #include "pico/stdlib.h" の <…> や "…" の上なら、{ name, label } を返す
+function includeAt(text, pos) {
+  const start = text.lastIndexOf("\n", pos - 1) + 1;
+  const nl = text.indexOf("\n", pos);
+  const line = text.slice(start, nl < 0 ? text.length : nl);
+  const m = line.match(/^(\s*#\s*include\s*)(<([^>]*)>|"([^"]*)")/);
+  if (!m) return null;
+  const p = pos - start, s = m[1].length, e = s + m[2].length;
+  return p >= s && p <= e ? { name: m[3] ?? m[4], label: "#include " + m[2] } : null;
+}
+
 // 単語の説明を探す。引数なら「関数名.引数名」、Pin.OUT のような形なら「Pin.OUT」を先に探す
 function lookupAt(text, pos) {
+  const inc = includeAt(text, pos);   // ヘッダー名の上なら、単語（stdlib や h）では探さない
+  if (inc) return headerTip(inc.name, inc.label);
   const w = wordAt(text, pos);
   if (!w || /^\d/.test(w.word)) return null;
   const isKwarg = /^\s*=(?!=)/.test(text.slice(w.end));
@@ -1631,6 +1650,14 @@ function shellLookup(text, pos) {
   return null;
 }
 
+// 文の中のコード。説明を出すのはヘッダーだけ（`#include "features.h"`、`<cstdio>`、`model.h`）
+function inlineLookup(text, pos) {
+  const t = text.trim();
+  if (/^#\s*include\b/.test(t)) return lookupAt(text, pos);
+  const m = t.match(/^<([^<>\s]+)>$/);
+  return headerTip(m ? m[1] : t, t);
+}
+
 function showTip(hit, x, y) {
   const m = hit.text.match(/^語源: (.*)\n([\s\S]*)$/);   // 先頭の「語源: 〜」は折りたたんで出す
   tipEl.innerHTML = `<div class="tip-head"><span class="tip-key">${esc(hit.label)}</span>
@@ -1662,8 +1689,7 @@ $("guideBody").addEventListener("mouseup", (e) => {
   const text = codeEl.textContent, pos = before.toString().length;
   const isBlock = !!codeEl.closest("pre");
   const shell = isBlock ? codeEl.classList.contains("sh") : isShellCommand(text);
-  if (!isBlock && !shell) return hideTip();
-  const hit = shell ? shellLookup(text, pos) : lookupAt(text, pos);
+  const hit = shell ? shellLookup(text, pos) : isBlock ? lookupAt(text, pos) : inlineLookup(text, pos);
   hit ? showTip(hit, e.clientX, e.clientY) : hideTip();
 });
 // エディタ

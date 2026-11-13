@@ -59,7 +59,7 @@ Pico Studio では MicroPython のコードを手早く試すこともできま�
 
 ### 言葉の意味を調べる
 
-コードの中の関数名や引数名（`gpio_put`、`i2c_write_blocking` など）や、コマンドの単語（`cmake`、`picotool` など）を**クリックすると、意味が吹き出しで出ます**。
+コードの中の関数名や引数名（`gpio_put`、`i2c_write_blocking` など）や、コマンドの単語（`cmake`、`picotool` など）を**クリックすると、意味が吹き出しで出ます**。`#include <cstdio>` の `cstdio` のようなヘッダーの名前をクリックすると、何のヘッダーか（C++ の標準ライブラリ・Pico SDK・自分で作るもの）と、中に入っている関数が出ます。
 
 ![引数をクリックしたところ](images/studio-tip.png)
 

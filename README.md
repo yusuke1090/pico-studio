@@ -116,6 +116,7 @@ python3 server.py --port 9000
 - コードの関数・引数・コマンドをクリックしたときの説明は `guide/glossary.json` に書く
   - キーは `"関数名.引数名"`（例: `"train_test_split.stratify"`）か `"単語"`（例: `"gpio_put"`）
   - コマンドの説明は `"$ コマンド"` の形で書く（例: `"$ cmake"`、`"$ picotool load"`）
+  - ヘッダーの説明は `"#include <名前>"` の形で書く（例: `"#include <cstdio>"`）。`#include "pico/stdlib.h"` のように `""` で書くものも、キーは `"#include <pico/stdlib.h>"` にする
   - 説明の先頭の行を `語源: 〜` にすると、吹き出しの中で折りたたんで表示する
 
 ## うまくいかないとき
