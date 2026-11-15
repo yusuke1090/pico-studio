@@ -62,10 +62,10 @@ python3 server.py --port 9000
 
 ## ガイド
 
-ガイド（ラズパイピコ開発ガイド）は、教科書のリポジトリ [textbooks](https://github.com/yusuke1090/textbooks) の `books/pico/` にあり、[教科書のページ](https://yusuke1090.github.io/textbooks/?b=pico) で読む（スマホでも読める。目次・付箋・線・メモ・言葉の説明もそちら）。
+ガイド（ラズパイピコ開発ガイド）は、教科書のリポジトリ [textbooks](https://github.com/yusuke1090/textbooks) の `books/pico/` にあり（日本語は `ja/`、英語は `en/`）、[教科書のページ](https://yusuke1090.github.io/textbooks/?b=pico) で読む（スマホでも読める。日本語と英語を切り替えられる。目次・付箋・線・メモ・言葉の説明もそちら）。
 Pico Studio の画面には出さない（右上の「📚 ガイド」は、教科書のページを開くリンク）。
 
-ガイドの ` ```cpp run ` のプログラムが本物の Pico SDK でビルドできるかは、この PC の開発環境を使う `tests/build_guide_cpp.py` で確かめる（下の「テスト」）。ガイドは `~/apps/textbooks/books/pico` から読む（別の場所なら環境変数 `PICO_GUIDE`）。
+ガイドの ` ```cpp run ` のプログラムが本物の Pico SDK でビルドできるかは、この PC の開発環境を使う `tests/build_guide_cpp.py` で確かめる（下の「テスト」）。ガイドは `~/apps/textbooks/books/pico/ja` から読む（別の場所なら環境変数 `PICO_GUIDE`。英語の章は `PICO_GUIDE=~/apps/textbooks/books/pico/en` で確かめる）。
 
 ## うまくいかないとき
 
@@ -105,7 +105,7 @@ start.sh                起動してブラウザを開くスクリプト
 70-pico-studio.rules    ピコを sudo なしで使えるようにする udev ルール
 tests/fake_pico.py      テスト用の「偽のピコ」
 tests/test_devenv.py    開発環境の確認とプロジェクトの用意、接続の自動判定のテスト
-tests/build_guide_cpp.py  ガイド（~/apps/textbooks/books/pico）の C++ のプログラムを、本物の Pico SDK で全部ビルドして確かめる
+tests/build_guide_cpp.py  ガイド（~/apps/textbooks/books/pico/ja）の C++ のプログラムを、本物の Pico SDK で全部ビルドして確かめる
 ```
 
 ## テスト・ピコなしで試す（開発用）
@@ -115,7 +115,7 @@ python3 tests/test_devenv.py
 python3 tests/build_guide_cpp.py pico pico2   # ガイドの C++（```cpp run）を Pico と Pico 2 でビルド。Pico SDK が必要
 ```
 
-`build_guide_cpp.py` は、エラーや警告をガイドのファイルと行（例: `textbooks/books/pico/09-sensors.md:325`）で表示する。17章の PC 用テストも g++ で動かす。
+`build_guide_cpp.py` は、エラーや警告をガイドのファイルと行（例: `textbooks/books/pico/ja/09-sensors.md:325`）で表示する。17章の PC 用テストも g++ で動かす。
 
 `tests/fake_pico.py` は、MicroPython の REPL のやり取りをまねる偽のピコ。
 疑似端末（`/dev/pts/N`）を作るので、実機がなくても画面や API の動作を確かめられる。

@@ -17,10 +17,14 @@ HERE = Path(__file__).resolve().parent
 
 
 def guide_dir():
-    """ピコの教科書（ガイド）の場所。教科書のリポジトリ ~/apps/textbooks の books/pico。
+    """ピコの教科書（ガイド）の場所。教科書のリポジトリ ~/apps/textbooks の books/pico/ja（日本語の章）。
+    英語の章は books/pico/en にあり、PICO_GUIDE=~/apps/textbooks/books/pico/en で確かめられる。
     tests/build_guide_cpp.py が、ここの C++ をビルドして確かめる。別の場所なら環境変数 PICO_GUIDE で指定する"""
     env = os.environ.get("PICO_GUIDE")
-    return Path(env).expanduser().resolve() if env else HERE.parent / "textbooks" / "books" / "pico"
+    if env:
+        return Path(env).expanduser().resolve()
+    book = HERE.parent / "textbooks" / "books" / "pico"
+    return book / "ja" if (book / "ja").is_dir() else book
 BUNDLED_INCLUDE = HERE / "cpp" / "include"
 PROJECT = Path(os.environ.get("PICO_CPP_DIR", Path.home() / "apps" / "pico-cpp"))
 PICO_HOME = Path.home() / ".pico-sdk"          # VS Code の拡張機能が使うフォルダ
