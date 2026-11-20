@@ -19,7 +19,7 @@ C++ の開発は VS Code の拡張機能「Raspberry Pi Pico」で行い、Pico 
 
 - Linux（Ubuntu で確認）
 - Python 3.10 以上と pyserial
-- C++ の開発には VS Code と拡張機能「Raspberry Pi Pico」（ガイド2章）
+- C++ の開発には VS Code と拡張機能「Raspberry Pi Pico」（ガイド3章）
 
 ```sh
 sudo apt install python3-serial
@@ -51,7 +51,7 @@ python3 server.py --port 9000
 
 ## 使い方
 
-くわしくはガイドの [5. Pico Studio でつながりを確かめる](https://yusuke1090.github.io/textbooks/?b=pico#ch=5) にまとめてある。
+くわしくはガイドの [6. Pico Studio でつながりを確かめる](https://yusuke1090.github.io/textbooks/?b=pico#ch=6) にまとめてある。
 
 1. ピコを USB ケーブルでつなぐ（充電専用ケーブルでは認識しない）
 2. ポート欄で「(ピコ・…)」と書かれたポートを選び、「接続」を押す
@@ -76,7 +76,7 @@ Pico Studio の画面には出さない（右上の「📚 ガイド」は、教
 | 「MicroPython の応答がありません」 | C++ のプログラムが動いていないか。VS Code の Serial Monitor などが同じポートを使っていないか |
 | 「サーバーが古いままです」 | `Ctrl + C` で止めて `./start.sh` で起動し直す |
 
-ガイドの [付録B. 困ったとき](https://yusuke1090.github.io/textbooks/?b=pico#ch=19) にくわしくある。
+ガイドの [付録B. 困ったとき](https://yusuke1090.github.io/textbooks/?b=pico#ch=20) にくわしくある。
 
 ## 仕組み
 
@@ -115,7 +115,7 @@ python3 tests/test_devenv.py
 python3 tests/build_guide_cpp.py pico pico2   # ガイドの C++（```cpp run）を Pico と Pico 2 でビルド。Pico SDK が必要
 ```
 
-`build_guide_cpp.py` は、エラーや警告をガイドのファイルと行（例: `textbooks/books/pico/ja/09-sensors.md:325`）で表示する。17章の PC 用テストも g++ で動かす。
+`build_guide_cpp.py` は、エラーや警告をガイドのファイルと行（例: `textbooks/books/pico/ja/09-sensors.md:325`）で表示する。18章の PC 用テストも g++ で動かす。
 
 `tests/fake_pico.py` は、MicroPython の REPL のやり取りをまねる偽のピコ。
 疑似端末（`/dev/pts/N`）を作るので、実機がなくても画面や API の動作を確かめられる。

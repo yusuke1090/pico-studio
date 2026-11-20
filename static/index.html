@@ -366,9 +366,9 @@ async function checkEnv() {
     ].join("\n");
     setDot("chkEnv", it.vscode && it.sdk && it.compiler ? "ok" : it.vscode || it.sdk ? "warn" : "err");
     $("envHint").innerHTML = it.vscode ? "" :
-      `C++ の開発には VS Code の拡張機能「Raspberry Pi Pico」を使います。<br><button id="envDoc">入れ方を見る（2章）</button>`;
-    if ($("envDoc")) $("envDoc").onclick = () => window.open("https://yusuke1090.github.io/textbooks/?b=pico#ch=2", "_blank", "noopener");
-    if (it.vscode && !it.sdk) $("chkEnvText").textContent += "\nVS Code で最初のプロジェクトを作ると、SDK などが入ります（3章）";
+      `C++ の開発には VS Code の拡張機能「Raspberry Pi Pico」を使います。<br><button id="envDoc">入れ方を見る（3章）</button>`;
+    if ($("envDoc")) $("envDoc").onclick = () => window.open("https://yusuke1090.github.io/textbooks/?b=pico#ch=3", "_blank", "noopener");
+    if (it.vscode && !it.sdk) $("chkEnvText").textContent += "\nVS Code で最初のプロジェクトを作ると、SDK などが入ります（4章）";
   } catch (err) {
     setDot("chkEnv", "err");
     $("chkEnvText").textContent = isOldServer(err) ? OLD_SERVER : err.message;
