@@ -38,7 +38,7 @@ LIBRARIES = ("pico_stdlib hardware_adc hardware_i2c hardware_spi hardware_pwm ha
 PROJECT_CMAKE = """\
 # Pico Studio が作ったプロジェクト（python3 ~/apps/pico-studio/cpp_build.py init）
 # このフォルダの *.cpp が、1つずつプログラムになる（blink.cpp → build/blink.uf2）。
-# test_ で始まるファイルは PC 用のテスト（18章）なので、ピコ用にはビルドしない。
+# test_ で始まるファイルは PC 用のテスト（19章）なので、ピコ用にはビルドしない。
 # .cpp を足したり消したりしたら、もう一度 cmake -S . -B build を打つ。
 cmake_minimum_required(VERSION 3.13)
 {sdk_fallback}include(pico_sdk_import.cmake)        # pico_sdk_init より前に読む

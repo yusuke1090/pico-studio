@@ -115,7 +115,7 @@ python3 tests/test_devenv.py
 python3 tests/build_guide_cpp.py pico pico2   # ガイドの C++（```cpp run）を Pico と Pico 2 でビルド。Pico SDK が必要
 ```
 
-`build_guide_cpp.py` は、エラーや警告をガイドのファイルと行（例: `textbooks/books/pico/ja/09-sensors.md:325`）で表示する。18章の PC 用テストも g++ で動かす。
+`build_guide_cpp.py` は、エラーや警告をガイドのファイルと行（例: `textbooks/books/pico/ja/09-sensors.md:325`）で表示する。19章の PC 用テストも g++ で動かす。
 
 `tests/fake_pico.py` は、MicroPython の REPL のやり取りをまねる偽のピコ。
 疑似端末（`/dev/pts/N`）を作るので、実機がなくても画面や API の動作を確かめられる。
