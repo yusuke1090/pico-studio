@@ -76,7 +76,7 @@ Pico Studio の画面には出さない（右上の「📚 ガイド」は、教
 | 「MicroPython の応答がありません」 | C++ のプログラムが動いていないか。VS Code の Serial Monitor などが同じポートを使っていないか |
 | 「サーバーが古いままです」 | `Ctrl + C` で止めて `./start.sh` で起動し直す |
 
-ガイドの [付録B. 困ったとき](https://yusuke1090.github.io/textbooks/?b=pico#ch=20) にくわしくある。
+ガイドの [付録B. 困ったとき](https://yusuke1090.github.io/textbooks/?b=pico#ch=22) にくわしくある。
 
 ## 仕組み
 
